@@ -13,6 +13,7 @@ const config = require('./config');
 const conceptRoutes = require('./routes/conceptRoutes');
 const userRoutes = require('./routes/userRoutes');
 const parserRoutes = require('./routes/parserRoutes');
+const treeRoutes = require('./routes/treeRoutes');
 
 // Initialize Express app
 const app = express();
@@ -42,6 +43,7 @@ app.get('/health', (req, res) => {
 app.use('/api/concepts', conceptRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/parser', parserRoutes);
+app.use('/api/trees', treeRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -81,6 +83,7 @@ async function startServer() {
       console.log('  Users:     GET/POST  /api/users/:userId');
       console.log('  Parser:    POST      /api/parser/parse');
       console.log('  Status:    GET       /api/parser/status');
+      console.log('  Trees:     CRUD      /api/trees/:userId');
       console.log('  Health:    GET       /health\n');
     });
   } catch (error) {

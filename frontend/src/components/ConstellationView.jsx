@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { knowledgeGraphData } from '../data/knowledgeGraph';
 import { fetchKnowledgeGraph, completeNode, verifyExplanation, generateCustomTree } from '../services/api';
 import BossFightModal from './BossFightModal';
+import ConstellationLoader from './ConstellationLoader';
 
 // Constellation-style node positioning
-function ConstellationNode({ node, position, onClick, isSelected }) {
+function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = false }) {
   const getNodeStyle = (status) => {
     switch (status) {
       case 'mastered':
@@ -31,12 +32,24 @@ function ConstellationNode({ node, position, onClick, isSelected }) {
         transform: 'translate(-50%, -50%)'
       }}
       initial={{ scale: 0, opacity: 0, rotate: -180 }}
-      animate={{ 
+      animate={isUnlocking ? {
+        scale: [1, 1.3, 1],
+        opacity: 1,
+        rotate: 0,
+        boxShadow: [
+          '0 0 20px rgba(96, 165, 250, 0)',
+          '0 0 50px rgba(96, 165, 250, 0.8)',
+          '0 0 20px rgba(96, 165, 250, 0)'
+        ]
+      } : {
         scale: 1, 
         opacity: 1,
         rotate: 0
       }}
-      transition={{ 
+      transition={isUnlocking ? {
+        duration: 1.2,
+        ease: 'easeOut'
+      } : {
         duration: 1.2,
         delay: node.level * 0.15,
         type: 'spring',
@@ -210,6 +223,105 @@ function ConstellationNode({ node, position, onClick, isSelected }) {
             }}
           />
         </svg>
+        
+        {/* Unlock burst effect */}
+        {isUnlocking && (
+          <>
+            {/* Expanding rings */}
+            <motion.svg
+              width={size * 3}
+              height={size * 3}
+              viewBox="0 0 100 100"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none'
+              }}
+            >
+              <defs>
+                <filter id="unlock-glow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              <motion.circle
+                cx="50"
+                cy="50"
+                r="20"
+                fill="none"
+                stroke="#60a5fa"
+                strokeWidth="2"
+                opacity={0.8}
+                filter="url(#unlock-glow)"
+                animate={{
+                  r: [20, 35, 50],
+                  opacity: [0.8, 0.4, 0]
+                }}
+                transition={{
+                  duration: 1.2,
+                  ease: 'easeOut'
+                }}
+              />
+              <motion.circle
+                cx="50"
+                cy="50"
+                r="25"
+                fill="none"
+                stroke="#a78bfa"
+                strokeWidth="1.5"
+                opacity={0.6}
+                filter="url(#unlock-glow)"
+                animate={{
+                  r: [25, 40, 55],
+                  opacity: [0.6, 0.2, 0]
+                }}
+                transition={{
+                  duration: 1.3,
+                  ease: 'easeOut',
+                  delay: 0.1
+                }}
+              />
+            </motion.svg>
+            
+            {/* Sparkle particles */}
+            <svg
+              width={size * 4}
+              height={size * 4}
+              viewBox="0 0 100 100"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none'
+              }}
+            >
+              {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
+                <motion.circle
+                  key={angle}
+                  cx="50"
+                  cy="50"
+                  r="2"
+                  fill="#60a5fa"
+                  animate={{
+                    cx: 50 + Math.cos(angle * Math.PI / 180) * 30,
+                    cy: 50 + Math.sin(angle * Math.PI / 180) * 30,
+                    opacity: [1, 0]
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    ease: 'easeOut'
+                  }}
+                />
+              ))}
+            </svg>
+          </>
+        )}
       </motion.div>
 
       {/* Label with smooth fade */}
@@ -236,12 +348,31 @@ function ConstellationNode({ node, position, onClick, isSelected }) {
       >
         {node.label.replace('\n', ' ')}
       </motion.div>
+
+      {/* Statistics display */}
+      <motion.div
+        className="absolute whitespace-nowrap font-mono text-xs"
+        style={{
+          left: `${size + 15}px`,
+          top: 'calc(50% + 20px)',
+          color: node.status === 'mastered' ? '#60a5fa' : node.status === 'active' ? '#99ff00' : '#888888',
+          opacity: nodeStyle.opacity * 0.8,
+          textShadow: `0 0 8px rgba(255, 255, 255, ${nodeStyle.opacity * 0.4})`,
+          pointerEvents: 'none',
+          fontSize: '10px'
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: nodeStyle.opacity * 0.8 }}
+        transition={{ delay: node.level * 0.15 + 0.6, duration: 0.8 }}
+      >
+        {node.status === 'mastered' ? `Score: ${node.score || 95}%` : 'Incomplete'}
+      </motion.div>
     </motion.div>
   );
 }
 
 // Connection lines between nodes with flowing energy
-function ConstellationLinks({ links, nodePositions, nodes }) {
+function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [] }) {
   return (
     <svg
       className="absolute inset-0 pointer-events-none"
@@ -250,6 +381,16 @@ function ConstellationLinks({ links, nodePositions, nodes }) {
       <defs>
         <filter id="constellation-glow">
           <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="neural-glow">
+          <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="0.8"/>
+          </feComponentTransfer>
           <feMerge>
             <feMergeNode in="coloredBlur"/>
             <feMergeNode in="SourceGraphic"/>
@@ -274,13 +415,79 @@ function ConstellationLinks({ links, nodePositions, nodes }) {
         const sourceNode = nodes.find(n => n.id === sourceId);
         const targetNode = nodes.find(n => n.id === targetId);
         
+        // Check if this edge is animating
+        const isAnimating = animatingEdges.includes(i);
+        
         // Subtle link styling - much less obvious
         let strokeOpacity = 0.08;
         let strokeWidth = 0.5;
+        let strokeColor = '#ffffff';
         
         if (sourceNode?.status === 'mastered' || sourceNode?.status === 'active') {
           strokeOpacity = sourceNode.status === 'mastered' ? 0.25 : 0.15;
           strokeWidth = sourceNode.status === 'mastered' ? 1 : 0.7;
+        }
+
+        // Neural animation for newly unlocked edges
+        if (isAnimating) {
+          return (
+            <g key={i}>
+              {/* Glow effect */}
+              <motion.line
+                x1={`${sourcePos.x}%`}
+                y1={`${sourcePos.y}%`}
+                x2={`${targetPos.x}%`}
+                y2={`${targetPos.y}%`}
+                stroke="#60a5fa"
+                strokeWidth={4}
+                filter="url(#neural-glow)"
+                initial={{ opacity: 0 }}
+                animate={{
+                  opacity: [0, 0.8, 0],
+                  strokeWidth: [3, 5, 3]
+                }}
+                transition={{
+                  duration: 1.5,
+                  ease: 'easeOut'
+                }}
+              />
+              
+              {/* Main neural pulse */}
+              <motion.line
+                x1={`${sourcePos.x}%`}
+                y1={`${sourcePos.y}%`}
+                x2={`${targetPos.x}%`}
+                y2={`${targetPos.y}%`}
+                stroke="#a78bfa"
+                strokeWidth={2}
+                initial={{ opacity: 0 }}
+                animate={{
+                  opacity: [0, 1, 0.3]
+                }}
+                transition={{
+                  duration: 1.5,
+                  ease: 'easeOut'
+                }}
+              />
+              
+              {/* Traveling energy particle */}
+              <motion.circle
+                r="8"
+                fill="#60a5fa"
+                filter="url(#neural-glow)"
+                initial={{ cx: `${sourcePos.x}%`, cy: `${sourcePos.y}%`, opacity: 0 }}
+                animate={{
+                  cx: [`${sourcePos.x}%`, `${targetPos.x}%`],
+                  cy: [`${sourcePos.y}%`, `${targetPos.y}%`],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{
+                  duration: 1.5,
+                  ease: 'easeOut'
+                }}
+              />
+            </g>
+          );
         }
 
         return (
@@ -290,15 +497,13 @@ function ConstellationLinks({ links, nodePositions, nodes }) {
             y1={`${sourcePos.y}%`}
             x2={`${targetPos.x}%`}
             y2={`${targetPos.y}%`}
-            stroke="#ffffff"
+            stroke={strokeColor}
             strokeWidth={strokeWidth}
-            initial={{ pathLength: 0, opacity: 0 }}
+            initial={{ opacity: 0 }}
             animate={{ 
-              pathLength: 1, 
               opacity: strokeOpacity
             }}
             transition={{ 
-              pathLength: { duration: 1.2, delay: i * 0.03 },
               opacity: { duration: 0.5, delay: i * 0.03 }
             }}
           />
@@ -316,6 +521,8 @@ export default function ConstellationView({ onBack, userPrompt }) {
   const [showBossFight, setShowBossFight] = useState(false);
   const [currentBossNode, setCurrentBossNode] = useState(null);
   const [generatedTopic, setGeneratedTopic] = useState('');
+  const [unlockedNodes, setUnlockedNodes] = useState([]);
+  const [animatingEdges, setAnimatingEdges] = useState([]);
   
   // Fetch knowledge graph from backend on mount
   useEffect(() => {
@@ -371,19 +578,68 @@ export default function ConstellationView({ onBack, userPrompt }) {
         const result = await completeNode(nodeId);
         
         if (result.success) {
-          // Update the graph with new data
-          setGraphData(result.updatedGraph);
+          // Create updated graph data
+          let updatedGraph = JSON.parse(JSON.stringify(graphData)); // Deep copy
+          
+          // Find and update the completed node
+          const completedNode = updatedGraph.nodes.find(n => n.id === nodeId);
+          if (completedNode) {
+            completedNode.status = 'mastered';
+            completedNode.score = verifyResult.score || 95;
+          }
+          
+          // Find all nodes that depend on this completed node (targets of outgoing links)
+          const dependentNodeIds = updatedGraph.links
+            .filter(link => {
+              const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+              return sourceId === nodeId;
+            })
+            .map(link => typeof link.target === 'object' ? link.target.id : link.target);
+          
+          // Unlock dependent nodes
+          dependentNodeIds.forEach(targetId => {
+            const targetNode = updatedGraph.nodes.find(n => n.id === targetId);
+            if (targetNode && targetNode.status === 'locked') {
+              targetNode.status = 'active';
+            }
+          });
+          
+          // Update state
+          setGraphData(updatedGraph);
+          setUnlockedNodes(dependentNodeIds);
+          
+          // Animate edges to unlocked nodes
+          const animatingEdgeIds = updatedGraph.links
+            .map((link, index) => {
+              const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+              const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+              
+              if (sourceId === nodeId && dependentNodeIds.includes(targetId)) {
+                return index;
+              }
+              return null;
+            })
+            .filter(id => id !== null);
+          
+          setAnimatingEdges(animatingEdgeIds);
+          
+          // Clear animation after 2 seconds
+          setTimeout(() => {
+            setAnimatingEdges([]);
+            setUnlockedNodes([]);
+          }, 2000);
+          
           setShowBossFight(false);
           setCurrentBossNode(null);
           
-          // Show success message (you can add a toast notification here)
+          // Show success message
           console.log('✅', result.message);
-          if (result.unlockedNodes.length > 0) {
-            console.log('🔓 Unlocked:', result.unlockedNodes);
+          if (dependentNodeIds.length > 0) {
+            console.log('🔓 Unlocked:', dependentNodeIds);
           }
         }
       } else {
-        // Show feedback to user (you can add a toast notification here)
+        // Show feedback to user
         console.log('❌ Verification failed:', verifyResult.message);
         alert(`${verifyResult.message}\n\nScore: ${verifyResult.score}/100\n\nFeedback: ${verifyResult.feedback}`);
       }
@@ -395,18 +651,7 @@ export default function ConstellationView({ onBack, userPrompt }) {
 
   // Show loading state
   if (isLoading) {
-    return (
-      <div className="relative w-full h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <motion.div
-            className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full mx-auto mb-4"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          />
-          <p className="text-white font-mono">Loading constellation...</p>
-        </div>
-      </div>
-    );
+    return <ConstellationLoader />;
   }
   
   // Position nodes in a constellation pattern (top to bottom)
@@ -451,7 +696,7 @@ export default function ConstellationView({ onBack, userPrompt }) {
       className="relative w-full h-screen bg-black overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 1 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
     >
 
       {/* Topic Header (if generated from prompt) */}
@@ -497,6 +742,7 @@ export default function ConstellationView({ onBack, userPrompt }) {
             links={graphData.links} 
             nodePositions={nodePositions}
             nodes={graphData.nodes}
+            animatingEdges={animatingEdges}
           />
           
           {/* Nodes */}
@@ -507,6 +753,7 @@ export default function ConstellationView({ onBack, userPrompt }) {
               position={nodePositions[node.id]}
               onClick={handleNodeClick}
               isSelected={selectedNode?.id === node.id}
+              isUnlocking={unlockedNodes.includes(node.id)}
             />
           ))}
         </div>

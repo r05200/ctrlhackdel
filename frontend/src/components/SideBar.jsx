@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 
-const Sidebar = ({isHovered, setIsHovered}) => {
+const Sidebar = ({isHovered, setIsHovered, onMenuClick}) => {
     
     
     const menuItems = [
         { icon: '✦', label: 'Create Tree' },
-        { icon: '◈', label: 'Past Trees' },
+        { icon: '◈', label: 'Library' },
         { icon: '⚙', label: 'Settings' },
     ];
 
@@ -31,6 +31,7 @@ const Sidebar = ({isHovered, setIsHovered}) => {
                 {menuItems.map((item, index) => (
                     <div
                         key={index}
+                        onClick={() => onMenuClick && onMenuClick(item.label)}
                         className="flex items-center px-3 py-2 rounded cursor-pointer transition-all duration-200 hover:bg-gray-900 group"
                     >
                         <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 text-lg group-hover:text-gray-200 transition-all duration-200">

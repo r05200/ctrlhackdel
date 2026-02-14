@@ -36,6 +36,16 @@ export const fetchUserProgress = async () => {
 
 // Complete a node (after passing boss fight)
 export const completeNode = async (nodeId) => {
+  // Debug mode: auto-return successful completion
+  if (DEBUG_AUTO_PASS) {
+    return {
+      success: true,
+      message: 'Node completed successfully!',
+      unlockedNodes: [nodeId], // Return the completed node for animation
+      updatedGraph: {}
+    };
+  }
+
   try {
     const response = await fetch(`${API_BASE_URL}/api/node/${nodeId}/complete`, {
       method: 'POST',
@@ -51,8 +61,23 @@ export const completeNode = async (nodeId) => {
   }
 };
 
+// Debug flag to auto-pass verification
+const DEBUG_AUTO_PASS = true;
+
 // Verify user explanation (for boss fight)
 export const verifyExplanation = async (nodeId, explanation, audioData = null) => {
+  // Debug mode: auto-pass all verifications
+  if (DEBUG_AUTO_PASS) {
+    return {
+      success: true,
+      passed: true,
+      score: 95,
+      feedback: '✨ Excellent explanation! (Debug mode - auto-passed)',
+      message: 'Explanation verified successfully!',
+      suggestions: []
+    };
+  }
+
   try {
     const response = await fetch(`${API_BASE_URL}/api/verify`, {
       method: 'POST',

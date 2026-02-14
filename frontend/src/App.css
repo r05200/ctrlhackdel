@@ -6,6 +6,32 @@
   background: #0a0818;
 }
 
+.app-container.view-exit {
+  animation: viewFadeOut 0.15s ease-out forwards;
+}
+
+@keyframes viewFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.library-wrapper {
+  animation: viewFadeIn 0.15s ease-in;
+}
+
+@keyframes viewFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .sidebar {
   position: absolute;
   top: 0;
