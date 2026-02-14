@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concept Tree Parser Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .panel h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 1.3em;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 0.95em;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 300px;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+      resize: vertical;
+      transition: border-color 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 0.95em;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .button-secondary {
+      background: #6c757d;
+    }
+
+    .button-secondary:hover {
+      background: #5a6268;
+    }
+
+    .output-section {
+      margin-top: 20px;
+    }
+
+    .status {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      display: none;
+      font-weight: 500;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.loading {
+      background: #cfe8fc;
+      color: #004085;
+      border-left: 4px solid #0066cc;
+    }
+
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border-left: 4px solid #28a745;
+    }
+
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #dc3545;
+    }
+
+    .results-container {
+      display: none;
+    }
+
+    .results-container.show {
+      display: block;
+    }
+
+    .result-section {
+      margin-bottom: 20px;
+    }
+
+    .result-section h3 {
+      color: #667eea;
+      margin-bottom: 12px;
+      font-size: 1.1em;
+    }
+
+    .result-section p {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .concepts-list {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 15px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .concept-item {
+      background: white;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      border-left: 3px solid #667eea;
+    }
+
+    .concept-item strong {
+      color: #333;
+      display: block;
+    }
+
+    .concept-item .meta {
+      color: #999;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+
+    .concept-item .meta span {
+      margin-right: 15px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .stat-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .stat-box .number {
+      font-size: 1.8em;
+      font-weight: bold;
+      display: block;
+    }
+
+    .stat-box .label {
+      font-size: 0.85em;
+      opacity: 0.9;
+    }
+
+    .example-btn {
+      background: #6c757d;
+      padding: 8px 16px;
+      font-size: 0.9em;
+      margin-bottom: 15px;
+    }
+
+    .example-btn:hover {
+      background: #5a6268;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(0,0,0,0.2);
+      border-radius: 50%;
+      border-top-color: #004085;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .json-display {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 0.85em;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎓 Concept Tree Parser Demo</h1>
+      <p>Transform your curriculum into an intelligent concept dependency tree</p>
+    </div>
+
+    <div class="main-grid">
+      <!-- Input Panel -->
+      <div class="panel">
+        <h2>📝 Input</h2>
+        
+        <div class="form-group">
+          <label for="curriculum">Paste your Table of Contents or Learning Topics:</label>
+          <textarea id="curriculum" placeholder="Example:&#10;1. Introduction to Calculus&#10;2. Limits and Continuity&#10;3. Derivatives&#10;4. Applications of Derivatives&#10;5. Integration&#10;&#10;Or paste a full curriculum here..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category (optional - will be auto-detected if not provided):</label>
+          <input type="text" id="category" placeholder="e.g., Calculus, Linear Algebra, Biology...">
+        </div>
+
+        <div class="button-group">
+          <button onclick="parseText()">🚀 Parse with AI</button>
+          <button class="button-secondary" onclick="loadExample()">📚 Load Example</button>
+        </div>
+
+        <div id="status" class="status"></div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="panel">
+        <h2>📊 Results</h2>
+        
+        <div id="resultsContainer" class="results-container">
+          <div class="stats" id="stats"></div>
+          
+          <div class="result-section">
+            <h3>📚 Created Concepts</h3>
+            <div class="concepts-list" id="conceptsList"></div>
+          </div>
+
+          <div class="result-section">
+            <h3>💡 Summary</h3>
+            <p id="summary"></p>
+          </div>
+
+          <div class="result-section">
+            <h3>🔗 Learning Path</h3>
+            <p id="learningPath"></p>
+          </div>
+
+          <details style="margin-top: 20px;">
+            <summary style="cursor: pointer; color: #667eea; font-weight: 500;">📋 Raw JSON Response</summary>
+            <div class="json-display" id="rawJson"></div>
+          </details>
+        </div>
+
+        <div style="text-align: center; color: #999; padding: 50px 20px;" id="emptyState">
+          Results will appear here
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:5000/api';
+
+    const exampleText = `Introduction to Calculus
+1. Limits and Continuity
+   1.1 Intuitive Understanding of Limits
+   1.2 Formal Definition of Limits
+   1.3 Limit Properties and Laws
+   1.4 Continuity
+
+2. Derivatives
+   2.1 Definition of the Derivative
+   2.2 Differentiation Rules
+   2.3 Chain Rule
+   2.4 Higher-order Derivatives
+
+3. Applications of Derivatives
+   3.1 Optimization
+   3.2 Related Rates
+   3.3 Curve Sketching
+   3.4 Newton's Method
+
+4. Integration
+   4.1 Antiderivatives and Indefinite Integrals
+   4.2 The Definite Integral
+   4.3 Fundamental Theorem of Calculus
+   4.4 Integration Techniques
+
+5. Applications of Integration
+   5.1 Area Between Curves
+   5.2 Volume of Solids
+   5.3 Arc Length and Surface Area`;
+
+    function updateStatus(message, type = 'loading', show = true) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`;
+      if (show) statusEl.classList.add('show');
+      if (type === 'loading') {
+        statusEl.innerHTML = `<span class="spinner"></span>${message}`;
+      }
+    }
+
+    function loadExample() {
+      document.getElementById('curriculum').value = exampleText;
+      document.getElementById('category').value = 'Calculus';
+      updateStatus('Example loaded! Click "Parse with AI" to process.', 'success');
+    }
+
+    async function parseText() {
+      const curriculum = document.getElementById('curriculum').value.trim();
+      const category = document.getElementById('category').value.trim();
+
+      if (!curriculum) {
+        updateStatus('Please enter some curriculum text first', 'error');
+        return;
+      }
+
+      updateStatus('🔄 Processing with Gemini AI...', 'loading');
+      
+      try {
+        const response = await fetch(`${API_BASE}/parser/parse`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            text: curriculum,
+            category: category || undefined
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || `HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        displayResults(data.data);
+        updateStatus('✅ Successfully parsed!', 'success');
+      } catch (error) {
+        console.error('Error:', error);
+        updateStatus(`❌ Error: ${error.message}`, 'error');
+      }
+    }
+
+    function displayResults(data) {
+      const resultsContainer = document.getElementById('resultsContainer');
+      const emptyState = document.getElementById('emptyState');
+
+      // Hide empty state, show results
+      emptyState.style.display = 'none';
+      resultsContainer.classList.add('show');
+
+      // Display stats
+      const statsHtml = `
+        <div class="stat-box">
+          <span class="number">${data.created_count || 0}</span>
+          <span class="label">Concepts Created</span>
+        </div>
+        <div class="stat-box">
+          <span class="number">${data.relationships_count || 0}</span>
+          <span class="label">Dependencies</span>
+        </div>
+        <div class="stat-box">
+          <span class="number">${data.interpolated_count || 0}</span>
+          <span class="label">Interpolated</span>
+        </div>
+        <div class="stat-box">
+          <span class="number">${data.category || 'N/A'}</span>
+          <span class="label">Category</span>
+        </div>
+      `;
+      document.getElementById('stats').innerHTML = statsHtml;
+
+      // Display concepts
+      const conceptsHtml = (data.created_concepts || []).map(concept => `
+        <div class="concept-item">
+          <strong>${concept.title}</strong>
+          <div class="meta">
+            <span>🆔 ${concept.concept_id}</span>
+            <span>📊 Level: ${concept.difficulty_level || 1}</span>
+            ${concept.prerequisites && concept.prerequisites.length > 0 ? `<span>📋 ${concept.prerequisites.length} prereq(s)</span>` : ''}
+          </div>
+          ${concept.description ? `<p style="margin-top: 8px; font-size: 0.9em; color: #666;">${concept.description}</p>` : ''}
+        </div>
+      `).join('');
+
+      document.getElementById('conceptsList').innerHTML = conceptsHtml;
+
+      // Display summary
+      document.getElementById('summary').textContent = data.summary || 'Curriculum successfully parsed and structured.';
+
+      // Display learning path
+      const pathText = data.learning_path || 'Learning path information will be displayed here.';
+      document.getElementById('learningPath').textContent = pathText;
+
+      // Display raw JSON
+      document.getElementById('rawJson').textContent = JSON.stringify(data, null, 2);
+    }
+
+    // Check API connectivity on load
+    window.addEventListener('load', async () => {
+      try {
+        const response = await fetch(`${API_BASE}/parser/status`);
+        const status = await response.json();
+        
+        if (status.gemini_api_configured) {
+          updateStatus('✅ Connected to API and Gemini is configured', 'success', false);
+          setTimeout(() => document.getElementById('status').classList.remove('show'), 3000);
+        } else {
+          updateStatus('⚠️ Gemini API not configured. Set GEMINI_API_KEY environment variable.', 'error');
+        }
+      } catch (error) {
+        updateStatus('❌ Cannot connect to backend. Make sure npm start is running on localhost:5000', 'error');
+      }
+    });
+
+    // Allow Enter key in textarea to submit (Ctrl+Enter)
+    document.getElementById('curriculum').addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        parseText();
+      }
+    });
+  </script>
+</body>
+</html>
