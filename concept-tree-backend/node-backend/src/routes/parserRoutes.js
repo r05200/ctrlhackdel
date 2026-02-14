@@ -32,6 +32,7 @@ router.get('/status', (req, res) => {
   res.json({
     available_endpoints: [
       'POST /api/parser/parse',
+      'POST /api/parser/generate-from-topic',
       'GET /api/parser/validate/<category>',
       'GET /api/parser/examples',
       'POST /api/parser/infer-category'
@@ -108,6 +109,50 @@ router.post('/infer-category', (req, res) => {
 });
 
 /**
+ * POST /api/parser/generate-from-topic
+ * Generate skill tree from a simple topic description
+ */
+router.post('/generate-from-topic', async (req, res) => {
+  try {
+    const { topic, depth, difficulty_range } = req.body;
+
+    if (!topic) {
+      return res.status(400).json({ error: 'topic field required' });
+    }
+
+    // Build an enhanced prompt for topic-based generation
+    const depthLevel = depth || 'comprehensive';
+    const diffRange = difficulty_range || [1, 10];
+    
+    const enhancedText = `Generate a ${depthLevel} curriculum for learning: ${topic}
+
+Please include:
+- Core foundational concepts (difficulty ${diffRange[0]}-${Math.floor((diffRange[0] + diffRange[1]) / 2)})
+- Intermediate building blocks
+- Advanced applications (difficulty ${Math.floor((diffRange[0] + diffRange[1]) / 2)}-${diffRange[1]})
+- Clear prerequisite relationships
+- Logical learning progression
+
+Structure this as a complete learning path with proper dependencies.`;
+
+    const result = await ParserService.parseAndCreateConcepts(enhancedText, topic);
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        ...result,
+        generation_method: 'topic',
+        topic,
+        depth: depthLevel
+      }
+    });
+  } catch (error) {
+    console.error('Topic generation error:', error);
+    res.status(500).json({ error: `Generation failed: ${error.message}` });
+  }
+});
+
+/**
  * GET /api/parser/examples
  * Get example inputs
  */
@@ -126,14 +171,24 @@ router.get('/examples', (req, res) => {
     computer_science_toc: `1. Basic Programming and Algorithms
 2. Data Structures
 3. Complexity Analysis
-4. Advanced Algorithms and Graphs`
+4. Advanced Algorithms and Graphs`,
+    
+    topic_examples: [
+      'Machine Learning Fundamentals',
+      'Web Development',
+      'Quantum Computing',
+      'Data Science with Python'
+    ]
   };
 
   res.json({
     status: 'success',
     data: {
       examples,
-      usage: 'Send these as the "text" field in POST /api/parser/parse'
+      usage: {
+        parse: 'Send structured text as "text" field to POST /api/parser/parse',
+        topic: 'Send simple topic as "topic" field to POST /api/parser/generate-from-topic'
+      }
     }
   });
 });
