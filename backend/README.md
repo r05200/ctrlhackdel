@@ -1,376 +1,262 @@
-# 🚀 NEXUS Backend API
+# 🎓 Concept Dependency Tree Backend
 
-Simple Express backend for the NEXUS Knowledge RPG hackathon project.
+A modern Node.js backend for managing intelligent concept hierarchies and skill trees. This system automatically extracts concepts from curriculum text using Gemini AI, builds dependency graphs, and tracks user progress through structured learning paths.
 
-## Quick Start
+## ✨ Key Features
 
-### Install Dependencies
+- **🤖 AI-Powered Parsing**: Uses Google Gemini to extract concepts and automatically infer prerequisites from unstructured text
+- **📊 Smart Dependency Trees**: Automatically builds concept prerequisite chains and difficulty levels
+- **👤 User Progress Tracking**: Monitor individual learner progress through concept mastery
+- **🔗 Intelligent Interpolation**: Automatically adds missing prerequisite concepts
+- **🎯 Learning Paths**: Get recommended learning sequences for any topic
+- **🧪 Comprehensive Testing**: 120+ automated tests with full coverage
+- **📱 Interactive Demo**: Beautiful web interface for testing the parser
+
+## 🏗️ Architecture
+
+```
+Node.js Express Backend (Port 5000)
+├── Concept API
+├── User Progress Tracking
+├── AI Parser (Gemini)
+└── Database Operations
+    │
+    └── MongoDB (Local or Atlas)
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Node.js** 14+
+- **MongoDB** (installed locally or use MongoDB Atlas)
+- **Google Gemini API key** (get from: https://ai.google.dev/)
+
+### 1. Setup
 
 ```bash
+cd node-backend
 npm install
 ```
 
-### Run Server
+### 2. Configure Environment
 
-```bash
-# Production
-npm start
-
-# Development (auto-reload)
-npm run dev
-```
-
-Server runs on: `http://localhost:5000`
-
-## API Endpoints
-
-### 1. Health Check
-
-```
-GET /
-```
-
-Returns API info and available endpoints.
-
-**Response:**
-
-```json
-{
-  "status": "ok",
-  "message": "NEXUS Backend API",
-  "version": "1.0.0"
-}
-```
-
----
-
-### 2. Get Knowledge Graph
-
-```
-GET /api/graph
-```
-
-Returns the complete knowledge graph with all nodes and links.
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "data": {
-    "nodes": [...],
-    "links": [...]
-  }
-}
-```
-
----
-
-### 3. Get User Progress
-
-```
-GET /api/progress
-```
-
-Returns user statistics and progress information.
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "stats": {
-    "total": 13,
-    "mastered": 1,
-    "active": 1,
-    "locked": 11,
-    "percentage": 8
-  },
-  "userProgress": {
-    "masteredNodes": ["programming-basics"],
-    "activeNodes": ["data-structures"],
-    "totalTimeSpent": 0,
-    "completedChallenges": 1
-  }
-}
-```
-
----
-
-### 4. Complete Node (After Boss Fight)
-
-```
-POST /api/node/:nodeId/complete
-```
-
-Marks a node as mastered and unlocks child nodes if all prerequisites are met.
-
-**Parameters:**
-
-- `nodeId` (path): ID of the node to complete
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Node 'Data Structures' marked as mastered!",
-  "unlockedNodes": ["linear-algebra"],
-  "updatedGraph": {...}
-}
-```
-
----
-
-### 5. Verify Explanation (AI Check)
-
-```
-POST /api/verify
-```
-
-Simulates AI verification of user explanation (for Boss Fight).
-
-**Request Body:**
-
-```json
-{
-  "nodeId": "data-structures",
-  "explanation": "Data structures are ways to organize data efficiently...",
-  "audioData": "base64-encoded-audio" // optional
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "passed": true,
-  "score": 85,
-  "feedback": "Good explanation length. Used relevant terminology.",
-  "message": "Excellent! You clearly understand Data Structures."
-}
-```
-
----
-
-### 6. Reset Progress (Testing Only)
-
-```
-POST /api/reset
-```
-
-Resets all progress back to initial state.
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Progress reset successfully",
-  "graph": {...}
-}
-```
-
----
-
-### 7. Generate Custom Tree (Future Feature)
-
-```
-POST /api/generate-tree
-```
-
-Generate a custom knowledge tree for any topic (requires LLM integration).
-
-**Request Body:**
-
-```json
-{
-  "topic": "Quantum Physics",
-  "difficulty": "intermediate"
-}
-```
-
----
-
-## Data Models
-
-### Node Structure
-
-```javascript
-{
-  id: "unique-node-id",
-  label: "Display Name\nMultiline",
-  status: "locked" | "active" | "mastered",
-  level: 1-6,
-  description: "Brief description of the concept"
-}
-```
-
-### Link Structure
-
-```javascript
-{
-  source: "parent-node-id",
-  target: "child-node-id"
-}
-```
-
----
-
-## Testing with cURL
-
-### Get Graph
-
-```bash
-curl http://localhost:5000/api/graph
-```
-
-### Complete a Node
-
-```bash
-curl -X POST http://localhost:5000/api/node/data-structures/complete \
-  -H "Content-Type: application/json"
-```
-
-### Verify Explanation
-
-```bash
-curl -X POST http://localhost:5000/api/verify \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nodeId": "data-structures",
-    "explanation": "Data structures organize and store data efficiently"
-  }'
-```
-
-### Reset Progress
-
-```bash
-curl -X POST http://localhost:5000/api/reset
-```
-
----
-
-## Frontend Integration
-
-The frontend (`frontend/src/App.jsx`) should fetch data from this API:
-
-```javascript
-// Fetch graph on component mount
-useEffect(() => {
-  fetch("http://localhost:5000/api/graph")
-    .then((res) => res.json())
-    .then((data) => setGraphData(data.data));
-}, []);
-
-// Complete node after boss fight
-const handleComplete = (nodeId) => {
-  fetch(`http://localhost:5000/api/node/${nodeId}/complete`, {
-    method: "POST",
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.success) {
-        setGraphData(data.updatedGraph);
-      }
-    });
-};
-```
-
----
-
-## Environment Variables
-
-Create a `.env` file (optional):
+Create `.env` file in `node-backend/`:
 
 ```env
+# MongoDB Connection
+MONGO_URI=mongodb://localhost:27017/concept-tree
+
+# Google Gemini API Key
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Server Configuration
 PORT=5000
 NODE_ENV=development
 ```
 
+### 3. Start MongoDB
+
+**Windows (if installed as service):**
+```powershell
+Get-Service MongoDB
+```
+
+**Mac/Linux:**
+```bash
+mongod
+```
+
+### 4. Start the Backend
+
+```bash
+cd node-backend
+npm start
+```
+
+You should see:
+```
+✓ Connected to MongoDB
+🚀 Concept Dependency Tree Backend (Node.js)
+📍 Server running on http://localhost:5000
+```
+
+## 📒 Using the Demo Interface
+
+Open the interactive parser demo:
+
+```
+file:///C:/Users/frank/Downloads/ctrlhackdel/concept-tree-backend/node-backend/parser_demo.html
+```
+
+**Features:**
+- Paste curriculum text or table of contents
+- AI automatically extracts concepts
+- View created concepts, dependencies, and learning paths
+- Live JSON responses
+
+## 📋 API Endpoints
+
+### Concepts
+
+```bash
+# Get all concepts
+curl http://localhost:5000/api/concepts
+
+# Get specific concept
+curl http://localhost:5000/api/concepts/derivatives
+
+# Get all concepts in category
+curl http://localhost:5000/api/concepts/category/Calculus
+
+# Get dependency tree
+curl http://localhost:5000/api/concepts/category/Calculus/tree
+
+# Get learning path
+curl http://localhost:5000/api/concepts/derivatives/learning-path
+
+# Search concepts
+curl "http://localhost:5000/api/concepts/search/derivative"
+
+# Create concept
+curl -X POST http://localhost:5000/api/concepts \
+  -H "Content-Type: application/json" \
+  -d '{"concept_id":"limits","title":"Limits","category":"Calculus"}'
+
+# Update concept
+curl -X PUT http://localhost:5000/api/concepts/limits \
+  -H "Content-Type: application/json" \
+  -d '{"difficulty_level":2}'
+
+# Delete concept
+curl -X DELETE http://localhost:5000/api/concepts/limits
+```
+
+### User Progress
+
+```bash
+# Get skill tree
+curl http://localhost:5000/api/users/alice/skills
+
+# Get completed concepts
+curl http://localhost:5000/api/users/alice/completed
+
+# Get available concepts
+curl http://localhost:5000/api/users/alice/available
+
+# Mark complete
+curl -X POST http://localhost:5000/api/users/alice/skills/derivatives/complete
+
+# Update progress
+curl -X PUT http://localhost:5000/api/users/alice/skills/derivatives/progress \
+  -H "Content-Type: application/json" \
+  -d '{"progress":75}'
+
+# Export
+curl http://localhost:5000/api/users/alice/export
+```
+
+### AI Parser
+
+```bash
+# Check status
+curl http://localhost:5000/api/parser/status
+
+# Parse curriculum
+curl -X POST http://localhost:5000/api/parser/parse \
+  -H "Content-Type: application/json" \
+  -d '{"text":"1. Limits\n2. Derivatives","category":"Calculus"}'
+```
+
+## 🧪 Testing
+
+```bash
+# All tests
+npm test
+
+# With coverage
+npm test -- --coverage
+
+# Watch mode
+npm test -- --watch
+```
+
+**Test Results:** ✅ 120/120 passing | 44.27% coverage
+
+## 📁 Project Structure
+
+```
+node-backend/
+├── src/
+│   ├── models/           # Database schemas
+│   ├── services/         # Business logic
+│   ├── routes/           # API endpoints
+│   ├── utils/            # Helper functions
+│   └── server.js         # Express setup
+├── tests/                # Test suites
+├── package.json
+├── jest.config.js
+├── .env
+└── parser_demo.html      # Interactive demo
+```
+
+## 🐛 Troubleshooting
+
+### MongoDB Connection Failed
+```bash
+# Check if running
+Get-Service MongoDB
+
+# Use MongoDB Atlas as alternative
+# Update .env: MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net
+```
+
+### Gemini API Not Working
+```
+1. Get key from: https://ai.google.dev/
+2. Add to .env: GEMINI_API_KEY=your_key
+3. Restart server
+```
+
+### Port 5000 in Use
+```powershell
+# Find and kill process
+Get-NetTCPConnection -LocalPort 5000 | foreach {Stop-Process -Id $_.OwningProcess -Force}
+```
+
+## 📚 Sample Curricula
+
+Testing files in `examples/`:
+- `sample_calculus_toc.txt`
+- `sample_cs_curriculum.txt`
+- `sample_linear_algebra_toc.txt`
+
+## 🚀 Deployment
+
+### Docker
+
+```bash
+docker build -t concept-tree .
+docker run -p 5000:5000 \
+  -e MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net \
+  -e GEMINI_API_KEY=your_key \
+  concept-tree
+```
+
+### Docker Compose
+
+```bash
+docker-compose up
+```
+
+## 📖 More Documentation
+
+- [Testing Guide](node-backend/TESTING.md)
+- [Sample Responses](EXAMPLES.json)
+
+## 📝 License
+
+MIT
+
 ---
 
-## Production Deployment
-
-### Deploy to Heroku
-
-```bash
-heroku create nexus-backend
-git push heroku main
-```
-
-### Deploy to Vercel
-
-```bash
-vercel
-```
-
-### Deploy to Railway
-
-```bash
-railway up
-```
-
----
-
-## Future Enhancements
-
-1. **Real AI Integration**
-   - Integrate Groq/Gemini API for actual explanation verification
-   - Use Deepgram for speech-to-text
-   - Use ElevenLabs for AI responses
-
-2. **Database**
-   - Add MongoDB for persistent storage
-   - Store user profiles and progress
-   - Track historical performance
-
-3. **Authentication**
-   - Add JWT-based auth
-   - User registration/login
-   - Protected routes
-
-4. **AI Tree Generation**
-   - Use LLM to auto-generate skill trees
-   - Input: topic name → Output: full dependency graph
-
-5. **Multiplayer**
-   - WebSocket support
-   - Real-time progress sharing
-   - Leaderboards
-
----
-
-## Troubleshooting
-
-### Port Already in Use
-
-```bash
-# Kill process on port 5000
-npx kill-port 5000
-```
-
-### CORS Issues
-
-CORS is already enabled for all origins. If issues persist:
-
-```javascript
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-  }),
-);
-```
-
-### Dependencies Won't Install
-
-```bash
-npm cache clean --force
-rm -rf node_modules package-lock.json
-npm install
-```
-
----
-
-**Built for CtrlHackDel Hackathon 🏆**
+**Ready to use! 🚀**
