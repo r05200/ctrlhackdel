@@ -40,7 +40,7 @@ const BossFightModal = ({ node, onClose, onComplete }) => {
   };
 
   const handlePass = () => {
-    onComplete(node.id, userExplanation);
+    onComplete(node.id, userExplanation, verificationResult);
     onClose();
   };
 
@@ -147,6 +147,12 @@ const BossFightModal = ({ node, onClose, onComplete }) => {
                   color: verificationResult.passed ? '#00ff88' : '#ff4444'
                 }}>
                   Score: {verificationResult.score}/100
+                </div>
+              )}
+
+              {verificationResult && verificationResult.previousBestScore !== null && verificationResult.previousBestScore !== undefined && (
+                <div style={{ marginBottom: '12px', color: '#d1d5db', fontSize: '14px' }}>
+                  Previous Best: {verificationResult.previousBestScore}/100 | Best Now: {verificationResult.bestScore}/100 | Change: {(verificationResult.scoreDeltaPercent >= 0 ? '+' : '') + verificationResult.scoreDeltaPercent}%
                 </div>
               )}
 

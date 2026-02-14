@@ -64,6 +64,11 @@ let userProgress = {
   completedChallenges: 1
 };
 
+const STATUS = {
+  LOCKED: -1,
+  ACTIVE: 0
+};
+
 // Routes
 
 // Health check
@@ -95,10 +100,10 @@ app.get('/api/graph', (req, res) => {
 app.get('/api/progress', (req, res) => {
   const stats = {
     total: knowledgeGraph.nodes.length,
-    mastered: knowledgeGraph.nodes.filter(n => n.status > 0).length,
-    active: knowledgeGraph.nodes.filter(n => n.status === 0).length,
-    locked: knowledgeGraph.nodes.filter(n => n.status === -1).length,
-    percentage: Math.round((knowledgeGraph.nodes.filter(n => n.status > 0).length / knowledgeGraph.nodes.length) * 100)
+    mastered: knowledgeGraph.nodes.filter(n => n.status > STATUS.ACTIVE).length,
+    active: knowledgeGraph.nodes.filter(n => n.status === STATUS.ACTIVE).length,
+    locked: knowledgeGraph.nodes.filter(n => n.status === STATUS.LOCKED).length,
+    percentage: Math.round((knowledgeGraph.nodes.filter(n => n.status > STATUS.ACTIVE).length / knowledgeGraph.nodes.length) * 100)
   };
   
   res.json({
@@ -111,6 +116,7 @@ app.get('/api/progress', (req, res) => {
 // Complete a node (after boss fight)
 app.post('/api/node/:nodeId/complete', (req, res) => {
   const { nodeId } = req.params;
+  const { score } = req.body || {};
   
   // Find the node
   const nodeIndex = knowledgeGraph.nodes.findIndex(n => n.id === nodeId);
@@ -124,13 +130,33 @@ app.post('/api/node/:nodeId/complete', (req, res) => {
   
   const node = knowledgeGraph.nodes[nodeIndex];
   
-  if (node.status !== 0) {
+  if (node.status === STATUS.LOCKED) {
     return res.status(400).json({
       success: false,
       message: 'Node is not active. Complete prerequisites first.',
       currentStatus: node.status
     });
   }
+
+  // Redo-practice completion for already mastered nodes should be idempotent.
+  if (node.status > STATUS.ACTIVE) {
+    return res.json({
+      success: true,
+      message: `Node "${node.label}" practice attempt recorded. Best score remains ${node.status}.`,
+      unlockedNodes: [],
+      updatedGraph: knowledgeGraph
+    });
+  }
+
+  const parsedScore = Number(score);
+  const completionScore = Number.isFinite(parsedScore) && parsedScore > 0
+    ? Math.min(100, Math.round(parsedScore))
+    : 95;
+  knowledgeGraph.nodes[nodeIndex].status = completionScore;
+  if (!userProgress.masteredNodes.includes(nodeId)) {
+    userProgress.masteredNodes.push(nodeId);
+  }
+  userProgress.activeNodes = userProgress.activeNodes.filter(id => id !== nodeId);
   
   // Find and unlock child nodes
   const childLinks = knowledgeGraph.links.filter(link => link.source === nodeId);
@@ -141,16 +167,16 @@ app.post('/api/node/:nodeId/complete', (req, res) => {
     if (childNodeIndex !== -1) {
       const childNode = knowledgeGraph.nodes[childNodeIndex];
       
-      if (childNode.status === -1) {
+      if (childNode.status === STATUS.LOCKED) {
         // Check if all parent nodes are mastered
         const parentLinks = knowledgeGraph.links.filter(l => l.target === childNode.id);
         const allParentsMastered = parentLinks.every(parentLink => {
           const parentNode = knowledgeGraph.nodes.find(n => n.id === parentLink.source);
-          return parentNode && parentNode.status > 0;
+          return parentNode && parentNode.status > STATUS.ACTIVE;
         });
         
         if (allParentsMastered) {
-          knowledgeGraph.nodes[childNodeIndex].status = 0;
+          knowledgeGraph.nodes[childNodeIndex].status = STATUS.ACTIVE;
           userProgress.activeNodes.push(childNode.id);
           unlockedNodes.push(childNode.id);
         }
@@ -171,7 +197,8 @@ app.post('/api/verify', (req, res) => {
   const { nodeId, explanation, audioData } = req.body;
   
   // Find the node
-  const node = knowledgeGraph.nodes.find(n => n.id === nodeId);
+  const nodeIndex = knowledgeGraph.nodes.findIndex(n => n.id === nodeId);
+  const node = knowledgeGraph.nodes[nodeIndex];
   
   if (!node) {
     return res.status(404).json({
@@ -180,6 +207,14 @@ app.post('/api/verify', (req, res) => {
     });
   }
   
+  if (node.status === STATUS.LOCKED) {
+    return res.status(400).json({
+      success: false,
+      message: 'Node is locked. Complete prerequisites first.',
+      currentStatus: node.status
+    });
+  }
+
   // Simulated AI verification (in production, this would call an LLM)
   const wordCount = explanation ? explanation.split(' ').length : 0;
   const hasKeywords = explanation && explanation.toLowerCase().includes('data');
@@ -203,17 +238,32 @@ app.post('/api/verify', (req, res) => {
   // Random bonus (simulating AI confidence)
   score += Math.floor(Math.random() * 30);
 
-  // Mark node as mastered
-  knowledgeGraph.nodes[nodeIndex].status = score;
-  userProgress.masteredNodes.push(nodeId);
-  userProgress.completedChallenges += 1;
+  const previousBestScore = node.status > STATUS.ACTIVE ? node.status : null;
+  const bestScore = previousBestScore === null ? null : Math.max(previousBestScore, score);
+  const scoreDelta = previousBestScore === null ? null : score - previousBestScore;
+  const scoreDeltaPercent = previousBestScore
+    ? Number((((score - previousBestScore) / previousBestScore) * 100).toFixed(2))
+    : null;
+  const improvedBest = previousBestScore === null ? true : score > previousBestScore;
   
   const passed = score >= 70;
+
+  // Persist best score only for already-mastered nodes; active-node completion happens in /complete.
+  if (previousBestScore !== null) {
+    knowledgeGraph.nodes[nodeIndex].status = bestScore;
+  }
+  userProgress.completedChallenges += 1;
   
   res.json({
     success: true,
     passed,
     score,
+    attemptScore: score,
+    previousBestScore,
+    bestScore: bestScore === null ? score : bestScore,
+    scoreDelta,
+    scoreDeltaPercent,
+    improvedBest,
     feedback: feedback.join('. '),
     message: passed 
       ? `Excellent! You clearly understand ${node.label}.` 
@@ -233,9 +283,9 @@ app.post('/api/reset', (req, res) => {
     if (node.id === 'programming-basics') {
       knowledgeGraph.nodes[index].status = 95;
     } else if (node.id === 'data-structures' || node.id === 'algorithms') {
-      knowledgeGraph.nodes[index].status = 0;
+      knowledgeGraph.nodes[index].status = STATUS.ACTIVE;
     } else {
-      knowledgeGraph.nodes[index].status = -1;
+      knowledgeGraph.nodes[index].status = STATUS.LOCKED;
     }
   });
   

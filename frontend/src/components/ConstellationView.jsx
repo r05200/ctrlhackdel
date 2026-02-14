@@ -5,8 +5,26 @@ import { fetchKnowledgeGraph, completeNode, verifyExplanation, generateCustomTre
 import BossFightModal from './BossFightModal';
 import ConstellationLoader from './ConstellationLoader';
 
+const normalizeNodeStatus = (node) => {
+  if (typeof node.status === 'number') {
+    if (node.status > 0) return 'mastered';
+    if (node.status === 0) return 'active';
+    return 'locked';
+  }
+  return node.status;
+};
+
+const getNodeBestScore = (node) => {
+  if (typeof node.status === 'number' && node.status > 0) {
+    return node.status;
+  }
+  return node.score || null;
+};
+
 // Constellation-style node positioning
 function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = false }) {
+  const normalizedStatus = normalizeNodeStatus(node);
+
   const getNodeStyle = (status) => {
     switch (status) {
       case 'mastered':
@@ -19,7 +37,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
     }
   };
 
-  const nodeStyle = getNodeStyle(node.status);
+  const nodeStyle = getNodeStyle(normalizedStatus);
   const baseColor = '#ffffff';
   const size = nodeStyle.size;
 
@@ -355,7 +373,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
         style={{
           left: `${size + 15}px`,
           top: 'calc(50% + 20px)',
-          color: node.status === 'mastered' ? '#60a5fa' : node.status === 'active' ? '#99ff00' : '#888888',
+          color: normalizedStatus === 'mastered' ? '#60a5fa' : normalizedStatus === 'active' ? '#99ff00' : '#888888',
           opacity: nodeStyle.opacity * 0.8,
           textShadow: `0 0 8px rgba(255, 255, 255, ${nodeStyle.opacity * 0.4})`,
           pointerEvents: 'none',
@@ -365,7 +383,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
         animate={{ opacity: nodeStyle.opacity * 0.8 }}
         transition={{ delay: node.level * 0.15 + 0.6, duration: 0.8 }}
       >
-        {node.status === 'mastered' ? `Score: ${node.score || 95}%` : 'Incomplete'}
+        {normalizedStatus === 'mastered' ? `Best Score: ${getNodeBestScore(node) || 95}%` : 'Incomplete'}
       </motion.div>
     </motion.div>
   );
@@ -423,9 +441,10 @@ function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [] }
         let strokeWidth = 0.5;
         let strokeColor = '#ffffff';
         
-        if (sourceNode?.status === 'mastered' || sourceNode?.status === 'active') {
-          strokeOpacity = sourceNode.status === 'mastered' ? 0.25 : 0.15;
-          strokeWidth = sourceNode.status === 'mastered' ? 1 : 0.7;
+        const sourceStatus = sourceNode ? normalizeNodeStatus(sourceNode) : 'locked';
+        if (sourceStatus === 'mastered' || sourceStatus === 'active') {
+          strokeOpacity = sourceStatus === 'mastered' ? 0.25 : 0.15;
+          strokeWidth = sourceStatus === 'mastered' ? 1 : 0.7;
         }
 
         // Neural animation for newly unlocked edges
@@ -561,21 +580,20 @@ export default function ConstellationView({ onBack, userPrompt }) {
   // Handle node click - open boss fight for active nodes
   const handleNodeClick = (node) => {
     setSelectedNode(node);
-    if (node.status === 'active') {
+    const normalizedStatus = normalizeNodeStatus(node);
+    if (normalizedStatus === 'active' || normalizedStatus === 'mastered') {
       setCurrentBossNode(node);
       setShowBossFight(true);
     }
   };
 
   // Handle boss fight completion
-  const handleBossFightComplete = async (nodeId, explanation) => {
+  const handleBossFightComplete = async (nodeId, explanation, verificationResult) => {
     try {
-      // First verify the explanation
-      const verifyResult = await verifyExplanation(nodeId, explanation);
-      
+      const verifyResult = verificationResult || await verifyExplanation(nodeId, explanation);
       if (verifyResult.passed) {
         // If passed, complete the node
-        const result = await completeNode(nodeId);
+        const result = await completeNode(nodeId, verifyResult.bestScore || verifyResult.score);
         
         if (result.success) {
           // Create updated graph data
@@ -585,7 +603,8 @@ export default function ConstellationView({ onBack, userPrompt }) {
           const completedNode = updatedGraph.nodes.find(n => n.id === nodeId);
           if (completedNode) {
             completedNode.status = 'mastered';
-            completedNode.score = verifyResult.score || 95;
+            const bestScore = verifyResult.bestScore || verifyResult.score || completedNode.score || 95;
+            completedNode.score = bestScore;
           }
           
           // Find all nodes that depend on this completed node (targets of outgoing links)
@@ -599,7 +618,7 @@ export default function ConstellationView({ onBack, userPrompt }) {
           // Unlock dependent nodes
           dependentNodeIds.forEach(targetId => {
             const targetNode = updatedGraph.nodes.find(n => n.id === targetId);
-            if (targetNode && targetNode.status === 'locked') {
+            if (targetNode && normalizeNodeStatus(targetNode) === 'locked') {
               targetNode.status = 'active';
             }
           });
@@ -637,6 +656,17 @@ export default function ConstellationView({ onBack, userPrompt }) {
           if (dependentNodeIds.length > 0) {
             console.log('🔓 Unlocked:', dependentNodeIds);
           }
+
+          const previousBest = verifyResult.previousBestScore;
+          const currentBest = verifyResult.bestScore || verifyResult.score;
+          const deltaPercent = verifyResult.scoreDeltaPercent;
+          const deltaDisplay = deltaPercent === null || deltaPercent === undefined
+            ? 'N/A (first completion)'
+            : `${deltaPercent >= 0 ? '+' : ''}${deltaPercent}% vs previous best`;
+          const bestChangeLine = previousBest === null || previousBest === undefined
+            ? `Best Score: ${currentBest}/100`
+            : `Best Score: ${previousBest}/100 -> ${currentBest}/100`;
+          alert(`Practice result:\nAttempt Score: ${verifyResult.score}/100\n${bestChangeLine}\nChange: ${deltaDisplay}`);
         }
       } else {
         // Show feedback to user
@@ -835,13 +865,13 @@ export default function ConstellationView({ onBack, userPrompt }) {
               </motion.span>
               <motion.span 
                 className={`px-3 py-1 rounded text-xs font-semibold border ${
-                  selectedNode.status === 'mastered' ? 'bg-white/30 border-white text-white' :
-                  selectedNode.status === 'active' ? 'bg-white/20 border-white/70 text-white/80' :
+                  normalizeNodeStatus(selectedNode) === 'mastered' ? 'bg-white/30 border-white text-white' :
+                  normalizeNodeStatus(selectedNode) === 'active' ? 'bg-white/20 border-white/70 text-white/80' :
                   'bg-white/10 border-white/30 text-white/40'
                 }`}
                 whileHover={{ scale: 1.05 }}
               >
-                {selectedNode.status.toUpperCase()}
+                {normalizeNodeStatus(selectedNode).toUpperCase()}
               </motion.span>
             </div>
           </motion.div>
