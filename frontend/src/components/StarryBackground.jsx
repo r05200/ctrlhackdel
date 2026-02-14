@@ -1,25 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
+import FIXED_STARS from '../data/stars';
 
-const MAX_STARS = 30;
 const METEOR_ANGLE_DEG = 22.6;
 const METEOR_ANGLE_RAD = (METEOR_ANGLE_DEG * Math.PI) / 180;
-// Delay meteors until after main screen is fully visible (sidebar animations take ~1s)
-const METEOR_INITIAL_DELAY = 2.5; // seconds
-
-function createStar(id) {
-  const pulseDuration = 3 + Math.random() * 3;
-  const pulseCount = 3 + Math.floor(Math.random() * 4);
-  const totalLife = pulseDuration * pulseCount;
-  return {
-    id,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 2 + 0.5,
-    pulseDuration,
-    totalLife,
-    createdAt: Date.now(),
-  };
-}
+const METEOR_INITIAL_DELAY = 3.0; // seconds
 
 function createMeteor(id) {
   // Get screen dimensions
@@ -56,10 +40,15 @@ function createMeteor(id) {
   const travelX = totalDist * cosA;
   const travelY = totalDist * sinA;
 
+  // Base duration with +/-10% speed variation
+  const baseDuration = 6;
+  const speedVariation = 0.9 + Math.random() * 0.2; // 0.9 to 1.1 (±10%)
+  const duration = baseDuration * speedVariation;
+
   return {
     id,
-    duration: 5 + Math.random() * 3,
-    delay: METEOR_INITIAL_DELAY + Math.random() * 18,
+    duration,
+    delay: (METEOR_INITIAL_DELAY * 0.9) + Math.random() * (18 * 0.9),
     initialOpacity: 0.3 + Math.random() * 0.7,
     scale: 0.5 + Math.random() * 0.9,
     startX,
@@ -69,79 +58,88 @@ function createMeteor(id) {
   };
 }
 
-function StarryBackground({ hideMeteors = false }) {
-  const nextId = useRef(0);
-  const [twinkleStars, setTwinkleStars] = useState(() => {
-    const stars = [];
-    for (let i = 0; i < MAX_STARS; i++) {
-      const star = createStar(nextId.current++);
-      star.createdAt = Date.now() + Math.random() * 10000;
-      stars.push(star);
-    }
-    return stars;
-  });
+function StarryBackground({ hideMeteors = false, splashDone = false }) {
+  const [phase, setPhase] = useState('hidden'); // 'hidden' -> 'landing' -> 'static' -> 'twinkle'
+  const [visibleStars, setVisibleStars] = useState(FIXED_STARS); // Only render stars in viewport
 
+  // When splashDone flips to true, start the landing animation
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTwinkleStars(prev => {
-        const now = Date.now();
-        return prev.map(star => {
-          const elapsed = (now - star.createdAt) / 1000;
-          if (elapsed > star.totalLife) {
-            return createStar(nextId.current++);
-          }
-          return star;
-        });
-      });
-    }, 2000);
-    return () => clearInterval(interval);
+    if (!splashDone) return;
+    setPhase('landing');
+    const t1 = setTimeout(() => setPhase('static'), 800);
+    const t2 = setTimeout(() => setPhase('twinkle'), 1000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [splashDone]);
+
+  // Filter visible stars: only render stars within screen bounds with padding
+  useEffect(() => {
+    const filterVisibleStars = () => {
+      const padding = 10; // 10% padding outside screen
+      setVisibleStars(FIXED_STARS.filter(star => {
+        return star.x >= -padding && star.x <= 100 + padding &&
+               star.y >= -padding && star.y <= 100 + padding;
+      }));
+    };
+    filterVisibleStars();
   }, []);
 
   const [meteors, setMeteors] = useState([]);
   const meteorIdRef = useRef(0);
+  const timerRefs = useRef({});
 
   // Delay meteor generation until after sidebar animations complete
   useEffect(() => {
     const timer = setTimeout(() => {
       const m = [];
       for (let i = 0; i < 8; i++) {
-        m.push(createMeteor(meteorIdRef.current++));
+        const newMeteor = createMeteor(meteorIdRef.current++);
+        m.push(newMeteor);
+        // Set up regeneration timer for this meteor
+        const totalDuration = (newMeteor.delay + newMeteor.duration) * 1000;
+        timerRefs.current[newMeteor.id] = setTimeout(() => {
+          regenerateMeteor(newMeteor.id);
+        }, totalDuration);
       }
       setMeteors(m);
     }, METEOR_INITIAL_DELAY * 1000);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      // Clear all regeneration timers on unmount
+      Object.values(timerRefs.current).forEach(clearTimeout);
+    };
   }, []);
 
-  // Regenerate each meteor individually after its animation completes
-  useEffect(() => {
-    if (meteors.length === 0) return;
+  // Function to regenerate a single meteor with new random spawn
+  const regenerateMeteor = (oldId) => {
+    const newMeteor = createMeteor(meteorIdRef.current++);
+    setMeteors(prev => prev.map(m => m.id === oldId ? newMeteor : m));
     
-    const timers = meteors.map((meteor) => {
-      const totalDuration = (meteor.delay + meteor.duration) * 1000;
-      return setTimeout(() => {
-        setMeteors(prev => 
-          prev.map(m => m.id === meteor.id ? createMeteor(meteorIdRef.current++) : m)
-        );
-      }, totalDuration);
-    });
-    
-    return () => timers.forEach(clearTimeout);
-  }, [meteors]);
+    // Set up next regeneration for this new meteor
+    const totalDuration = (newMeteor.delay + newMeteor.duration) * 1000;
+    timerRefs.current[newMeteor.id] = setTimeout(() => {
+      regenerateMeteor(newMeteor.id);
+    }, totalDuration);
+  };
 
   return (
     <div className="starry-background">
-      {twinkleStars.map(star => (
+      {/* Fixed stars — landing streak -> static -> subtle twinkle */}
+      {phase !== 'hidden' && visibleStars.map((star, i) => (
         <div
           key={star.id}
-          className="bg-twinkle-star"
+          className={phase === 'landing' ? 'star-landing' : 'bg-twinkle-star'}
           style={{
             left: `${star.x}%`,
             top: `${star.y}%`,
             width: `${star.size}px`,
             height: `${star.size}px`,
-            '--pulse-duration': `${star.pulseDuration}s`,
-            '--total-life': `${star.totalLife}s`,
-            animation: `star-pulse ${star.pulseDuration}s ease-in-out infinite, star-lifecycle ${star.totalLife}s ease-in-out forwards`,
+            ...(phase === 'landing' ? {
+              '--travel-down': `${300 + (i % 5) * 50}px`,
+              '--streak-len': `${12 + (i % 6) * 5}px`,
+            } : phase === 'twinkle' ? {
+              animation: `star-twinkle-forever ${3 + (i % 5)}s ease-in-out infinite`,
+              animationDelay: `${(i * 0.15) % 4}s`,
+            } : {}),
           }}
         />
       ))}

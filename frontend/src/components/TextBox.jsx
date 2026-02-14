@@ -19,7 +19,7 @@ function TextBox({ onSubmit }) {
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Enter text here..." 
-            className="w-full p-4 bg-gray-800 border border-gray-700 rounded-full text-white focus:outline-none pl-14" 
+            className="w-full p-4 bg-gray-800 border border-gray-700 rounded-full text-white focus:outline-none pl-[72px]" 
           />
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
             <UploadButton />
