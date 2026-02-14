@@ -6,6 +6,29 @@
   background: #000000;
 }
 
+.sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+}
+
+.header {
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: 50;
+  background: #0a0a0a;
+  border-bottom: 1px solid #222222;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+}
+
+
 /* Loading Overlay */
 .loading-overlay {
   position: fixed;
@@ -316,5 +339,291 @@
   
   .stat-value {
     font-size: 20px;
+  }
+}
+
+/* Gentle pulsating animation */
+@keyframes gentle-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-gentle-pulse {
+  animation: gentle-pulse 6s ease-in-out infinite;
+}
+
+/* ===== Splash Screen ===== */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.splash-content {
+  text-align: center;
+  transform: scale(1);
+  opacity: 1;
+}
+
+.splash-title {
+  font-size: 2.8rem;
+  font-weight: 300;
+  color: #e5e7eb;
+  letter-spacing: 0.02em;
+  user-select: none;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.splash-title-transition {
+  animation: text-fade-transition 0.8s ease-in-out;
+}
+
+.splash-title-fade-out {
+  animation: text-fade-out 1s ease-in-out forwards;
+}
+
+@keyframes text-fade-transition {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes text-fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.splash-hint {
+  margin-top: 2.5rem;
+  font-size: 1rem;
+  font-weight: 300;
+  color: #9ca3af;
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+  user-select: none;
+}
+
+.splash-hint-visible {
+  opacity: 0.85;
+}
+
+/* Splash exit — text slides off bottom (looking up effect) */
+.splash-exit .splash-content {
+  animation: splash-slide-down 2000ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes splash-slide-down {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh);
+    opacity: 0;
+  }
+}
+
+/* Splash stars — appear gradually */
+.splash-star-gradual {
+  position: absolute;
+  background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 40%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  animation: star-gradual-appear 1.2s ease-out forwards;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8),
+              0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+@keyframes star-gradual-appear {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.splash-exit .splash-star-gradual {
+  animation: star-fade 2000ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes star-fade {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* ===== Starry Background (main page) ===== */
+.starry-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-twinkle-star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+/* Repeating pulse animation */
+@keyframes star-pulse {
+  0%, 100% {
+    opacity: 0.05;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.2);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+  }
+}
+
+/* One-shot lifecycle: fade in, stay, fade out */
+@keyframes star-lifecycle {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Streaks — diagonal meteors at 22.6° angle */
+.meteor {
+  position: absolute;
+  width: 140px;
+  height: 2px;
+  background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.05) 20%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.7));
+  border-radius: 2px;
+  transform: rotate(22.6deg) scale(var(--scale, 1));
+  animation: meteor-travel linear infinite;
+}
+
+/*
+ * Trig: angle = 22.6°
+ * Each meteor calculates its own travel-x and travel-y based on screen size
+ * so x and y components arrive at the endpoint simultaneously.
+ * cos(22.6°) ≈ 0.924, sin(22.6°) ≈ 0.384
+ * travelX = dist * cos(22.6°), travelY = dist * sin(22.6°)
+ * Both reach endpoint at 100% → same duration → equal arrival time.
+ */
+@keyframes meteor-travel {
+  0% {
+    transform: translate(0, 0) rotate(22.6deg) scale(var(--scale, 1));
+    opacity: 0;
+  }
+  3% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(var(--travel-x), var(--travel-y)) rotate(22.6deg) scale(var(--scale, 1));
+    opacity: 0;
+  }
+}
+
+/* Main content entrance — 'looking up' animation */
+.main-enter {
+  animation: none;
+}
+
+.main-enter .header {
+  animation: header-slide-down 1000ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes header-slide-down {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.main-enter .header > * {
+  animation: content-fade-in 600ms ease-out 800ms forwards;
+  opacity: 0;
+}
+
+.main-enter .sidebar {
+  animation: sidebar-fade-in 1000ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes sidebar-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.main-enter .sidebar > * > * {
+  animation: content-fade-in 600ms ease-out 800ms forwards;
+  opacity: 0;
+}
+
+.main-enter .flex-1.p-4 {
+  animation: main-content-rise 1200ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes main-content-rise {
+  0% {
+    transform: translateY(-60px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes content-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }
