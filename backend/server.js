@@ -13,19 +13,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // In-memory database (for hackathon speed)
 let knowledgeGraph = {
   nodes: [
-    { id: 'programming-basics', label: 'Programming\nBasics', status: 'mastered', level: 1, description: 'Variables, loops, conditionals' },
-    { id: 'data-structures', label: 'Data\nStructures', status: 'active', level: 2, description: 'Arrays, Lists, Hash Tables' },
-    { id: 'algorithms', label: 'Algorithms', status: 'locked', level: 2, description: 'Sorting, Searching, Complexity' },
-    { id: 'linear-algebra', label: 'Linear\nAlgebra', status: 'locked', level: 3, description: 'Vectors, Matrices, Eigenvalues' },
-    { id: 'statistics', label: 'Statistics &\nProbability', status: 'locked', level: 3, description: 'Distributions, Hypothesis Testing' },
-    { id: 'calculus', label: 'Calculus', status: 'locked', level: 3, description: 'Derivatives, Integrals, Optimization' },
-    { id: 'python', label: 'Python for\nML', status: 'locked', level: 4, description: 'NumPy, Pandas, Matplotlib' },
-    { id: 'ml-basics', label: 'Machine\nLearning Basics', status: 'locked', level: 4, description: 'Supervised vs Unsupervised Learning' },
-    { id: 'neural-networks', label: 'Neural\nNetworks', status: 'locked', level: 5, description: 'Perceptrons, Backpropagation' },
-    { id: 'deep-learning', label: 'Deep\nLearning', status: 'locked', level: 5, description: 'CNNs, RNNs, Transformers' },
-    { id: 'computer-vision', label: 'Computer\nVision', status: 'locked', level: 6, description: 'Image Recognition, Object Detection' },
-    { id: 'nlp', label: 'Natural Language\nProcessing', status: 'locked', level: 6, description: 'Text Analysis, LLMs' },
-    { id: 'reinforcement-learning', label: 'Reinforcement\nLearning', status: 'locked', level: 6, description: 'Q-Learning, Policy Gradients' },
+    { id: 'programming-basics', label: 'Programming\nBasics', status: 95, level: 1, description: 'Variables, loops, conditionals' },
+    { id: 'data-structures', label: 'Data\nStructures', status: 0, level: 2, description: 'Arrays, Lists, Hash Tables' },
+    { id: 'algorithms', label: 'Algorithms', status: -1, level: 2, description: 'Sorting, Searching, Complexity' },
+    { id: 'linear-algebra', label: 'Linear\nAlgebra', status: -1, level: 3, description: 'Vectors, Matrices, Eigenvalues' },
+    { id: 'statistics', label: 'Statistics &\nProbability', status: -1, level: 3, description: 'Distributions, Hypothesis Testing' },
+    { id: 'calculus', label: 'Calculus', status: -1, level: 3, description: 'Derivatives, Integrals, Optimization' },
+    { id: 'python', label: 'Python for\nML', status: -1, level: 4, description: 'NumPy, Pandas, Matplotlib' },
+    { id: 'ml-basics', label: 'Machine\nLearning Basics', status: -1, level: 4, description: 'Supervised vs Unsupervised Learning' },
+    { id: 'neural-networks', label: 'Neural\nNetworks', status: -1, level: 5, description: 'Perceptrons, Backpropagation' },
+    { id: 'deep-learning', label: 'Deep\nLearning', status: -1, level: 5, description: 'CNNs, RNNs, Transformers' },
+    { id: 'computer-vision', label: 'Computer\nVision', status: -1, level: 6, description: 'Image Recognition, Object Detection' },
+    { id: 'nlp', label: 'Natural Language\nProcessing', status: -1, level: 6, description: 'Text Analysis, LLMs' },
+    { id: 'reinforcement-learning', label: 'Reinforcement\nLearning', status: -1, level: 6, description: 'Q-Learning, Policy Gradients' },
   ],
   links: [
     { source: 'programming-basics', target: 'data-structures' },
@@ -85,10 +85,10 @@ app.get('/api/graph', (req, res) => {
 app.get('/api/progress', (req, res) => {
   const stats = {
     total: knowledgeGraph.nodes.length,
-    mastered: knowledgeGraph.nodes.filter(n => n.status === 'mastered').length,
-    active: knowledgeGraph.nodes.filter(n => n.status === 'active').length,
-    locked: knowledgeGraph.nodes.filter(n => n.status === 'locked').length,
-    percentage: Math.round((knowledgeGraph.nodes.filter(n => n.status === 'mastered').length / knowledgeGraph.nodes.length) * 100)
+    mastered: knowledgeGraph.nodes.filter(n => n.status > 0).length,
+    active: knowledgeGraph.nodes.filter(n => n.status === 0).length,
+    locked: knowledgeGraph.nodes.filter(n => n.status === -1).length,
+    percentage: Math.round((knowledgeGraph.nodes.filter(n => n.status > 0).length / knowledgeGraph.nodes.length) * 100)
   };
   
   res.json({
@@ -114,18 +114,13 @@ app.post('/api/node/:nodeId/complete', (req, res) => {
   
   const node = knowledgeGraph.nodes[nodeIndex];
   
-  if (node.status !== 'active') {
+  if (node.status !== 0) {
     return res.status(400).json({
       success: false,
       message: 'Node is not active. Complete prerequisites first.',
       currentStatus: node.status
     });
   }
-  
-  // Mark node as mastered
-  knowledgeGraph.nodes[nodeIndex].status = 'mastered';
-  userProgress.masteredNodes.push(nodeId);
-  userProgress.completedChallenges += 1;
   
   // Find and unlock child nodes
   const childLinks = knowledgeGraph.links.filter(link => link.source === nodeId);
@@ -136,16 +131,16 @@ app.post('/api/node/:nodeId/complete', (req, res) => {
     if (childNodeIndex !== -1) {
       const childNode = knowledgeGraph.nodes[childNodeIndex];
       
-      if (childNode.status === 'locked') {
+      if (childNode.status === -1) {
         // Check if all parent nodes are mastered
         const parentLinks = knowledgeGraph.links.filter(l => l.target === childNode.id);
         const allParentsMastered = parentLinks.every(parentLink => {
           const parentNode = knowledgeGraph.nodes.find(n => n.id === parentLink.source);
-          return parentNode && parentNode.status === 'mastered';
+          return parentNode && parentNode.status > 0;
         });
         
         if (allParentsMastered) {
-          knowledgeGraph.nodes[childNodeIndex].status = 'active';
+          knowledgeGraph.nodes[childNodeIndex].status = 0;
           userProgress.activeNodes.push(childNode.id);
           unlockedNodes.push(childNode.id);
         }
@@ -197,6 +192,11 @@ app.post('/api/verify', (req, res) => {
   
   // Random bonus (simulating AI confidence)
   score += Math.floor(Math.random() * 30);
+
+  // Mark node as mastered
+  knowledgeGraph.nodes[nodeIndex].status = score;
+  userProgress.masteredNodes.push(nodeId);
+  userProgress.completedChallenges += 1;
   
   const passed = score >= 70;
   
@@ -221,11 +221,11 @@ app.post('/api/reset', (req, res) => {
   // Reset all nodes
   knowledgeGraph.nodes.forEach((node, index) => {
     if (node.id === 'programming-basics') {
-      knowledgeGraph.nodes[index].status = 'mastered';
+      knowledgeGraph.nodes[index].status = 95;
     } else if (node.id === 'data-structures' || node.id === 'algorithms') {
-      knowledgeGraph.nodes[index].status = 'active';
+      knowledgeGraph.nodes[index].status = 0;
     } else {
-      knowledgeGraph.nodes[index].status = 'locked';
+      knowledgeGraph.nodes[index].status = -1;
     }
   });
   
@@ -283,17 +283,17 @@ function generateLearningTree(topic) {
 function generateReactTree() {
   return {
     nodes: [
-      { id: 'html-css', label: 'HTML & CSS\nBasics', status: 'mastered', level: 1, description: 'Web page structure and styling' },
-      { id: 'javascript', label: 'JavaScript\nFundamentals', status: 'active', level: 2, description: 'JS syntax, functions, DOM manipulation' },
-      { id: 'es6', label: 'ES6+\nFeatures', status: 'locked', level: 2, description: 'Arrow functions, destructuring, modules' },
-      { id: 'react-basics', label: 'React\nBasics', status: 'locked', level: 3, description: 'Components, JSX, Props' },
-      { id: 'state-props', label: 'State &\nProps', status: 'locked', level: 3, description: 'Managing component state' },
-      { id: 'hooks', label: 'React\nHooks', status: 'locked', level: 4, description: 'useState, useEffect, custom hooks' },
-      { id: 'routing', label: 'React\nRouter', status: 'locked', level: 4, description: 'Navigation and routing' },
-      { id: 'state-management', label: 'State\nManagement', status: 'locked', level: 5, description: 'Redux, Context API, Zustand' },
-      { id: 'api-integration', label: 'API\nIntegration', status: 'locked', level: 5, description: 'Fetch, Axios, async operations' },
-      { id: 'performance', label: 'React\nPerformance', status: 'locked', level: 6, description: 'Optimization, memoization' },
-      { id: 'testing', label: 'Testing\nReact Apps', status: 'locked', level: 6, description: 'Jest, React Testing Library' },
+      { id: 'html-css', label: 'HTML & CSS\nBasics', status: 95, level: 1, description: 'Web page structure and styling' },
+      { id: 'javascript', label: 'JavaScript\nFundamentals', status: 0, level: 2, description: 'JS syntax, functions, DOM manipulation' },
+      { id: 'es6', label: 'ES6+\nFeatures', status: -1, level: 2, description: 'Arrow functions, destructuring, modules' },
+      { id: 'react-basics', label: 'React\nBasics', status: -1, level: 3, description: 'Components, JSX, Props' },
+      { id: 'state-props', label: 'State &\nProps', status: -1, level: 3, description: 'Managing component state' },
+      { id: 'hooks', label: 'React\nHooks', status: -1, level: 4, description: 'useState, useEffect, custom hooks' },
+      { id: 'routing', label: 'React\nRouter', status: -1, level: 4, description: 'Navigation and routing' },
+      { id: 'state-management', label: 'State\nManagement', status: -1, level: 5, description: 'Redux, Context API, Zustand' },
+      { id: 'api-integration', label: 'API\nIntegration', status: -1, level: 5, description: 'Fetch, Axios, async operations' },
+      { id: 'performance', label: 'React\nPerformance', status: -1, level: 6, description: 'Optimization, memoization' },
+      { id: 'testing', label: 'Testing\nReact Apps', status: -1, level: 6, description: 'Jest, React Testing Library' },
     ],
     links: [
       { source: 'html-css', target: 'javascript' },
@@ -314,16 +314,16 @@ function generateReactTree() {
 function generatePythonTree() {
   return {
     nodes: [
-      { id: 'python-basics', label: 'Python\nBasics', status: 'mastered', level: 1, description: 'Variables, data types, operators' },
-      { id: 'control-flow', label: 'Control\nFlow', status: 'active', level: 2, description: 'If/else, loops, functions' },
-      { id: 'data-structures', label: 'Data\nStructures', status: 'locked', level: 2, description: 'Lists, dicts, sets, tuples' },
-      { id: 'oop', label: 'Object-Oriented\nProgramming', status: 'locked', level: 3, description: 'Classes, inheritance, polymorphism' },
-      { id: 'file-handling', label: 'File\nHandling', status: 'locked', level: 3, description: 'Reading/writing files, CSV, JSON' },
-      { id: 'libraries', label: 'Popular\nLibraries', status: 'locked', level: 4, description: 'NumPy, Pandas, Matplotlib' },
-      { id: 'web-frameworks', label: 'Web\nFrameworks', status: 'locked', level: 4, description: 'Flask, Django,FastAPI' },
-      { id: 'apis', label: 'APIs &\nRequests', status: 'locked', level: 5, description: 'REST APIs, requests library' },
-      { id: 'testing', label: 'Testing &\nDebugging', status: 'locked', level: 5, description: 'Pytest, unittest, debugging' },
-      { id: 'deployment', label: 'Deployment', status: 'locked', level: 6, description: 'Docker, cloud deployment' },
+      { id: 'python-basics', label: 'Python\nBasics', status: 95, level: 1, description: 'Variables, data types, operators' },
+      { id: 'control-flow', label: 'Control\nFlow', status: 0, level: 2, description: 'If/else, loops, functions' },
+      { id: 'data-structures', label: 'Data\nStructures', status: -1, level: 2, description: 'Lists, dicts, sets, tuples' },
+      { id: 'oop', label: 'Object-Oriented\nProgramming', status: -1, level: 3, description: 'Classes, inheritance, polymorphism' },
+      { id: 'file-handling', label: 'File\nHandling', status: -1, level: 3, description: 'Reading/writing files, CSV, JSON' },
+      { id: 'libraries', label: 'Popular\nLibraries', status: -1, level: 4, description: 'NumPy, Pandas, Matplotlib' },
+      { id: 'web-frameworks', label: 'Web\nFrameworks', status: -1, level: 4, description: 'Flask, Django,FastAPI' },
+      { id: 'apis', label: 'APIs &\nRequests', status: -1, level: 5, description: 'REST APIs, requests library' },
+      { id: 'testing', label: 'Testing &\nDebugging', status: -1, level: 5, description: 'Pytest, unittest, debugging' },
+      { id: 'deployment', label: 'Deployment', status: -1, level: 6, description: 'Docker, cloud deployment' },
     ],
     links: [
       { source: 'python-basics', target: 'control-flow' },
@@ -347,16 +347,16 @@ function generateMLTree() {
 function generateWebDevTree() {
   return {
     nodes: [
-      { id: 'html', label: 'HTML\nFundamentals', status: 'mastered', level: 1, description: 'Structure and semantics' },
-      { id: 'css', label: 'CSS\nStyling', status: 'active', level: 2, description: 'Selectors, box model, flexbox' },
-      { id: 'javascript', label: 'JavaScript\nBasics', status: 'locked', level: 2, description: 'DOM manipulation, events' },
-      { id: 'responsive', label: 'Responsive\nDesign', status: 'locked', level: 3, description: 'Media queries, mobile-first' },
-      { id: 'frameworks', label: 'CSS\nFrameworks', status: 'locked', level: 3, description: 'Bootstrap, Tailwind' },
-      { id: 'frontend-framework', label: 'Frontend\nFramework', status: 'locked', level: 4, description: 'React, Vue, or Angular' },
-      { id: 'backend-basics', label: 'Backend\nBasics', status: 'locked', level: 4, description: 'Node.js, APIs, databases' },
-      { id: 'databases', label: 'Databases', status: 'locked', level: 5, description: 'SQL, MongoDB, Postgres' },
-      { id: 'authentication', label: 'Authentication', status: 'locked', level: 5, description: 'JWT, OAuth, sessions' },
-      { id: 'deployment', label: 'Deployment', status: 'locked', level: 6, description: 'Hosting, CI/CD, domains' },
+      { id: 'html', label: 'HTML\nFundamentals', status: 95, level: 1, description: 'Structure and semantics' },
+      { id: 'css', label: 'CSS\nStyling', status: 0, level: 2, description: 'Selectors, box model, flexbox' },
+      { id: 'javascript', label: 'JavaScript\nBasics', status: -1, level: 2, description: 'DOM manipulation, events' },
+      { id: 'responsive', label: 'Responsive\nDesign', status: -1, level: 3, description: 'Media queries, mobile-first' },
+      { id: 'frameworks', label: 'CSS\nFrameworks', status: -1, level: 3, description: 'Bootstrap, Tailwind' },
+      { id: 'frontend-framework', label: 'Frontend\nFramework', status: -1, level: 4, description: 'React, Vue, or Angular' },
+      { id: 'backend-basics', label: 'Backend\nBasics', status: -1, level: 4, description: 'Node.js, APIs, databases' },
+      { id: 'databases', label: 'Databases', status: -1, level: 5, description: 'SQL, MongoDB, Postgres' },
+      { id: 'authentication', label: 'Authentication', status: -1, level: 5, description: 'JWT, OAuth, sessions' },
+      { id: 'deployment', label: 'Deployment', status: -1, level: 6, description: 'Hosting, CI/CD, domains' },
     ],
     links: [
       { source: 'html', target: 'css' },
@@ -376,15 +376,15 @@ function generateWebDevTree() {
 function generateDataScienceTree() {
   return {
     nodes: [
-      { id: 'python-basics', label: 'Python\nBasics', status: 'mastered', level: 1, description: 'Variables, functions, data types' },
-      { id: 'numpy', label: 'NumPy', status: 'active', level: 2, description: 'Arrays, mathematical operations' },
-      { id: 'pandas', label: 'Pandas', status: 'locked', level: 2, description: 'DataFrames, data manipulation' },
-      { id: 'visualization', label: 'Data\nVisualization', status: 'locked', level: 3, description: 'Matplotlib, Seaborn, Plotly' },
-      { id: 'statistics', label: 'Statistics', status: 'locked', level: 3, description: 'Descriptive, inferential stats' },
-      { id: 'ml-basics', label: 'Machine\nLearning', status: 'locked', level: 4, description: 'Scikit-learn, models, training' },
-      { id: 'deep-learning', label: 'Deep\nLearning', status: 'locked', level: 5, description: 'TensorFlow, PyTorch, neural nets' },
-      { id: 'nlp', label: 'Natural Language\nProcessing', status: 'locked', level: 6, description: 'Text analysis, transformers' },
-      { id: 'computer-vision', label: 'Computer\nVision', status: 'locked', level: 6, description: 'Image processing, CNNs' },
+      { id: 'python-basics', label: 'Python\nBasics', status: 95, level: 1, description: 'Variables, functions, data types' },
+      { id: 'numpy', label: 'NumPy', status: 0, level: 2, description: 'Arrays, mathematical operations' },
+      { id: 'pandas', label: 'Pandas', status: -1, level: 2, description: 'DataFrames, data manipulation' },
+      { id: 'visualization', label: 'Data\nVisualization', status: -1, level: 3, description: 'Matplotlib, Seaborn, Plotly' },
+      { id: 'statistics', label: 'Statistics', status: -1, level: 3, description: 'Descriptive, inferential stats' },
+      { id: 'ml-basics', label: 'Machine\nLearning', status: -1, level: 4, description: 'Scikit-learn, models, training' },
+      { id: 'deep-learning', label: 'Deep\nLearning', status: -1, level: 5, description: 'TensorFlow, PyTorch, neural nets' },
+      { id: 'nlp', label: 'Natural Language\nProcessing', status: -1, level: 6, description: 'Text analysis, transformers' },
+      { id: 'computer-vision', label: 'Computer\nVision', status: -1, level: 6, description: 'Image processing, CNNs' },
     ],
     links: [
       { source: 'python-basics', target: 'numpy' },
@@ -407,13 +407,13 @@ function generateGenericTree(topic) {
   
   return {
     nodes: [
-      { id: 'basics', label: `${capitalizedTopic}\nBasics`, status: 'mastered', level: 1, description: 'Fundamental concepts and introduction' },
-      { id: 'fundamentals', label: 'Core\nFundamentals', status: 'active', level: 2, description: 'Essential principles and practices' },
-      { id: 'intermediate', label: 'Intermediate\nConcepts', status: 'locked', level: 3, description: 'Building on the foundations' },
-      { id: 'advanced-1', label: 'Advanced\nTopics I', status: 'locked', level: 4, description: 'Deep dive into complex areas' },
-      { id: 'advanced-2', label: 'Advanced\nTopics II', status: 'locked', level: 4, description: 'Specialized knowledge' },
-      { id: 'practical', label: 'Practical\nApplications', status: 'locked', level: 5, description: 'Real-world projects and use cases' },
-      { id: 'mastery', label: 'Mastery &\nBest Practices', status: 'locked', level: 6, description: 'Expert-level skills' },
+      { id: 'basics', label: `${capitalizedTopic}\nBasics`, status: 95, level: 1, description: 'Fundamental concepts and introduction' },
+      { id: 'fundamentals', label: 'Core\nFundamentals', status: 0, level: 2, description: 'Essential principles and practices' },
+      { id: 'intermediate', label: 'Intermediate\nConcepts', status: -1, level: 3, description: 'Building on the foundations' },
+      { id: 'advanced-1', label: 'Advanced\nTopics I', status: -1, level: 4, description: 'Deep dive into complex areas' },
+      { id: 'advanced-2', label: 'Advanced\nTopics II', status: -1, level: 4, description: 'Specialized knowledge' },
+      { id: 'practical', label: 'Practical\nApplications', status: -1, level: 5, description: 'Real-world projects and use cases' },
+      { id: 'mastery', label: 'Mastery &\nBest Practices', status: -1, level: 6, description: 'Expert-level skills' },
     ],
     links: [
       { source: 'basics', target: 'fundamentals' },
