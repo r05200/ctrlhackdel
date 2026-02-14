@@ -35,7 +35,7 @@ export const fetchUserProgress = async () => {
 };
 
 // Complete a node (after passing boss fight)
-export const completeNode = async (nodeId) => {
+export const completeNode = async (nodeId, score = null) => {
   // Debug mode: auto-return successful completion
   if (DEBUG_AUTO_PASS) {
     return {
@@ -52,6 +52,7 @@ export const completeNode = async (nodeId) => {
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ score }),
     });
     const data = await handleResponse(response);
     return data; // Returns { success, message, unlockedNodes, updatedGraph }
@@ -62,7 +63,7 @@ export const completeNode = async (nodeId) => {
 };
 
 // Debug flag to auto-pass verification
-const DEBUG_AUTO_PASS = true;
+const DEBUG_AUTO_PASS = false;
 
 // Verify user explanation (for boss fight)
 export const verifyExplanation = async (nodeId, explanation, audioData = null) => {
