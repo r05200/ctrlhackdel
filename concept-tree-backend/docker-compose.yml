@@ -18,47 +18,25 @@ services:
       timeout: 5s
       retries: 5
 
-  flask:
+  backend:
     build:
-      context: ./flask-backend
+      context: ./node-backend
       dockerfile: Dockerfile
-    container_name: concept-tree-flask
+    container_name: concept-tree-backend
     ports:
       - "5000:5000"
     environment:
       MONGO_URI: mongodb://mongodb:27017/concept-tree
-      FLASK_ENV: development
-      FLASK_DEBUG: true
+      NODE_ENV: development
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     depends_on:
       mongodb:
         condition: service_healthy
     networks:
       - concept-tree-network
     volumes:
-      - ./flask-backend:/app
-    command: python app.py
-
-  node:
-    build:
-      context: ./node-server
-      dockerfile: Dockerfile
-    container_name: concept-tree-node
-    ports:
-      - "3000:3000"
-    environment:
-      MONGO_URI: mongodb://mongodb:27017/concept-tree
-      NODE_ENV: development
-      FLASK_API_URL: http://flask:5000
-      LOG_LEVEL: debug
-    depends_on:
-      - flask
-      - mongodb
-    networks:
-      - concept-tree-network
-    volumes:
-      - ./node-server:/app
+      - ./node-backend:/app
       - /app/node_modules
-    command: npm run dev
 
 networks:
   concept-tree-network:
@@ -71,4 +49,4 @@ volumes:
 # docker-compose up              # Start all services
 # docker-compose down            # Stop all services
 # docker-compose logs -f         # View logs
-# docker-compose logs flask      # View Flask logs only
+# docker-compose logs backend    # View backend logs only

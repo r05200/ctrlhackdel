@@ -318,6 +318,7 @@
     <div class="header">
       <h1>🎓 Concept Tree Parser Demo</h1>
       <p>Transform your curriculum into an intelligent concept dependency tree</p>
+      <p style="font-size: 0.9em; opacity: 0.8; margin-top: 10px;">⚠️ <strong>Important:</strong> Each parse uses Gemini API tokens. Free tier has rate limits (~60 requests/min). Wait for processing to complete before parsing again.</p>
     </div>
 
     <div class="main-grid">
@@ -427,18 +428,42 @@
       updateStatus('Example loaded! Click "Parse with AI" to process.', 'success');
     }
 
+    let isParsing = false;
+    let lastParsedText = null;
+    let lastParsedCategory = null;
+
     async function parseText() {
       const curriculum = document.getElementById('curriculum').value.trim();
       const category = document.getElementById('category').value.trim();
+      const parseBtn = event.target;
 
       if (!curriculum) {
         updateStatus('Please enter some curriculum text first', 'error');
         return;
       }
 
-      updateStatus('🔄 Processing with Gemini AI...', 'loading');
+      // Prevent duplicate parsing
+      if (curriculum === lastParsedText && category === lastParsedCategory) {
+        updateStatus('ℹ️ This text was just parsed. Try modifying it or wait a moment before parsing the same content again.', 'error');
+        return;
+      }
+
+      if (isParsing) {
+        updateStatus('Already processing... please wait', 'error');
+        return;
+      }
+
+      // Disable button during processing
+      isParsing = true;
+      parseBtn.disabled = true;
+      parseBtn.textContent = '⏳ Processing...';
+
+      updateStatus('🔄 Processing with Gemini AI... (this may take 30-60 seconds)', 'loading');
       
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+        
         const response = await fetch(`${API_BASE}/parser/parse`, {
           method: 'POST',
           headers: {
@@ -447,8 +472,11 @@
           body: JSON.stringify({
             text: curriculum,
             category: category || undefined
-          })
+          }),
+          signal: controller.signal
         });
+
+        clearTimeout(timeout);
 
         if (!response.ok) {
           const error = await response.json();
@@ -458,9 +486,22 @@
         const data = await response.json();
         displayResults(data.data);
         updateStatus('✅ Successfully parsed!', 'success');
+        
+        // Remember what was parsed
+        lastParsedText = curriculum;
+        lastParsedCategory = category;
       } catch (error) {
         console.error('Error:', error);
-        updateStatus(`❌ Error: ${error.message}`, 'error');
+        if (error.name === 'AbortError') {
+          updateStatus('❌ Request timeout (2 minutes). The text may be too long or the API is slow. Try with shorter text.', 'error');
+        } else {
+          updateStatus(`❌ Error: ${error.message}`, 'error');
+        }
+      } finally {
+        // Re-enable button
+        isParsing = false;
+        parseBtn.disabled = false;
+        parseBtn.textContent = '🚀 Parse with AI';
       }
     }
 
