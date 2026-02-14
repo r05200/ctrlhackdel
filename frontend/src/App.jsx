@@ -1,42 +1,31 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import ForceGraph3D from 'react-force-graph-3d';
-import * as THREE from 'three';
 import BossFightModal from './components/BossFightModal';
-import { knowledgeGraphData, getNodeColor, getLinkColor } from './data/knowledgeGraph';
-import './App.css';
 import Sidebar from './components/SideBar';
 import Header from './components/Header';
-import TextBox from './components/TextBox';
-import AddMedia from './components/AddMedia';
-import Greeting from './components/Greeting';
+import SkillTreeView from './components/SkillTreeView';
+import CreateTree from './components/CreateTree';
+import OtherTrees from './components/OtherTrees';
 import SplashScreen from './components/SplashScreen';
 import StarryBackground from './components/StarryBackground';
-import TelescopeView from './components/TelescopeView';
-
-const API_URL = 'http://localhost:5000';
+import './App.css';
 
 function App() {
-  
   const [isHovered, setIsHovered] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [mainVisible, setMainVisible] = useState(false);
-  const [telescopeMode, setTelescopeMode] = useState(false);
-  const [fadingOut, setFadingOut] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [currentView, setCurrentView] = useState('skill-tree'); // 'skill-tree', 'create-tree', 'other-trees'
 
   const handleSplashComplete = () => {
     setShowSplash(false);
     requestAnimationFrame(() => setMainVisible(true));
   };
 
-  const handleTextSubmit = (query) => {
-    setSearchQuery(query);
-    setFadingOut(true);
-    // After the UI fades out, switch to telescope view
-    setTimeout(() => {
-      setTelescopeMode(true);
-      setFadingOut(false);
-    }, 1200);
+  const handleNavigation = (viewId) => {
+    setCurrentView(viewId);
+  };
+
+  const handleBackToSkillTree = () => {
+    setCurrentView('skill-tree');
   };
 
   if (showSplash) {
@@ -45,25 +34,26 @@ function App() {
 
   return (
     <div className={`app-container flex h-screen w-screen bg-black text-gray-100 overflow-hidden relative ${mainVisible ? 'main-enter' : ''}`}>
-      <StarryBackground hideMeteors={telescopeMode} />
+      <StarryBackground />
 
-      {/* Telescope overlay */}
-      {telescopeMode && <TelescopeView query={searchQuery} />}
-      
-      <div className={`sidebar ${fadingOut ? 'fade-out-up' : ''}`}>
-        <Sidebar isHovered={isHovered} setIsHovered={setIsHovered} />
+      <div className="sidebar">
+        <Sidebar isHovered={isHovered} setIsHovered={setIsHovered} onNavigate={handleNavigation} />
       </div>
       
       <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${isHovered ? 'ml-56' : 'ml-16'}`}>
-        <Header isHovered={isHovered}/>
-        <div className={`flex-1 p-4 flex flex-col justify-center items-center ${fadingOut ? 'fade-out-up' : ''}`}>
-          {!telescopeMode && (
-            <>
-              <Greeting />
-              <div className="w-[55vw]">
-                <TextBox onSubmit={handleTextSubmit} />
-              </div>
-            </>
+        <Header isHovered={isHovered} />
+        <div className="flex-1 overflow-hidden">
+          {/* Main View - Skill Tree */}
+          {currentView === 'skill-tree' && <SkillTreeView />}
+
+          {/* Create Tree View */}
+          {currentView === 'create-tree' && (
+            <CreateTree onCancel={handleBackToSkillTree} onCreateSuccess={() => setCurrentView('other-trees')} />
+          )}
+
+          {/* Other Trees View */}
+          {currentView === 'other-trees' && (
+            <OtherTrees onCancel={handleBackToSkillTree} onSelectTree={() => handleBackToSkillTree()} />
           )}
         </div>
       </div>

@@ -54,6 +54,30 @@ let userProgress = {
   completedChallenges: 1
 };
 
+// Store custom trees (in-memory, could be persisted to DB in production)
+let customTrees = [
+  {
+    id: 'tree-1',
+    name: 'Web Development Fundamentals',
+    topic: 'Learn modern web development from HTML to React',
+    difficulty: 'beginner',
+    status: 'in-progress',
+    progress: 45,
+    nodeCount: 12,
+    createdAt: '2 days ago',
+  },
+  {
+    id: 'tree-2',
+    name: 'Advanced Python',
+    topic: 'Master Python for automation and data science',
+    difficulty: 'advanced',
+    status: 'completed',
+    progress: 100,
+    nodeCount: 15,
+    createdAt: '1 week ago',
+  },
+];
+
 // Routes
 
 // Health check
@@ -245,14 +269,113 @@ app.post('/api/reset', (req, res) => {
 
 // Generate custom tree (bonus feature)
 app.post('/api/generate-tree', (req, res) => {
-  const { topic, difficulty } = req.body;
+  const { topic, difficulty, treeName } = req.body;
   
-  // This would call an LLM in production
-  // For now, return sample response
+  if (!topic || !treeName) {
+    return res.status(400).json({
+      success: false,
+      message: 'Topic and tree name are required'
+    });
+  }
+  
+  // Generate a new tree ID
+  const treeId = 'tree-' + Date.now();
+  
+  // In production, this would call an LLM like Gemini or GPT-4
+  // For now, create a mock tree structure
+  const newTree = {
+    id: treeId,
+    name: treeName,
+    topic: topic,
+    difficulty: difficulty || 'intermediate',
+    status: 'in-progress',
+    progress: 0,
+    nodeCount: Math.floor(Math.random() * 10) + 8, // 8-17 nodes
+    createdAt: new Date().toLocaleDateString(),
+    graph: {
+      nodes: [],
+      links: []
+    }
+  };
+  
+  // Add to custom trees
+  customTrees.push(newTree);
+  
   res.json({
     success: true,
-    message: `Custom tree for "${topic}" would be generated here using AI`,
-    note: 'This feature requires LLM integration (Gemini/GPT-4)'
+    message: `Tree "${treeName}" created successfully!`,
+    tree: newTree,
+    note: 'Full LLM integration pending - currently using mock data'
+  });
+});
+
+// Get all custom trees
+app.get('/api/trees', (req, res) => {
+  res.json({
+    success: true,
+    trees: customTrees
+  });
+});
+
+// Get specific tree
+app.get('/api/trees/:treeId', (req, res) => {
+  const { treeId } = req.params;
+  const tree = customTrees.find(t => t.id === treeId);
+  
+  if (!tree) {
+    return res.status(404).json({
+      success: false,
+      message: 'Tree not found'
+    });
+  }
+  
+  res.json({
+    success: true,
+    tree
+  });
+});
+
+// Delete tree
+app.delete('/api/trees/:treeId', (req, res) => {
+  const { treeId } = req.params;
+  const index = customTrees.findIndex(t => t.id === treeId);
+  
+  if (index === -1) {
+    return res.status(404).json({
+      success: false,
+      message: 'Tree not found'
+    });
+  }
+  
+  const deletedTree = customTrees.splice(index, 1);
+  
+  res.json({
+    success: true,
+    message: `Tree "${deletedTree[0].name}" deleted successfully`,
+    tree: deletedTree[0]
+  });
+});
+
+// Update tree status
+app.patch('/api/trees/:treeId/status', (req, res) => {
+  const { treeId } = req.params;
+  const { status } = req.body;
+  
+  const tree = customTrees.find(t => t.id === treeId);
+  
+  if (!tree) {
+    return res.status(404).json({
+      success: false,
+      message: 'Tree not found'
+    });
+  }
+  
+  tree.status = status;
+  
+  res.json({
+    success: true,
+    message: `Tree status updated to "${status}"`,
+    tree
   });
 });
 
