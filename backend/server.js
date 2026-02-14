@@ -3,7 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
@@ -245,16 +245,187 @@ app.post('/api/reset', (req, res) => {
 
 // Generate custom tree (bonus feature)
 app.post('/api/generate-tree', (req, res) => {
-  const { topic, difficulty } = req.body;
+  const { topic } = req.body;
   
-  // This would call an LLM in production
-  // For now, return sample response
+  if (!topic || !topic.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Topic is required'
+    });
+  }
+
+  // Generate a learning tree based on the topic
+  const generatedTree = generateLearningTree(topic.toLowerCase().trim());
+  
   res.json({
     success: true,
-    message: `Custom tree for "${topic}" would be generated here using AI`,
-    note: 'This feature requires LLM integration (Gemini/GPT-4)'
+    topic: topic,
+    graph: generatedTree
   });
 });
+
+// Helper function to generate learning tree
+function generateLearningTree(topic) {
+  // Topic templates - in production this would use LLM
+  const templates = {
+    'react': generateReactTree,
+    'python': generatePythonTree,
+    'machine learning': generateMLTree,
+    'web development': generateWebDevTree,
+    'data science': generateDataScienceTree,
+  };
+
+  // Find matching template or use generic
+  const generator = templates[topic] || (() => generateGenericTree(topic));
+  return generator();
+}
+
+function generateReactTree() {
+  return {
+    nodes: [
+      { id: 'html-css', label: 'HTML & CSS\nBasics', status: 'mastered', level: 1, description: 'Web page structure and styling' },
+      { id: 'javascript', label: 'JavaScript\nFundamentals', status: 'active', level: 2, description: 'JS syntax, functions, DOM manipulation' },
+      { id: 'es6', label: 'ES6+\nFeatures', status: 'locked', level: 2, description: 'Arrow functions, destructuring, modules' },
+      { id: 'react-basics', label: 'React\nBasics', status: 'locked', level: 3, description: 'Components, JSX, Props' },
+      { id: 'state-props', label: 'State &\nProps', status: 'locked', level: 3, description: 'Managing component state' },
+      { id: 'hooks', label: 'React\nHooks', status: 'locked', level: 4, description: 'useState, useEffect, custom hooks' },
+      { id: 'routing', label: 'React\nRouter', status: 'locked', level: 4, description: 'Navigation and routing' },
+      { id: 'state-management', label: 'State\nManagement', status: 'locked', level: 5, description: 'Redux, Context API, Zustand' },
+      { id: 'api-integration', label: 'API\nIntegration', status: 'locked', level: 5, description: 'Fetch, Axios, async operations' },
+      { id: 'performance', label: 'React\nPerformance', status: 'locked', level: 6, description: 'Optimization, memoization' },
+      { id: 'testing', label: 'Testing\nReact Apps', status: 'locked', level: 6, description: 'Jest, React Testing Library' },
+    ],
+    links: [
+      { source: 'html-css', target: 'javascript' },
+      { source: 'html-css', target: 'es6' },
+      { source: 'javascript', target: 'react-basics' },
+      { source: 'es6', target: 'react-basics' },
+      { source: 'react-basics', target: 'state-props' },
+      { source: 'state-props', target: 'hooks' },
+      { source: 'state-props', target: 'routing' },
+      { source: 'hooks', target: 'state-management' },
+      { source: 'hooks', target: 'api-integration' },
+      { source: 'state-management', target: 'performance' },
+      { source: 'api-integration', target: 'testing' },
+    ]
+  };
+}
+
+function generatePythonTree() {
+  return {
+    nodes: [
+      { id: 'python-basics', label: 'Python\nBasics', status: 'mastered', level: 1, description: 'Variables, data types, operators' },
+      { id: 'control-flow', label: 'Control\nFlow', status: 'active', level: 2, description: 'If/else, loops, functions' },
+      { id: 'data-structures', label: 'Data\nStructures', status: 'locked', level: 2, description: 'Lists, dicts, sets, tuples' },
+      { id: 'oop', label: 'Object-Oriented\nProgramming', status: 'locked', level: 3, description: 'Classes, inheritance, polymorphism' },
+      { id: 'file-handling', label: 'File\nHandling', status: 'locked', level: 3, description: 'Reading/writing files, CSV, JSON' },
+      { id: 'libraries', label: 'Popular\nLibraries', status: 'locked', level: 4, description: 'NumPy, Pandas, Matplotlib' },
+      { id: 'web-frameworks', label: 'Web\nFrameworks', status: 'locked', level: 4, description: 'Flask, Django,FastAPI' },
+      { id: 'apis', label: 'APIs &\nRequests', status: 'locked', level: 5, description: 'REST APIs, requests library' },
+      { id: 'testing', label: 'Testing &\nDebugging', status: 'locked', level: 5, description: 'Pytest, unittest, debugging' },
+      { id: 'deployment', label: 'Deployment', status: 'locked', level: 6, description: 'Docker, cloud deployment' },
+    ],
+    links: [
+      { source: 'python-basics', target: 'control-flow' },
+      { source: 'python-basics', target: 'data-structures' },
+      { source: 'control-flow', target: 'oop' },
+      { source: 'data-structures', target: 'file-handling' },
+      { source: 'oop', target: 'libraries' },
+      { source: 'file-handling', target: 'web-frameworks' },
+      { source: 'libraries', target: 'apis' },
+      { source: 'web-frameworks', target: 'apis' },
+      { source: 'apis', target: 'testing' },
+      { source: 'testing', target: 'deployment' },
+    ]
+  };
+}
+
+function generateMLTree() {
+  return knowledgeGraph; // Use the existing ML tree
+}
+
+function generateWebDevTree() {
+  return {
+    nodes: [
+      { id: 'html', label: 'HTML\nFundamentals', status: 'mastered', level: 1, description: 'Structure and semantics' },
+      { id: 'css', label: 'CSS\nStyling', status: 'active', level: 2, description: 'Selectors, box model, flexbox' },
+      { id: 'javascript', label: 'JavaScript\nBasics', status: 'locked', level: 2, description: 'DOM manipulation, events' },
+      { id: 'responsive', label: 'Responsive\nDesign', status: 'locked', level: 3, description: 'Media queries, mobile-first' },
+      { id: 'frameworks', label: 'CSS\nFrameworks', status: 'locked', level: 3, description: 'Bootstrap, Tailwind' },
+      { id: 'frontend-framework', label: 'Frontend\nFramework', status: 'locked', level: 4, description: 'React, Vue, or Angular' },
+      { id: 'backend-basics', label: 'Backend\nBasics', status: 'locked', level: 4, description: 'Node.js, APIs, databases' },
+      { id: 'databases', label: 'Databases', status: 'locked', level: 5, description: 'SQL, MongoDB, Postgres' },
+      { id: 'authentication', label: 'Authentication', status: 'locked', level: 5, description: 'JWT, OAuth, sessions' },
+      { id: 'deployment', label: 'Deployment', status: 'locked', level: 6, description: 'Hosting, CI/CD, domains' },
+    ],
+    links: [
+      { source: 'html', target: 'css' },
+      { source: 'html', target: 'javascript' },
+      { source: 'css', target: 'responsive' },
+      { source: 'css', target: 'frameworks' },
+      { source: 'javascript', target: 'frontend-framework' },
+      { source: 'javascript', target: 'backend-basics' },
+      { source: 'frontend-framework', target: 'databases' },
+      { source: 'backend-basics', target: 'databases' },
+      { source: 'databases', target: 'authentication' },
+      { source: 'authentication', target: 'deployment' },
+    ]
+  };
+}
+
+function generateDataScienceTree() {
+  return {
+    nodes: [
+      { id: 'python-basics', label: 'Python\nBasics', status: 'mastered', level: 1, description: 'Variables, functions, data types' },
+      { id: 'numpy', label: 'NumPy', status: 'active', level: 2, description: 'Arrays, mathematical operations' },
+      { id: 'pandas', label: 'Pandas', status: 'locked', level: 2, description: 'DataFrames, data manipulation' },
+      { id: 'visualization', label: 'Data\nVisualization', status: 'locked', level: 3, description: 'Matplotlib, Seaborn, Plotly' },
+      { id: 'statistics', label: 'Statistics', status: 'locked', level: 3, description: 'Descriptive, inferential stats' },
+      { id: 'ml-basics', label: 'Machine\nLearning', status: 'locked', level: 4, description: 'Scikit-learn, models, training' },
+      { id: 'deep-learning', label: 'Deep\nLearning', status: 'locked', level: 5, description: 'TensorFlow, PyTorch, neural nets' },
+      { id: 'nlp', label: 'Natural Language\nProcessing', status: 'locked', level: 6, description: 'Text analysis, transformers' },
+      { id: 'computer-vision', label: 'Computer\nVision', status: 'locked', level: 6, description: 'Image processing, CNNs' },
+    ],
+    links: [
+      { source: 'python-basics', target: 'numpy' },
+      { source: 'python-basics', target: 'pandas' },
+      { source: 'numpy', target: 'visualization' },
+      { source: 'pandas', target: 'visualization' },
+      { source: 'pandas', target: 'statistics' },
+      { source: 'visualization', target: 'ml-basics' },
+      { source: 'statistics', target: 'ml-basics' },
+      { source: 'ml-basics', target: 'deep-learning' },
+      { source: 'deep-learning', target: 'nlp' },
+      { source: 'deep-learning', target: 'computer-vision' },
+    ]
+  };
+}
+
+function generateGenericTree(topic) {
+  // Generic template for any topic
+  const capitalizedTopic = topic.charAt(0).toUpperCase() + topic.slice(1);
+  
+  return {
+    nodes: [
+      { id: 'basics', label: `${capitalizedTopic}\nBasics`, status: 'mastered', level: 1, description: 'Fundamental concepts and introduction' },
+      { id: 'fundamentals', label: 'Core\nFundamentals', status: 'active', level: 2, description: 'Essential principles and practices' },
+      { id: 'intermediate', label: 'Intermediate\nConcepts', status: 'locked', level: 3, description: 'Building on the foundations' },
+      { id: 'advanced-1', label: 'Advanced\nTopics I', status: 'locked', level: 4, description: 'Deep dive into complex areas' },
+      { id: 'advanced-2', label: 'Advanced\nTopics II', status: 'locked', level: 4, description: 'Specialized knowledge' },
+      { id: 'practical', label: 'Practical\nApplications', status: 'locked', level: 5, description: 'Real-world projects and use cases' },
+      { id: 'mastery', label: 'Mastery &\nBest Practices', status: 'locked', level: 6, description: 'Expert-level skills' },
+    ],
+    links: [
+      { source: 'basics', target: 'fundamentals' },
+      { source: 'fundamentals', target: 'intermediate' },
+      { source: 'intermediate', target: 'advanced-1' },
+      { source: 'intermediate', target: 'advanced-2' },
+      { source: 'advanced-1', target: 'practical' },
+      { source: 'advanced-2', target: 'practical' },
+      { source: 'practical', target: 'mastery' },
+    ]
+  };
+}
 
 // Error handling
 app.use((err, req, res, next) => {
