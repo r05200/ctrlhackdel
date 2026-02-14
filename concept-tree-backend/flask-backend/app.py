@@ -4,7 +4,7 @@ Main Flask application for Concept Dependency Tree Backend
 from flask import Flask, jsonify
 from flask_cors import CORS
 from mongoengine import connect, disconnect
-from routes import concept_routes, user_routes
+from routes import concept_routes, user_routes, parser_routes
 import os
 from dotenv import load_dotenv
 
@@ -34,6 +34,7 @@ def init_db():
 # Register blueprints
 app.register_blueprint(concept_routes)
 app.register_blueprint(user_routes)
+app.register_blueprint(parser_routes)
 
 
 # Health check endpoint

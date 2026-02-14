@@ -1,0 +1,41 @@
+Computer Science Fundamentals Learning Path
+
+Tier 1: Core Foundations
+├─ Programming Basics (Variables, Control Flow, Functions)
+├─ Data Types and Structures
+└─ Problem Solving and Algorithmic Thinking
+
+Tier 2: Data Structures
+├─ Arrays and Lists
+├─ Linked Lists
+├─ Stacks and Queues
+├─ Trees (Binary, BST)
+└─ Hash Tables and Dictionaries
+
+Tier 3: Algorithms
+├─ Sorting Algorithms
+│  ├─ Bubble Sort
+│  ├─ Merge Sort
+│  ├─ Quick Sort
+│  └─ Heap Sort
+├─ Searching Algorithms (Linear, Binary)
+└─ Analysis of Algorithms (Big O Notation)
+
+Tier 4: Advanced Data Structures
+├─ Graphs
+│  ├─ Graph Representation
+│  ├─ Breadth-First Search (BFS)
+│  ├─ Depth-First Search (DFS)
+│  └─ Shortest Path (Dijkstra, Bellman-Ford)
+└─ Heaps and Priority Queues
+
+Tier 5: Advanced Algorithms
+├─ Divide and Conquer
+├─ Dynamic Programming
+├─ Greedy Algorithms
+└─ Graph Algorithms (Minimum Spanning Tree)
+
+Tier 6: Specialized Topics
+├─ String Matching and Pattern Recognition
+├─ Computational Geometry
+└─ Approximation Algorithms

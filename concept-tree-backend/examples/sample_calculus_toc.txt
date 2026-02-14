@@ -1,0 +1,34 @@
+Calculus I - Course Outline
+
+Chapter 1: Limits and Continuity
+1.1 The Concept of a Limit
+1.2 Limit Laws and Their Properties
+1.3 Continuity
+1.4 The Intermediate Value Theorem
+
+Chapter 2: Derivatives
+2.1 The Derivative as a Limit
+2.2 The Derivative as a Rate of Change
+2.3 Differentiation Rules (Power, Product, Quotient)
+2.4 The Chain Rule
+2.5 Implicit Differentiation
+2.6 Derivatives of Exponential and Logarithmic Functions
+
+Chapter 3: Applications of Derivatives
+3.1 Related Rates
+3.2 Linear Approximations and Differentials
+3.3 Extreme Values and the Mean Value Theorem
+3.4 Concavity and the Second Derivative Test
+3.5 Curve Sketching
+
+Chapter 4: Integration
+4.1 Antiderivatives
+4.2 The Definite Integral
+4.3 The Fundamental Theorem of Calculus
+4.4 Integration by Substitution
+
+Chapter 5: Applications of Integration
+5.1 Areas Between Curves
+5.2 Volumes of Solids of Revolution
+5.3 Arc Length
+5.4 Surface Area

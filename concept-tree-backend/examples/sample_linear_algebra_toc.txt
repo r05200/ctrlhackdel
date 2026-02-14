@@ -1,0 +1,37 @@
+Linear Algebra - Complete Curriculum
+
+Module 1: Foundations
+- Vectors in R^n
+- Vector Operations (Addition, Scalar Multiplication, Dot Product)
+- Vector Spaces and Subspaces
+
+Module 2: Matrices
+- Matrix Operations
+- Matrix Multiplication
+- Special Matrices (Identity, Diagonal, Triangular)
+- Inverse Matrices
+- Matrix Determinants
+
+Module 3: Systems of Equations
+- Gaussian Elimination
+- Row Echelon Form
+- Solving Linear Systems
+- Applications of Linear Systems
+
+Module 4: Eigenvalues and Eigenvectors
+- Characteristic Polynomial
+- Computing Eigenvalues
+- Finding Eigenvectors
+- Diagonalization
+
+Module 5: Linear Transformations
+- Linear Transformations as Matrices
+- Kernel and Range
+- Rank-Nullity Theorem
+- Change of Basis
+
+Module 6: Advanced Topics
+- Inner Products and Orthogonality
+- QR Decomposition
+- Singular Value Decomposition
+- Applications in Data Science
