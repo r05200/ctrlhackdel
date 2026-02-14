@@ -25,7 +25,7 @@ function TextBox({ onSubmit }) {
             <UploadButton />
           </div>
         </div>
-    </form>
+    </div>
   )
 }
 

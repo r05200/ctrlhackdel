@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { generateCustomTree } from '../services/api';
 
 const DIRECTIONS = ['left', 'right', 'up', 'down'];
 
@@ -35,7 +36,7 @@ function generateLensStars(count) {
   return stars;
 }
 
-function TelescopeView({ query }) {
+function TelescopeView({ query, onComplete }) {
   const [phase, setPhase] = useState('pan-up');
   const [lensStars] = useState(() => generateLensStars(200));
   const [searching, setSearching] = useState(false);
@@ -122,6 +123,30 @@ function TelescopeView({ query }) {
     const init = setTimeout(runShake, 2000);
     timersRef.current.push(init);
   }, [searching]);
+
+  // When constellation is found, generate the tree
+  useEffect(() => {
+    if (!found || !query) return;
+
+    const generateTree = async () => {
+      try {
+        const tree = await generateCustomTree(query);
+        // Call the onComplete callback to transition to constellation view
+        if (onComplete) {
+          setTimeout(() => {
+            onComplete(tree);
+          }, 2000); // Wait 2s after "Found!" before showing tree
+        }
+      } catch (error) {
+        console.error('Error generating tree:', error);
+        if (onComplete) {
+          onComplete(null);
+        }
+      }
+    };
+
+    generateTree();
+  }, [found, query, onComplete]);
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase('zoom-lens'), 3000);

@@ -7,6 +7,7 @@ import Greeting from './components/Greeting';
 import SplashScreen from './components/SplashScreen';
 import StarryBackground from './components/StarryBackground';
 import TelescopeView from './components/TelescopeView';
+import ConstellationView from './components/ConstellationView';
 
 const API_URL = 'http://localhost:5000';
 
@@ -16,8 +17,10 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [mainVisible, setMainVisible] = useState(false);
   const [telescopeMode, setTelescopeMode] = useState(false);
+  const [constellationMode, setConstellationMode] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [constellationData, setConstellationData] = useState(null);
 
   const [splashDone, setSplashDone] = useState(false);
 
@@ -37,6 +40,12 @@ function App() {
     }, 1700);
   };
 
+  const handleTelescopeComplete = (tree) => {
+    setConstellationData(tree);
+    setTelescopeMode(false);
+    setConstellationMode(true);
+  };
+
   if (showSplash) {
     return (
       <div className="h-screen w-screen overflow-hidden relative">
@@ -46,12 +55,21 @@ function App() {
     );
   }
 
+  if (constellationMode && constellationData) {
+    return (
+      <div className="h-screen w-screen bg-black text-gray-100 overflow-hidden">
+        <StarryBackground hideMeteors={false} splashDone={true} />
+        <ConstellationView graphData={constellationData} query={searchQuery} />
+      </div>
+    );
+  }
+
   return (
     <div className={`app-container flex h-screen w-screen bg-black text-gray-100 overflow-hidden relative ${mainVisible ? 'main-enter' : ''}`}>
       <StarryBackground hideMeteors={telescopeMode} splashDone={true} />
 
       {/* Telescope overlay */}
-      {telescopeMode && <TelescopeView query={searchQuery} />}
+      {telescopeMode && <TelescopeView query={searchQuery} onComplete={handleTelescopeComplete} />}
       
       <div className={`sidebar ${fadingOut ? 'fade-out-up' : ''}`}>
         <Sidebar isHovered={isHovered} setIsHovered={setIsHovered} />
