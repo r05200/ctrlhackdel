@@ -100,9 +100,9 @@ function App() {
       
       <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${isHovered ? 'ml-56' : 'ml-16'}`}>
         <Header isHovered={isHovered}/>
-        <div className="flex-1 p-4 flex flex-col justify-center items-center">
+        <div className="flex-1 p-4 flex flex-col justify-center items-center relative z-20 pointer-events-auto">
           <Greeting />
-          <div className="w-[55vw]">
+          <div className="w-[55vw] z-20 pointer-events-auto">
             <TextBox onSubmit={handlePromptSubmit} />
           </div>
         </div>

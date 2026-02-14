@@ -1,0 +1,184 @@
+.constellation-loader {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: radial-gradient(ellipse at center, #0f0420 0%, #000000 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: loaderFadeIn 0.6s ease-out;
+}
+
+@keyframes loaderFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Background stars */
+.loader-stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.loader-star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+}
+
+/* Main content */
+.loader-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Central orb */
+.loader-central-orb {
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(167, 139, 250, 0.6));
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 5;
+}
+
+/* Orbiting particles */
+.loader-particle {
+  position: absolute;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.8), rgba(96, 165, 250, 0.2));
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
+  top: 50%;
+  left: 50%;
+  margin-top: -4px;
+  margin-left: -4px;
+}
+
+/* Ring effect */
+.loader-ring {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border: 2px solid;
+  border-image: linear-gradient(45deg, rgba(167, 139, 250, 0.6), rgba(96, 165, 250, 0.4), transparent) 1;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+/* Text wrapper */
+.loader-text-wrapper {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.loader-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #a78bfa, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
+}
+
+.loader-dots {
+  margin: 1rem 0;
+  font-size: 2rem;
+  color: #a78bfa;
+  letter-spacing: 0.5rem;
+  height: 2rem;
+}
+
+.loader-dots span {
+  display: inline-block;
+}
+
+.loader-subtitle {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.875rem;
+  color: #a0aec0;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Ambient glow */
+.loader-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.1), transparent);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(40px);
+  animation: glowPulse 4s ease-in-out infinite;
+  z-index: 2;
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.6;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .loader-central-orb {
+    width: 60px;
+    height: 60px;
+  }
+
+  .loader-title {
+    font-size: 1.35rem;
+  }
+
+  .loader-ring {
+    width: 150px;
+    height: 150px;
+  }
+
+  .loader-glow {
+    width: 400px;
+    height: 400px;
+  }
+}
+
+/* Exit animation - when data is loaded */
+.constellation-loader.exit {
+  animation: loaderFadeOut 0.5s ease-out forwards;
+}
+
+@keyframes loaderFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
