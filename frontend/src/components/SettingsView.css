@@ -1,0 +1,71 @@
+.settings-view {
+  width: min(980px, 90vw);
+  max-height: 80vh;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(8, 10, 20, 0.78);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.settings-title {
+  color: #f6f7ff;
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+
+.settings-subtitle {
+  color: rgba(200, 210, 255, 0.72);
+  font-size: 0.9rem;
+}
+
+.settings-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.settings-item {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #6fc4ff;
+  cursor: pointer;
+}
+
+.settings-item-title {
+  color: #f6f7ff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.settings-item-desc {
+  margin-top: 0.3rem;
+  color: rgba(208, 216, 243, 0.78);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 900px) {
+  .settings-view {
+    width: 94vw;
+  }
+}

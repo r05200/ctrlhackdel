@@ -3,7 +3,8 @@ import React from 'react';
 const Sidebar = ({ isHovered, setIsHovered, onMenuClick, activePage = 'create' }) => {
   const menuItems = [
     { id: 'create', icon: '\u2736', label: 'Create Constellation' },
-    { id: 'past', icon: '\u25C8', label: 'Past Constellations' }
+    { id: 'past', icon: '\u25C8', label: 'Past Constellations' },
+    { id: 'settings', icon: '\u2699', label: 'Settings' }
   ];
 
   return (

@@ -10,16 +10,26 @@ import TelescopeView from './components/TelescopeView';
 import ConstellationView from './components/ConstellationView';
 import PastConstellationsView from './components/PastConstellationsView';
 import ProfileView from './components/ProfileView';
+import SettingsView from './components/SettingsView';
 import { createPastConstellation } from './services/api';
 
 const MAIN_UI_FADE_MS = 900;
 const PAST_OPEN_GLINT_MS = 700;
 const PAST_OPEN_ZOOM_MS = 850;
 const PAST_OPEN_DISSOLVE_MS = 550;
+const APP_SETTINGS_KEY = 'ctrlhackdel_app_settings';
+const DEFAULT_APP_SETTINGS = {
+  disableStartingAnimation: false,
+  disableBackgroundElements: false
+};
 
 const PAGE_CONTENT = {
   past: {
     title: 'Past Constellations',
+    subtitle: 'Simple outline view',
+  },
+  settings: {
+    title: 'Settings',
     subtitle: 'Simple outline view',
   },
   profile: {
@@ -66,11 +76,27 @@ function buildSeededStars(seedKey, count = 18) {
   }));
 }
 
+function getStoredAppSettings() {
+  try {
+    const raw = localStorage.getItem(APP_SETTINGS_KEY);
+    if (!raw) return { ...DEFAULT_APP_SETTINGS };
+    const parsed = JSON.parse(raw);
+    return {
+      ...DEFAULT_APP_SETTINGS,
+      ...parsed
+    };
+  } catch {
+    return { ...DEFAULT_APP_SETTINGS };
+  }
+}
+
 function App() {
+  const initialSettingsRef = useRef(getStoredAppSettings());
+  const initialSettings = initialSettingsRef.current;
 
   const [isHovered, setIsHovered] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
-  const [mainVisible, setMainVisible] = useState(false);
+  const [showSplash, setShowSplash] = useState(!initialSettings.disableStartingAnimation);
+  const [mainVisible, setMainVisible] = useState(initialSettings.disableStartingAnimation);
   const [telescopeMode, setTelescopeMode] = useState(false);
   const [constellationMode, setConstellationMode] = useState(false);
   const [constellationReady, setConstellationReady] = useState(false);
@@ -81,6 +107,7 @@ function App() {
   const [activePage, setActivePage] = useState('create');
   const [pastOpenTransition, setPastOpenTransition] = useState(null);
   const pastOpenTimersRef = useRef([]);
+  const [appSettings, setAppSettings] = useState(initialSettings);
 
   const [splashDone, setSplashDone] = useState(false);
 
@@ -90,6 +117,10 @@ function App() {
   };
 
   useEffect(() => () => clearPastOpenTimers(), []);
+
+  useEffect(() => {
+    localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(appSettings));
+  }, [appSettings]);
 
   const handleSplashComplete = () => {
     setSplashDone(true);
@@ -206,17 +237,30 @@ function App() {
     }, endTransitionMs));
   };
 
+  const handleSettingsChange = (patch) => {
+    setAppSettings((prev) => {
+      const next = { ...prev, ...patch };
+      if (patch.disableStartingAnimation) {
+        setShowSplash(false);
+        setMainVisible(true);
+      }
+      return next;
+    });
+  };
+
   const showConstellationView = constellationMode && constellationData && activePage === 'create';
   const showMainUI = !showConstellationView;
 
   return (
     <div className="h-screen w-screen overflow-hidden relative bg-black text-gray-100">
       {/* Always-mounted StarryBackground — eliminates black flash between views */}
-      <StarryBackground
-        hideMeteors={showSplash}
-        enableGeminiStars={!showSplash && !showConstellationView && !telescopeMode}
-        panUpTransition={fadingOut || telescopeMode || showConstellationView}
-      />
+      {!appSettings.disableBackgroundElements && (
+        <StarryBackground
+          hideMeteors={showSplash}
+          enableGeminiStars={!showSplash && !showConstellationView && !telescopeMode}
+          panUpTransition={fadingOut || telescopeMode || showConstellationView}
+        />
+      )}
 
       {/* Splash screen overlays on top */}
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
@@ -295,6 +339,8 @@ function App() {
                   </>
                 ) : activePage === 'past' ? (
                   <PastConstellationsView onOpenConstellation={handleOpenPastConstellation} />
+                ) : activePage === 'settings' ? (
+                  <SettingsView settings={appSettings} onChange={handleSettingsChange} />
                 ) : activePage === 'profile' ? (
                   <ProfileView />
                 ) : (
