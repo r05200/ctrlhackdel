@@ -275,31 +275,22 @@ export default function StarGauntletModal({ graphData, onClose, onComplete }) {
                   key={mode}
                   onClick={() => {
                     setInputMode(mode);
+                    if (mode === 'mic' && prompts[0]?.id) {
+                      setActivePromptId(prompts[0].id);
+                    }
                     setError('');
                   }}
                   className={`mode-btn ${inputMode === mode ? 'active' : ''}`}
                 >
-                  {mode === 'type' ? 'Type' : 'Mic'}
+                  {mode === 'type' ? 'Type' : 'Mic (Explanation)'}
                 </button>
               ))}
             </div>
 
             {inputMode === 'mic' && (
               <div className="mic-block" style={{ marginBottom: 12 }}>
-                <div style={{ marginBottom: 8 }}>
-                  <label className="word-count" style={{ display: 'block', marginBottom: 6 }}>Target Prompt</label>
-                  <select
-                    className="trial-answer-input"
-                    value={activePromptId}
-                    onChange={(e) => setActivePromptId(e.target.value)}
-                    style={{ minHeight: 40 }}
-                  >
-                    {prompts.map((item, idx) => (
-                      <option key={item.id} value={item.id}>
-                        {idx === 0 ? 'Explanation Prompt' : `Critical Prompt ${idx}`}
-                      </option>
-                    ))}
-                  </select>
+                <div className="word-count" style={{ marginBottom: 8 }}>
+                  Mic target: Explanation Prompt
                 </div>
                 <div className="mic-actions">
                   {!isRecording && !audioBlob && (
@@ -331,13 +322,15 @@ export default function StarGauntletModal({ graphData, onClose, onComplete }) {
                     {idx === 0 ? 'Explanation Prompt' : `Critical Prompt ${idx}`}
                   </div>
                   <p className="trial-question-text">{item.prompt}</p>
-                  <textarea
-                    className="trial-answer-input"
-                    rows={idx === 0 ? 4 : 3}
-                    value={answersById[item.id] || ''}
-                    onChange={(e) => setAnswersById((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                    placeholder="Your answer..."
-                  />
+                  {!(idx === 0 && inputMode === 'mic') && (
+                    <textarea
+                      className="trial-answer-input"
+                      rows={idx === 0 ? 4 : 3}
+                      value={answersById[item.id] || ''}
+                      onChange={(e) => setAnswersById((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                      placeholder="Your answer..."
+                    />
+                  )}
                 </div>
               ))}
             </div>
