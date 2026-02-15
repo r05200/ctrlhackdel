@@ -1246,7 +1246,7 @@ export default function ConstellationView({
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 22, stiffness: 300 }}
             style={{
-              position: 'fixed', bottom: '32px', left: '50%', transform: 'translateX(-50%)',
+              position: 'fixed', bottom: '24px', right: '24px',
               zIndex: 2000, minWidth: '320px', maxWidth: '460px',
               background: toast.type === 'success'
                 ? 'linear-gradient(135deg, rgba(0,180,80,0.92), rgba(0,120,60,0.92))'
