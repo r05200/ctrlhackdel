@@ -17,7 +17,6 @@ import { generateMainStarField } from './utils/starField';
 
 const MAIN_UI_FADE_MS = 900;
 const PAST_OPEN_GLINT_MS = 1000;
-const PAST_OPEN_ENVELOP_MS = 900;
 const PAST_OPEN_DISSOLVE_MS = 520;
 const CONSTELLATION_LEAVE_DISSOLVE_MS = 520;
 const APP_SETTINGS_KEY = 'ctrlhackdel_app_settings';
@@ -288,14 +287,9 @@ function App() {
     };
     setPastOpenTransition(shell);
 
-    const toEnvelopMs = PAST_OPEN_GLINT_MS;
-    const toDissolveMs = PAST_OPEN_GLINT_MS + PAST_OPEN_ENVELOP_MS;
+    const toDissolveMs = PAST_OPEN_GLINT_MS;
     const mountConstellationMs = toDissolveMs;
     const endTransitionMs = toDissolveMs + PAST_OPEN_DISSOLVE_MS;
-
-    pastOpenTimersRef.current.push(setTimeout(() => {
-      setPastOpenTransition((prev) => (prev ? { ...prev, phase: 'envelop' } : prev));
-    }, toEnvelopMs));
 
     pastOpenTimersRef.current.push(setTimeout(() => {
       setSearchQuery(item.query || '');

@@ -179,12 +179,25 @@ const getNodeVertexCountMap = (graph) => {
   return vertexCountMap;
 };
 // Constellation-style node positioning
-function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = false, nodeColor = '#ffffff', vertexCount = 4 }) {
+function ConstellationNode({
+  node,
+  position,
+  onClick,
+  isSelected,
+  isUnlocking = false,
+  nodeColor = '#ffffff',
+  vertexCount = 4,
+  isConstellationComplete = false
+}) {
   const normalizedStatus = normalizeNodeStatus(node);
   const nodeStyle = getNodeStyleByStatus(normalizedStatus);
   const baseColor = isHexColor(nodeColor) ? nodeColor : '#ffffff';
+  const completedAuraColor = '#f6c56a';
   const shimmerHighlight = getStatusHighlightColor(normalizedStatus);
-  const glowColor = shimmerHighlight || baseColor;
+  const glowColor = isConstellationComplete ? completedAuraColor : (shimmerHighlight || baseColor);
+  const auraShadow = isConstellationComplete
+    ? `0 0 28px ${withAlpha(completedAuraColor, 0.78)}`
+    : nodeStyle.shadow;
   const size = nodeStyle.size;
   const motionProfile = useMemo(() => getNodeMotionProfile(node.id), [node.id]);
   const primaryPath = useMemo(
@@ -278,7 +291,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
             height={size}
             viewBox="0 0 100 100"
             style={{
-              filter: `drop-shadow(0 0 12px ${withAlpha(glowColor, 0.85)}) drop-shadow(${nodeStyle.shadow})`
+              filter: `drop-shadow(0 0 12px ${withAlpha(glowColor, 0.85)}) drop-shadow(${auraShadow})`
             }}
           >
             <motion.path
@@ -652,6 +665,10 @@ export default function ConstellationView({
   const constellationStarColor = isHexColor(starColor) ? starColor : '#ffffff';
   const constellationStarRgb = hexToRgbString(constellationStarColor);
   const [toast, setToast] = useState(null); // { type: 'success'|'error'|'info', title, lines[] }
+  const isConstellationComplete = useMemo(() => {
+    const nodes = Array.isArray(graphData?.nodes) ? graphData.nodes : [];
+    return nodes.length > 0 && nodes.every((node) => normalizeNodeStatus(node) === 'mastered');
+  }, [graphData]);
   const selectedNodeConditions = useMemo(() => {
     if (!selectedNode || !graphData?.links || !graphData?.nodes) {
       return { requires: [], unlocks: [] };
@@ -1183,6 +1200,7 @@ export default function ConstellationView({
               isUnlocking={unlockedNodes.includes(node.id)}
               nodeColor={nodeColor}
               vertexCount={nodeVertexCounts[node.id] || 4}
+              isConstellationComplete={isConstellationComplete}
             />
           ))}
         </div>
