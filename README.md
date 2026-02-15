@@ -1,364 +1,103 @@
-# 🧠 NEXUS - Knowledge RPG
+# NEXUS
 
-**A revolutionary educational platform that gamifies learning through 3D skill trees and AI-powered oral exams.**
+NEXUS is a learning app that turns topics into constellation maps, lets users complete Star Trials, and tracks progress across saved constellations (Galaxy).
 
----
+## Monorepo Layout
 
-## 🚀 QUICK START (5 Minutes)
+- `frontend/` React + Vite client
+- `backend/node-backend/` Express API
+- `start-all.bat` legacy helper script (uses old backend path)
 
-### Prerequisites
+## Requirements
 
-- Node.js 18+ installed
-- Modern browser (Chrome/Edge recommended)
+- Node.js 18+
+- npm
 
-### Installation & Run
+## Quick Start
+
+### 1. Install dependencies
 
 ```bash
-# 1. Install frontend dependencies
+# Frontend
 cd frontend
 npm install
 
-# 2. Install backend dependencies
-cd ../backend
+# Backend
+cd ../backend/node-backend
 npm install
+```
 
-# 3. Start everything (Windows)
-start-all.bat
+### 2. Configure environment
 
-# 3. Start everything (Manual)
-# Terminal 1 - Backend
-cd backend
-npm start
+Create `backend/node-backend/.env` (or copy from `.env.example`) and set at minimum:
 
-# Terminal 2 - Frontend
+```env
+PORT=5000
+GEMINI_API_KEY=your_key_here
+ELEVENLABS_API_KEY=your_key_here
+# Optional:
+# GEMINI_MODEL=gemini-2.5-flash
+# GEMINI_MODEL_FALLBACKS=gemini-2.0-flash,gemini-1.5-flash,gemini-1.5-pro
+```
+
+If needed, set frontend API base in `frontend/.env`:
+
+```env
+VITE_API_BASE_URL=http://localhost:5000
+```
+
+### 3. Run the app
+
+```bash
+# Terminal 1
+cd backend/node-backend
+npm run dev
+
+# Terminal 2
 cd frontend
 npm run dev
 ```
 
-**URLs:**
+App URLs:
 
-- 🎮 **Frontend**: http://localhost:3000
-- 📚 **Backend API**: http://localhost:5000
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:5000`
 
----
+## Core Features
 
-## 📁 Project Structure
+- Stargaze topic input and constellation generation
+- Galaxy view for saved constellations (open/rename/tag/delete)
+- Constellation map with node unlock flow and Star Trial flows
+- Settings for startup animation, background elements, user name, and colors
+- AI-backed generation/scoring
 
-```
-ctrlhackdel/
-├── frontend/                 # React 3D visualization
-│   ├── src/
-│   │   ├── App.jsx          # Main graph component
-│   │   ├── components/      # Boss Fight modal
-│   │   └── data/            # Knowledge graph data
-│   ├── README.md            # Complete frontend docs
-│   ├── PRESENTATION.md      # Demo script
-│   └── TROUBLESHOOTING.md   # Common issues
-│
-├── backend/                  # Express API
-│   ├── server.js            # API endpoints
-│   ├── README.md            # API documentation
-│   └── package.json
-│
-├── concept-tree-backend/     # Original backend (optional)
-│   ├── flask-backend/       # Python Flask alternative
-│   └── node-server/         # Alternative Node server
-│
-└── start-all.bat            # Start everything (Windows)
-```
+## Frontend Scripts (`frontend/package.json`)
 
----
+- `npm run dev`
+- `npm run build`
+- `npm run preview`
 
-## 🎯 Key Features
+## Backend Scripts (`backend/node-backend/package.json`)
 
-### 1. **3D Interactive Knowledge Graph**
+- `npm run dev`
+- `npm start`
+- `npm test`
 
-- Physics-based force-directed layout
-- Auto-rotating camera
-- Real-time particle effects
-- Custom Three.js rendering
+## Main Backend Endpoints
 
-### 2. **Three-State Node System**
+- `GET /api/graph`
+- `GET /api/progress`
+- `POST /api/node/:nodeId/complete`
+- `POST /api/verify`
+- `POST /api/star-trial/questions`
+- `POST /api/generate-tree`
+- `GET /api/constellations`
+- `POST /api/constellations`
+- `PATCH /api/constellations/:id`
+- `DELETE /api/constellations/:id`
+- `POST /api/voice/transcribe`
 
-- 🔒 **LOCKED** - Prerequisites incomplete
-- ⚡ **ACTIVE** - Ready for Boss Fight
-- ✅ **MASTERED** - Concept understood
+## Notes
 
-### 3. **Boss Fight System**
-
-- Oral examination interface
-- Simulated AI verification
-- Real-time feedback
-- Progressive unlocking
-
-### 4. **Backend Integration**
-
-- RESTful API
-- Progress persistence
-- Node completion tracking
-- Custom tree generation (future)
-
----
-
-## 🎬 DEMO SCRIPT (For Hackathon)
-
-See [`frontend/PRESENTATION.md`](frontend/PRESENTATION.md) for complete 2-minute demo script.
-
-**Quick Version:**
-
-1. Show rotating 3D graph
-2. Click locked node → Show it's blocked
-3. Click active (green) node → Open Boss Fight
-4. Complete challenge → Watch graph update
-5. Show nodes unlocking with particle effects
-
----
-
-## 🔌 API Endpoints
-
-### Get Knowledge Graph
-
-```bash
-GET http://localhost:5000/api/graph
-```
-
-### Complete Node
-
-```bash
-POST http://localhost:5000/api/node/:nodeId/complete
-```
-
-### Verify Explanation
-
-```bash
-POST http://localhost:5000/api/verify
-Content-Type: application/json
-
-{
-  "nodeId": "data-structures",
-  "explanation": "Your explanation here..."
-}
-```
-
-### Get Progress
-
-```bash
-GET http://localhost:5000/api/progress
-```
-
-### Reset Progress (Testing)
-
-```bash
-POST http://localhost:5000/api/reset
-```
-
-**Full API docs:** [`backend/README.md`](backend/README.md)
-
----
-
-## 🎨 Customization
-
-### Change Colors
-
-Edit `frontend/src/index.css`:
-
-```css
-:root {
-  --neon-blue: #00f3ff;
-  --neon-green: #39ff14;
-  --neon-purple: #9d4edd;
-}
-```
-
-### Add New Concepts
-
-Edit `frontend/src/data/knowledgeGraph.js` or `backend/server.js`:
-
-```javascript
-{
-  id: 'your-concept',
-  label: 'Your Concept',
-  status: 'locked',
-  level: 3,
-  description: 'Description here'
-}
-```
-
-### Adjust Graph Physics
-
-Edit `frontend/src/App.jsx`:
-
-```javascript
-<ForceGraph3D
-  d3VelocityDecay={0.3} // Friction
-  warmupTicks={100} // Initial simulation
-/>
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Frontend Issues
-
-See [`frontend/TROUBLESHOOTING.md`](frontend/TROUBLESHOOTING.md)
-
-### Backend Not Connecting
-
-```bash
-# Check if backend is running
-curl http://localhost:5000
-
-# Check for port conflicts
-netstat -ano | findstr :5000
-
-# Restart backend
-cd backend
-npm start
-```
-
-### CORS Errors
-
-The backend has CORS enabled. If issues persist:
-
-```javascript
-// backend/server.js
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-  }),
-);
-```
-
-### Graph Not Rendering
-
-- Use Chrome/Edge (best WebGL support)
-- Enable GPU acceleration in browser
-- Check browser console for errors
-
----
-
-## 🏆 Hackathon Judging Criteria
-
-| Criteria                       | Score          | How We Win                                       |
-| ------------------------------ | -------------- | ------------------------------------------------ |
-| **Functionality (35%)**        | ✅ Exceptional | Fully working, no bugs, smooth interactions      |
-| **Innovation (25%)**           | ✅ Exceptional | Novel combo of gaming + education + 3D viz       |
-| **Technical Complexity (20%)** | ✅ Exceptional | React + Three.js + Force Graph + API integration |
-| **UX/Design (10%)**            | ✅ Exceptional | Sci-fi aesthetic, intuitive, visually stunning   |
-| **Presentation (10%)**         | ✅ Ready       | Clear demo script, live demo, memorable          |
-
-**Expected Total: 95-100/100**
-
----
-
-## 📊 Tech Stack
-
-### Frontend
-
-- **React 18** - UI framework
-- **Vite** - Build tool
-- **react-force-graph-3d** - 3D graph rendering
-- **Three.js** - Custom 3D objects
-- **CSS3** - Animations & styling
-
-### Backend
-
-- **Express.js** - REST API
-- **Node.js** - Runtime
-- **CORS** - Cross-origin support
-
-### Future
-
-- MongoDB (persistence)
-- Groq/Gemini (AI verification)
-- Deepgram (speech-to-text)
-- WebSocket (multiplayer)
-
----
-
-## 🚀 Deployment
-
-### Frontend (Vercel)
-
-```bash
-cd frontend
-vercel
-```
-
-### Backend (Railway/Heroku)
-
-```bash
-cd backend
-railway up
-# or
-heroku create
-git push heroku main
-```
-
----
-
-## 📚 Documentation
-
-- **Frontend README**: [`frontend/README.md`](frontend/README.md) - Complete UI docs
-- **Backend README**: [`backend/README.md`](backend/README.md) - API reference
-- **Presentation Guide**: [`frontend/PRESENTATION.md`](frontend/PRESENTATION.md) - Demo script
-- **Troubleshooting**: [`frontend/TROUBLESHOOTING.md`](frontend/TROUBLESHOOTING.md) - Common fixes
-
----
-
-## 🎯 Roadmap
-
-### Phase 1 - Hackathon (DONE ✅)
-
-- [x] 3D force graph visualization
-- [x] Node state management
-- [x] Boss Fight modal
-- [x] Backend API integration
-- [x] Progress tracking
-
-### Phase 2 - Post-Hackathon
-
-- [ ] Real AI integration (Groq/Gemini)
-- [ ] Speech-to-text (Deepgram)
-- [ ] Text-to-speech (ElevenLabs)
-- [ ] MongoDB persistence
-- [ ] User authentication
-
-### Phase 3 - Production
-
-- [ ] AI-generated skill trees
-- [ ] Multiplayer support
-- [ ] Leaderboards
-- [ ] Achievement system
-- [ ] Mobile app
-
----
-
-## 👥 Team
-
-Built for **CtrlHackDel Hackathon** 🏆
-
----
-
-## 📄 License
-
-MIT License - Feel free to use and modify!
-
----
-
-## 🎉 Good Luck!
-
-You have everything you need:
-
-- ✅ Stunning 3D visualization
-- ✅ Full backend integration
-- ✅ Complete documentation
-- ✅ Demo script ready
-- ✅ Troubleshooting guides
-
-**GO WIN THAT HACKATHON! 🔥**
-
----
-
-_"NEXUS isn't a study tool. It's a skill tree for real life."_
+- The frontend calls backend directly (no Vite proxy requirement).
+- Legacy docs in this repo may reference older paths/endpoints.
