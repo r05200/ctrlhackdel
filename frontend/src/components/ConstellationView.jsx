@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { knowledgeGraphData } from '../data/knowledgeGraph';
 import FIXED_STARS from '../data/stars';
-import { fetchKnowledgeGraph, completeNode, verifyExplanation, generateCustomTree } from '../services/api';
+import { fetchKnowledgeGraph, completeNode, verifyExplanation, generateCustomTree, updatePastConstellationGauntletBest } from '../services/api';
 import BossFightModal from './BossFightModal';
+import StarGauntletModal from './StarGauntletModal';
 import ConstellationLoader from './ConstellationLoader';
 
 const normalizeNodeStatus = (node) => {
@@ -618,7 +619,9 @@ export default function ConstellationView({
   onTopicResolved,
   nodeColor = '#ffffff',
   backgroundStarsEnabled = true,
-  starColor = '#ffffff'
+  starColor = '#ffffff',
+  gauntletLaunchTick = 0,
+  constellationId = null
 }) {
   const [selectedNode, setSelectedNode] = useState(null);
   const [graphData, setGraphData] = useState(knowledgeGraphData); // Start with local data as fallback
@@ -627,6 +630,7 @@ export default function ConstellationView({
   const [showBossFight, setShowBossFight] = useState(false);
   const [currentBossNode, setCurrentBossNode] = useState(null);
   const [generatedTopic, setGeneratedTopic] = useState('');
+  const [showGauntlet, setShowGauntlet] = useState(false);
   const [unlockedNodes, setUnlockedNodes] = useState([]);
   const [animatingEdges, setAnimatingEdges] = useState([]);
   const graphContainerRef = useRef(null);
@@ -665,6 +669,11 @@ export default function ConstellationView({
 
     return { requires, unlocks };
   }, [selectedNode, graphData]);
+
+  useEffect(() => {
+    if (!gauntletLaunchTick) return;
+    setShowGauntlet(true);
+  }, [gauntletLaunchTick]);
   
   // Resolve graph from props or backend
   useEffect(() => {
@@ -860,6 +869,50 @@ export default function ConstellationView({
 
   const handleGraphMouseLeave = () => {
     setCursorPoint(null);
+  };
+
+  const handleGauntletComplete = async (gauntletResult) => {
+    if (!gauntletResult) return;
+    if (!gauntletResult.allMastered) {
+      setToast({
+        type: 'info',
+        title: 'Star Gauntlet Complete',
+        lines: [
+          `Score: ${gauntletResult.score}%`,
+          'PB tracking unlocks after all constellation Star Trials are completed.'
+        ]
+      });
+      return;
+    }
+
+    if (!constellationId) {
+      setToast({
+        type: 'info',
+        title: 'Star Gauntlet Complete',
+        lines: [`Score: ${gauntletResult.score}%`, 'No persisted constellation ID found for PB tracking.']
+      });
+      return;
+    }
+
+    try {
+      const response = await updatePastConstellationGauntletBest(constellationId, gauntletResult.score);
+      const pb = response?.item?.gauntletBestScore;
+      setToast({
+        type: 'success',
+        title: 'Star Gauntlet PB Updated',
+        lines: [
+          `Attempt: ${gauntletResult.score}%`,
+          `Personal Best: ${Number.isFinite(Number(pb)) ? Math.round(Number(pb)) : gauntletResult.score}%`
+        ]
+      });
+    } catch (err) {
+      console.error('Failed to persist gauntlet PB:', err);
+      setToast({
+        type: 'error',
+        title: 'Gauntlet Save Failed',
+        lines: ['Score completed, but PB could not be saved to Galaxy card.']
+      });
+    }
   };
 
   // Show loading state
@@ -1117,8 +1170,8 @@ export default function ConstellationView({
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <motion.div
-                className="w-4 h-4 rounded-full bg-white"
-                style={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.8)' }}
+                className="w-4 h-4 rounded-full"
+                style={{ background: '#3b82f6', boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)' }}
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
@@ -1126,15 +1179,15 @@ export default function ConstellationView({
             </div>
             <div className="flex items-center gap-3">
               <motion.div
-                className="w-3 h-3 rounded-full bg-white opacity-80"
-                style={{ boxShadow: '0 0 15px rgba(255, 255, 255, 0.5)' }}
+                className="w-3 h-3 rounded-full"
+                style={{ background: '#22c55e', boxShadow: '0 0 15px rgba(34, 197, 94, 0.6)' }}
                 animate={{ scale: [1, 1.15, 1] }}
                 transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
               />
               <span className="text-sm text-gray-300">Available</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-white opacity-30" />
+              <div className="w-2 h-2 rounded-full" style={{ background: '#6b7280' }} />
               <span className="text-sm text-gray-500">Locked</span>
             </div>
           </div>
@@ -1252,6 +1305,14 @@ export default function ConstellationView({
             setCurrentBossNode(null);
           }}
           onComplete={handleBossFightComplete}
+        />
+      )}
+
+      {showGauntlet && (
+        <StarGauntletModal
+          graphData={graphData}
+          onClose={() => setShowGauntlet(false)}
+          onComplete={handleGauntletComplete}
         />
       )}
 

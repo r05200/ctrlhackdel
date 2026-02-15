@@ -205,6 +205,7 @@ app.post('/api/constellations', async (req, res) => {
       title: String(title || query || 'Untitled Constellation').trim(),
       query: String(query || '').trim(),
       tags: cleanTags,
+      gauntletBestScore: null,
       graph,
       createdAt: now,
       updatedAt: now
@@ -229,14 +230,15 @@ app.post('/api/constellations', async (req, res) => {
 app.patch('/api/constellations/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { tags, title } = req.body || {};
+    const { tags, title, gauntletBestScore } = req.body || {};
     const hasTags = Object.prototype.hasOwnProperty.call(req.body || {}, 'tags');
     const hasTitle = Object.prototype.hasOwnProperty.call(req.body || {}, 'title');
+    const hasGauntletBest = Object.prototype.hasOwnProperty.call(req.body || {}, 'gauntletBestScore');
 
-    if (!hasTags && !hasTitle) {
+    if (!hasTags && !hasTitle && !hasGauntletBest) {
       return res.status(400).json({
         success: false,
-        message: 'at least one of tags or title is required'
+        message: 'at least one of tags, title, or gauntletBestScore is required'
       });
     }
 
@@ -261,6 +263,18 @@ app.patch('/api/constellations/:id', async (req, res) => {
       });
     }
 
+    let cleanGauntletBest = null;
+    if (hasGauntletBest) {
+      const n = Number(gauntletBestScore);
+      if (!Number.isFinite(n)) {
+        return res.status(400).json({
+          success: false,
+          message: 'gauntletBestScore must be a number when provided'
+        });
+      }
+      cleanGauntletBest = Math.max(0, Math.min(100, Math.round(n)));
+    }
+
     const store = await readConstellationStore();
     const idx = store.items.findIndex((item) => item.id === id);
 
@@ -276,6 +290,14 @@ app.patch('/api/constellations/:id', async (req, res) => {
     }
     if (hasTitle) {
       store.items[idx].title = cleanTitle;
+    }
+    if (hasGauntletBest) {
+      const existingBest = Number.isFinite(Number(store.items[idx].gauntletBestScore))
+        ? Number(store.items[idx].gauntletBestScore)
+        : null;
+      store.items[idx].gauntletBestScore = existingBest === null
+        ? cleanGauntletBest
+        : Math.max(existingBest, cleanGauntletBest);
     }
     store.items[idx].updatedAt = new Date().toISOString();
     await writeConstellationStore(store);

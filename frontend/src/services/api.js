@@ -297,3 +297,13 @@ export const deletePastConstellation = async (id) => {
     method: 'DELETE'
   });
 };
+
+export const updatePastConstellationGauntletBest = async (id, gauntletBestScore) => {
+  return requestConstellationApi(`/api/constellations/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ gauntletBestScore })
+  });
+};

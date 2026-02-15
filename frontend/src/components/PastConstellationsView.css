@@ -260,6 +260,14 @@
   text-shadow: 0 0 10px rgba(255, 214, 106, 0.5);
 }
 
+.past-card-gauntlet-best {
+  margin-top: 0.22rem;
+  color: rgba(144, 208, 255, 0.95);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(120, 188, 255, 0.35);
+}
+
 .past-card-actions {
   display: flex;
   gap: 0.5rem;

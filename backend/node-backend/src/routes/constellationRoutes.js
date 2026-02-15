@@ -75,6 +75,7 @@ router.post('/', async (req, res) => {
       title: String(title || query || 'Untitled Constellation').trim(),
       query: String(query || '').trim(),
       tags: cleanTags,
+      gauntletBestScore: null,
       graph,
       createdAt: now,
       updatedAt: now
@@ -93,12 +94,13 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { tags, title } = req.body || {};
+    const { tags, title, gauntletBestScore } = req.body || {};
     const hasTags = Object.prototype.hasOwnProperty.call(req.body || {}, 'tags');
     const hasTitle = Object.prototype.hasOwnProperty.call(req.body || {}, 'title');
+    const hasGauntletBest = Object.prototype.hasOwnProperty.call(req.body || {}, 'gauntletBestScore');
 
-    if (!hasTags && !hasTitle) {
-      return res.status(400).json({ success: false, message: 'at least one of tags or title is required' });
+    if (!hasTags && !hasTitle && !hasGauntletBest) {
+      return res.status(400).json({ success: false, message: 'at least one of tags, title, or gauntletBestScore is required' });
     }
 
     if (hasTags && !Array.isArray(tags)) {
@@ -115,6 +117,15 @@ router.patch('/:id', async (req, res) => {
     if (hasTitle && !cleanTitle) {
       return res.status(400).json({ success: false, message: 'title cannot be empty' });
     }
+
+    let cleanGauntletBest = null;
+    if (hasGauntletBest) {
+      const n = Number(gauntletBestScore);
+      if (!Number.isFinite(n)) {
+        return res.status(400).json({ success: false, message: 'gauntletBestScore must be a number when provided' });
+      }
+      cleanGauntletBest = Math.max(0, Math.min(100, Math.round(n)));
+    }
     const store = await readStore();
     const index = store.items.findIndex((item) => item.id === id);
     if (index === -1) {
@@ -126,6 +137,14 @@ router.patch('/:id', async (req, res) => {
     }
     if (hasTitle) {
       store.items[index].title = cleanTitle;
+    }
+    if (hasGauntletBest) {
+      const existingBest = Number.isFinite(Number(store.items[index].gauntletBestScore))
+        ? Number(store.items[index].gauntletBestScore)
+        : null;
+      store.items[index].gauntletBestScore = existingBest === null
+        ? cleanGauntletBest
+        : Math.max(existingBest, cleanGauntletBest);
     }
     store.items[index].updatedAt = new Date().toISOString();
     await writeStore(store);

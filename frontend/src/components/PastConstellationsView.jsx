@@ -275,6 +275,11 @@ export default function PastConstellationsView({ onOpenConstellation }) {
                   <div className={`past-card-progress ${isComplete ? 'complete' : ''}`}>
                     Complete: {completionPercent}%
                   </div>
+                  {Number.isFinite(Number(item.gauntletBestScore)) && (
+                    <div className="past-card-gauntlet-best">
+                      Star Gauntlet PB: {Math.round(Number(item.gauntletBestScore))}%
+                    </div>
+                  )}
                 </div>
                 <div className="past-card-actions">
                   <button type="button" onClick={() => handleOpen(item)} className="past-open-btn" disabled={!!openingId}>

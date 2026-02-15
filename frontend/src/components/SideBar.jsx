@@ -14,7 +14,7 @@ const Sidebar = ({ isHovered, setIsHovered, onMenuClick, activePage = 'create' }
       className={`flex flex-col h-full text-gray-100 pb-6 transition-all duration-300 ease-in-out ${isHovered ? 'w-56' : 'w-16'} overflow-hidden border-r border-gray-800`}
       style={{ background: '#0a0818' }}
     >
-      <div className="flex items-center px-2 py-2 mx-2">
+      <div className="flex items-center px-2 py-2 mx-2 min-h-[40px]">
         <button
           type="button"
           onClick={() => onMenuClick?.('create')}
@@ -23,6 +23,13 @@ const Sidebar = ({ isHovered, setIsHovered, onMenuClick, activePage = 'create' }
         >
           N
         </button>
+        <span
+          className={`ml-4 font-orbitron text-xl font-semibold text-gray-300 whitespace-nowrap transition-all duration-300 ${
+            isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'
+          }`}
+        >
+          NEXUS
+        </span>
       </div>
 
       <div className="mx-4 mb-6 h-px bg-gray-800" />

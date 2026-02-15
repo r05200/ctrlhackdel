@@ -100,6 +100,11 @@ function sanitizeHexColor(value, fallback = '#ffffff') {
   return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw.toLowerCase() : fallback;
 }
 
+function isMasteredStatus(status) {
+  if (typeof status === 'number') return status > 0;
+  return String(status || '').trim().toLowerCase() === 'mastered';
+}
+
 function App() {
   const initialSettingsRef = useRef(getStoredAppSettings());
   const initialSettings = initialSettingsRef.current;
@@ -114,12 +119,14 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [constellationData, setConstellationData] = useState(null);
   const [constellationTopic, setConstellationTopic] = useState('');
+  const [currentConstellationId, setCurrentConstellationId] = useState(null);
   const [activePage, setActivePage] = useState('create');
   const [pastOpenTransition, setPastOpenTransition] = useState(null);
   const [constellationLeaveTransition, setConstellationLeaveTransition] = useState(false);
   const pastOpenTimersRef = useRef([]);
   const constellationLeaveTimerRef = useRef(null);
   const [appSettings, setAppSettings] = useState(initialSettings);
+  const [gauntletLaunchTick, setGauntletLaunchTick] = useState(0);
 
   const [splashDone, setSplashDone] = useState(false);
 
@@ -168,6 +175,7 @@ function App() {
       const topic = tree.topic || searchQuery || '';
       if (!graph) {
         setConstellationData(null);
+        setCurrentConstellationId(null);
         setConstellationMode(false);
         setConstellationReady(false);
         setFadingOut(false);
@@ -186,9 +194,14 @@ function App() {
         query: searchQuery || '',
         tags: [],
         graph
-      }).catch((err) => {
-        console.error('Failed to persist constellation:', err);
-      });
+      })
+        .then((response) => {
+          setCurrentConstellationId(response?.item?.id || null);
+        })
+        .catch((err) => {
+          console.error('Failed to persist constellation:', err);
+          setCurrentConstellationId(null);
+        });
 
       // Fade in UI after the zoom transition completes
       setTimeout(() => {
@@ -197,6 +210,7 @@ function App() {
       return;
     }
     setConstellationData(null);
+    setCurrentConstellationId(null);
     setConstellationMode(false);
     setConstellationReady(false);
     setFadingOut(false);
@@ -258,6 +272,7 @@ function App() {
       setSearchQuery(item.query || '');
       setConstellationTopic(item.title || item.query || 'Knowledge');
       setConstellationData(item.graph);
+      setCurrentConstellationId(item.id || null);
       setConstellationMode(true);
       setConstellationReady(false);
       setActivePage('create');
@@ -305,6 +320,9 @@ function App() {
 
   const showConstellationView = constellationMode && constellationData && activePage === 'create';
   const showMainUI = !showConstellationView;
+  const hasMasteredNodes = Array.isArray(constellationData?.nodes)
+    ? constellationData.nodes.some((node) => isMasteredStatus(node?.status))
+    : false;
 
   return (
     <div className="h-screen w-screen overflow-hidden relative bg-black text-gray-100">
@@ -339,17 +357,30 @@ function App() {
                 </div>
               </div>
               <div className="constellation-rail-legend">
-                <div className="constellation-rail-legend-row">
-                  <span className="constellation-legend-dot mastered" />
-                  <span>Mastered</span>
-                </div>
-                <div className="constellation-rail-legend-row">
-                  <span className="constellation-legend-dot available" />
-                  <span>Available</span>
-                </div>
-                <div className="constellation-rail-legend-row">
-                  <span className="constellation-legend-dot locked" />
-                  <span>Locked</span>
+                <div className="constellation-rail-legend-wrap">
+                  <div>
+                    <div className="constellation-rail-legend-row">
+                      <span className="constellation-legend-dot mastered" />
+                      <span>Mastered</span>
+                    </div>
+                    <div className="constellation-rail-legend-row">
+                      <span className="constellation-legend-dot available" />
+                      <span>Available</span>
+                    </div>
+                    <div className="constellation-rail-legend-row">
+                      <span className="constellation-legend-dot locked" />
+                      <span>Locked</span>
+                    </div>
+                  </div>
+                  {hasMasteredNodes && (
+                    <button
+                      type="button"
+                      className="constellation-gauntlet-btn"
+                      onClick={() => setGauntletLaunchTick((prev) => prev + 1)}
+                    >
+                      Star Gauntlet
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -363,6 +394,8 @@ function App() {
               nodeColor={nodeColor}
               backgroundStarsEnabled={!appSettings.disableBackgroundElements}
               starColor={starColor}
+              gauntletLaunchTick={gauntletLaunchTick}
+              constellationId={currentConstellationId}
             />
           </div>
           {constellationLeaveTransition && <div className="constellation-leave-dissolve-overlay" />}
