@@ -1,5 +1,5 @@
 // API Service for Backend Integration
-const API_BASE_URL = 'http://localhost:5001';
+const API_BASE_URL = 'http://localhost:5000';
 const API_FALLBACK_BASE_URL = 'http://localhost:5000';
 
 // Helper function to handle API errors

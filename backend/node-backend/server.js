@@ -496,6 +496,9 @@ app.post('/api/verify', async (req, res) => {
     console.log('✅ AI Verification complete!');
     console.log('Score:', result.score);
     console.log('Passed:', result.passed);
+    if (result.usingFallback) {
+      console.log('⚠️  Used fallback scoring due to:', result.reason);
+    }
 
     // Only update backend graph if node exists in it (not for AI-generated nodes)
     let previousBestScore = null;
@@ -530,7 +533,9 @@ app.post('/api/verify', async (req, res) => {
       improvedBest,
       feedback: result.feedback,
       message: result.message,
-      suggestions: result.suggestions
+      suggestions: result.suggestions,
+      usingFallback: result.usingFallback || false,
+      fallbackReason: result.reason || null
     });
   } catch (error) {
     console.error('❌ Verification failed:', error.message);
@@ -797,15 +802,16 @@ function generateGenericTree(topic) {
 }
 
 // AI-powered function to verify user explanations
-async function verifyExplanationWithAI(node, explanation) {
+async function verifyExplanationWithAI(node, explanation, retryCount = 0, maxRetries = 2) {
   console.log('\n🤖 AI Verification Function Called');
   console.log('Node:', node.label);
   console.log('Explanation:', explanation.substring(0, 100) + (explanation.length > 100 ? '...' : ''));
+  if (retryCount > 0) console.log(`↻ Retry attempt ${retryCount}/${maxRetries}`);
   
   // If Gemini API not configured, use fallback scoring
   if (!model) {
     console.log('⚠️  Gemini API not configured - using fallback scoring');
-    return fallbackVerification(node, explanation);
+    return { ...fallbackVerification(node, explanation), usingFallback: true, reason: 'API not configured' };
   }
   
   console.log('✓ Using Gemini AI for verification');
@@ -902,14 +908,43 @@ Return ONLY valid JSON, no markdown code blocks.`;
   } catch (error) {
     console.error('\n❌ AI verification failed!');
     console.error('Error:', error.message);
+    
+    // Check if it's a quota/rate limit error (429)
+    const isQuotaError = error.message && (
+      error.message.includes('429') || 
+      error.message.includes('quota') || 
+      error.message.includes('rate limit') ||
+      error.message.includes('Too Many Requests')
+    );
+    
+    // Extract retry delay from error message (format: "retry in X.XXXs")
+    let retryDelay = 2000; // default 2 seconds
+    const retryMatch = error.message.match(/retry in ([0-9.]+)s/);
+    if (retryMatch) {
+      retryDelay = Math.ceil(parseFloat(retryMatch[1]) * 1000) + 500; // Add 500ms buffer
+    }
+    
+    // If quota error and we haven't exceeded max retries, wait and retry
+    if (isQuotaError && retryCount < maxRetries) {
+      console.log(`⏳ Quota exceeded. Waiting ${retryDelay}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+      return verifyExplanationWithAI(node, explanation, retryCount + 1, maxRetries);
+    }
+    
     console.log('\n📄 Falling back to basic verification...');
-    return fallbackVerification(node, explanation);
+    return { 
+      ...fallbackVerification(node, explanation), 
+      usingFallback: true, 
+      reason: isQuotaError ? 'Gemini quota exceeded' : 'API error',
+      originalError: error.message
+    };
   }
 }
 
 // Fallback verification when AI is unavailable
 function fallbackVerification(node, explanation) {
   console.log('\n📋 Using fallback verification');
+  console.log('⚠️  Note: This is a basic rule-based scoring, not AI-powered');
   
   const wordCount = explanation.split(' ').length;
   const hasNodeKeywords = node.label.toLowerCase().split(/\s+/).some(word => 

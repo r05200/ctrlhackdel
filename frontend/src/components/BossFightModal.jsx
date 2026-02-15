@@ -311,6 +311,23 @@ const BossFightModal = ({ node, onClose, onComplete }) => {
               </div>
               <h3>{verificationResult?.passed ? 'BOSS DEFEATED!' : 'NOT QUITE THERE YET'}</h3>
               
+              {verificationResult?.usingFallback && (
+                <div style={{ 
+                  background: 'rgba(255,200,0,0.15)', 
+                  border: '1px solid rgba(255,200,0,0.4)',
+                  borderRadius: '8px',
+                  padding: '10px 15px',
+                  marginBottom: '15px',
+                  fontSize: '13px',
+                  color: '#ffd700'
+                }}>
+                  ⚠️ <strong>AI Temporarily Unavailable</strong><br/>
+                  {verificationResult.fallbackReason === 'Gemini quota exceeded' 
+                    ? 'Gemini API quota reached. Using basic scoring. Your real score may differ.'
+                    : 'Using basic rule-based scoring. AI grading will return shortly.'}
+                </div>
+              )}
+              
               {verificationResult?.score && (
                 <div style={{ 
                   fontSize: '24px', 

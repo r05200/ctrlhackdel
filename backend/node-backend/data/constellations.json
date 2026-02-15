@@ -92,6 +92,142 @@
       },
       "createdAt": "2026-02-15T04:35:12.950Z",
       "updatedAt": "2026-02-15T08:18:08.497Z"
+    },
+    {
+      "id": "const_1771138530936_2mbi77",
+      "title": "java object oriented programming",
+      "query": "java object oriented programming",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "java_oop_intro",
+            "label": "Intro to OOP",
+            "status": "mastered",
+            "level": 1,
+            "description": "Understand the fundamental concepts and principles of Object-Oriented Programming."
+          },
+          {
+            "id": "classes_objects",
+            "label": "Classes and Objects",
+            "status": "active",
+            "level": 2,
+            "description": "Learn how to define classes, create objects, and understand their relationship."
+          },
+          {
+            "id": "constructors",
+            "label": "Constructors",
+            "status": "locked",
+            "level": 2,
+            "description": "Understand how to initialize objects using constructors and constructor overloading."
+          },
+          {
+            "id": "access_modifiers",
+            "label": "Access Modifiers",
+            "status": "locked",
+            "level": 3,
+            "description": "Learn to control the visibility and accessibility of classes, fields, and methods."
+          },
+          {
+            "id": "encapsulation",
+            "label": "Encapsulation",
+            "status": "locked",
+            "level": 3,
+            "description": "Grasp the concept of data hiding and bundling data with methods that operate on the data."
+          },
+          {
+            "id": "inheritance",
+            "label": "Inheritance",
+            "status": "locked",
+            "level": 4,
+            "description": "Explore how to create new classes based on existing ones, promoting code reusability."
+          },
+          {
+            "id": "polymorphism",
+            "label": "Polymorphism",
+            "status": "locked",
+            "level": 4,
+            "description": "Understand how objects can take on many forms, enabling flexible and extensible code."
+          },
+          {
+            "id": "abstraction_intro",
+            "label": "Intro to Abstraction",
+            "status": "locked",
+            "level": 5,
+            "description": "Learn to hide complex implementation details and show only essential features."
+          },
+          {
+            "id": "abstract_classes",
+            "label": "Abstract Classes",
+            "status": "locked",
+            "level": 5,
+            "description": "Master creating abstract classes and methods to define common interfaces for subclasses."
+          },
+          {
+            "id": "interfaces",
+            "label": "Interfaces",
+            "status": "locked",
+            "level": 6,
+            "description": "Understand how interfaces define contracts for classes to implement, supporting multiple inheritance of type."
+          }
+        ],
+        "links": [
+          {
+            "source": "java_oop_intro",
+            "target": "classes_objects"
+          },
+          {
+            "source": "classes_objects",
+            "target": "constructors"
+          },
+          {
+            "source": "classes_objects",
+            "target": "access_modifiers"
+          },
+          {
+            "source": "classes_objects",
+            "target": "encapsulation"
+          },
+          {
+            "source": "access_modifiers",
+            "target": "encapsulation"
+          },
+          {
+            "source": "encapsulation",
+            "target": "inheritance"
+          },
+          {
+            "source": "access_modifiers",
+            "target": "inheritance"
+          },
+          {
+            "source": "inheritance",
+            "target": "polymorphism"
+          },
+          {
+            "source": "inheritance",
+            "target": "abstraction_intro"
+          },
+          {
+            "source": "abstraction_intro",
+            "target": "abstract_classes"
+          },
+          {
+            "source": "abstraction_intro",
+            "target": "interfaces"
+          },
+          {
+            "source": "abstract_classes",
+            "target": "polymorphism"
+          },
+          {
+            "source": "interfaces",
+            "target": "polymorphism"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T06:55:30.936Z",
+      "updatedAt": "2026-02-15T06:55:30.936Z"
     }
   ]
 }
