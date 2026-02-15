@@ -231,7 +231,10 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
         stiffness: 100
       }}
       whileHover={{ scale: 1.32, transition: { duration: 0.3 } }}
-      onClick={() => onClick(node)}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick(node);
+      }}
     >
       <div
         style={{
@@ -636,6 +639,32 @@ export default function ConstellationView({
   const constellationStarColor = isHexColor(starColor) ? starColor : '#ffffff';
   const constellationStarRgb = hexToRgbString(constellationStarColor);
   const [toast, setToast] = useState(null); // { type: 'success'|'error'|'info', title, lines[] }
+  const selectedNodeConditions = useMemo(() => {
+    if (!selectedNode || !graphData?.links || !graphData?.nodes) {
+      return { requires: [], unlocks: [] };
+    }
+
+    const nodeById = new Map(graphData.nodes.map((n) => [n.id, n]));
+    const requires = graphData.links
+      .filter((link) => toEndpointId(link.target) === selectedNode.id)
+      .map((link) => {
+        const sourceId = toEndpointId(link.source);
+        const sourceNode = nodeById.get(sourceId);
+        return sourceNode ? sourceNode.label.replace('\n', ' ') : sourceId;
+      })
+      .filter(Boolean);
+
+    const unlocks = graphData.links
+      .filter((link) => toEndpointId(link.source) === selectedNode.id)
+      .map((link) => {
+        const targetId = toEndpointId(link.target);
+        const targetNode = nodeById.get(targetId);
+        return targetNode ? targetNode.label.replace('\n', ' ') : targetId;
+      })
+      .filter(Boolean);
+
+    return { requires, unlocks };
+  }, [selectedNode, graphData]);
   
   // Resolve graph from props or backend
   useEffect(() => {
@@ -1038,7 +1067,13 @@ export default function ConstellationView({
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.2, delay: 0.3 }}
       >
-        <div ref={graphContainerRef} onMouseMove={handleGraphMouseMove} onMouseLeave={handleGraphMouseLeave} className="relative w-full h-full">
+        <div
+          ref={graphContainerRef}
+          onMouseMove={handleGraphMouseMove}
+          onMouseLeave={handleGraphMouseLeave}
+          onClick={() => setSelectedNode(null)}
+          className="relative w-full h-full"
+        >
           {/* Connection lines */}
           <ConstellationLinks 
             links={graphData.links} 
@@ -1123,6 +1158,7 @@ export default function ConstellationView({
               fontFamily: 'monospace',
               boxShadow: '0 0 40px rgba(255, 255, 255, 0.2)'
             }}
+            onClick={(event) => event.stopPropagation()}
           >
             <motion.h3 
               className="text-xl text-white mb-2 font-bold"
@@ -1139,6 +1175,22 @@ export default function ConstellationView({
               transition={{ delay: 0.2 }}
             >
               {selectedNode.description}
+            </motion.p>
+            <motion.p
+              className="text-xs text-gray-300 mb-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.24 }}
+            >
+              Requires: {selectedNodeConditions.requires.length ? selectedNodeConditions.requires.join(', ') : 'None'}
+            </motion.p>
+            <motion.p
+              className="text-xs text-gray-300 mb-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.28 }}
+            >
+              Unlocks: {selectedNodeConditions.unlocks.length ? selectedNodeConditions.unlocks.join(', ') : 'None'}
             </motion.p>
             <div className="flex items-center gap-2">
               <motion.span 
