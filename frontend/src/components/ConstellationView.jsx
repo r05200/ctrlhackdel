@@ -665,6 +665,7 @@ export default function ConstellationView({
   const constellationStarColor = isHexColor(starColor) ? starColor : '#ffffff';
   const constellationStarRgb = hexToRgbString(constellationStarColor);
   const [toast, setToast] = useState(null); // { type: 'success'|'error'|'info', title, lines[] }
+  const lastGauntletLaunchTickRef = useRef(gauntletLaunchTick);
   const isConstellationComplete = useMemo(() => {
     const nodes = Array.isArray(graphData?.nodes) ? graphData.nodes : [];
     return nodes.length > 0 && nodes.every((node) => normalizeNodeStatus(node) === 'mastered');
@@ -697,8 +698,10 @@ export default function ConstellationView({
   }, [selectedNode, graphData]);
 
   useEffect(() => {
-    if (!gauntletLaunchTick) return;
-    setShowGauntlet(true);
+    if (gauntletLaunchTick > lastGauntletLaunchTickRef.current) {
+      setShowGauntlet(true);
+    }
+    lastGauntletLaunchTickRef.current = gauntletLaunchTick;
   }, [gauntletLaunchTick]);
 
   useEffect(() => {

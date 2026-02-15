@@ -94,20 +94,22 @@ export default function SettingsView({ settings, onChange }) {
 
         <label className="settings-item">
           <div className="settings-copy">
-            <div className="settings-item-title">Stargaze Node Cap</div>
+            <div className="settings-item-title">Stargaze Star Cap</div>
             <div className="settings-item-desc">
-              Maximum nodes generated for each new Stargaze constellation (1-12).
+              Maximum stars generated for each new Stargaze constellation (1-12).
             </div>
           </div>
-          <input
+          <select
             className="settings-text-input"
-            type="number"
-            min={1}
-            max={12}
-            step={1}
             value={settings?.stargazeNodeCap ?? 12}
             onChange={(e) => onChange?.({ stargazeNodeCap: e.target.value })}
-          />
+          >
+            {Array.from({ length: 12 }, (_, idx) => idx + 1).map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="settings-item">

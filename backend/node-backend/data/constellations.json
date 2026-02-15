@@ -4,7 +4,9 @@
       "id": "const_1771163001541_comur0",
       "title": "calculus",
       "query": "calculus",
-      "tags": [],
+      "tags": [
+        "math"
+      ],
       "gauntletBestScore": 53,
       "graph": {
         "nodes": [
@@ -33,7 +35,104 @@
         ]
       },
       "createdAt": "2026-02-15T13:43:21.541Z",
-      "updatedAt": "2026-02-15T14:27:37.974Z"
+      "updatedAt": "2026-02-15T14:51:22.474Z"
+    },
+    {
+      "id": "const_1771167035836_7zccty",
+      "title": "alsdjfjalksdfj",
+      "query": "alsdjfjalksdfj",
+      "tags": [],
+      "gauntletBestScore": null,
+      "graph": {
+        "nodes": [
+          {
+            "id": "basics",
+            "label": "Alsdjfjalksdfj\nBasics",
+            "status": "mastered",
+            "level": 1,
+            "description": "Fundamental concepts and introduction",
+            "score": 100
+          },
+          {
+            "id": "terminology",
+            "label": "Key\nTerminology",
+            "status": "active",
+            "level": 1,
+            "description": "Essential vocabulary and definitions"
+          },
+          {
+            "id": "fundamentals",
+            "label": "Core\nFundamentals",
+            "status": "active",
+            "level": 2,
+            "description": "Essential principles and practices"
+          },
+          {
+            "id": "concepts-1",
+            "label": "Core\nConcepts I",
+            "status": "locked",
+            "level": 2,
+            "description": "First set of core ideas"
+          },
+          {
+            "id": "concepts-2",
+            "label": "Core\nConcepts II",
+            "status": "locked",
+            "level": 2,
+            "description": "Second set of core ideas"
+          },
+          {
+            "id": "intermediate-1",
+            "label": "Intermediate\nTopics I",
+            "status": "locked",
+            "level": 3,
+            "description": "Building on the foundations"
+          },
+          {
+            "id": "intermediate-2",
+            "label": "Intermediate\nTopics II",
+            "status": "locked",
+            "level": 3,
+            "description": "Expanding knowledge"
+          }
+        ],
+        "links": [
+          {
+            "source": "basics",
+            "target": "terminology"
+          },
+          {
+            "source": "basics",
+            "target": "fundamentals"
+          },
+          {
+            "source": "terminology",
+            "target": "concepts-1"
+          },
+          {
+            "source": "fundamentals",
+            "target": "concepts-1"
+          },
+          {
+            "source": "fundamentals",
+            "target": "concepts-2"
+          },
+          {
+            "source": "concepts-1",
+            "target": "intermediate-1"
+          },
+          {
+            "source": "concepts-2",
+            "target": "intermediate-2"
+          },
+          {
+            "source": "concepts-1",
+            "target": "intermediate-2"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T14:50:35.836Z",
+      "updatedAt": "2026-02-15T14:50:58.962Z"
     }
   ]
 }
