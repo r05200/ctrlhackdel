@@ -4,6 +4,14 @@ import { generateCustomTree } from '../services/api';
 const DIRECTIONS = ['left', 'right', 'up', 'down'];
 const FOUND_ZOOM_MS = 1800;
 const FOUND_PAN_DISTANCE = 0;
+const DIRECT_PAN_UP_MS = 2000;
+const DIRECT_LEFT_PAN_MS = 920;
+const DIRECT_ACCEL_PORTION = 0.15;
+const DIRECT_DECEL_START = 0.75;
+const DIRECT_FOUND_DELAY_MS = 160;
+const DIRECT_SKY_OFFSET = { x: -25, y: -18 };
+const DEFAULT_SKY_TRANSITION_EASE = 'cubic-bezier(0.7, 0, 0.12, 1)';
+const DIRECT_SKY_TRANSITION_EASE = 'cubic-bezier(0.84, 0, 0.78, 1)';
 
 function randomBetween(min, max) {
   return min + Math.random() * (max - min);
@@ -48,10 +56,14 @@ function buildConstellationPreview(payload) {
       const maxY = Math.max(...ys);
       const spanX = Math.max(1, maxX - minX);
       const spanY = Math.max(1, maxY - minY);
+      // Use uniform scaling to preserve aspect ratio, then center
+      const span = Math.max(spanX, spanY);
+      const padX = (span - spanX) / 2;
+      const padY = (span - spanY) / 2;
       return baseNodes.map((node) => ({
         ...node,
-        x: 18 + ((node.x - minX) / spanX) * 64,
-        y: 18 + ((node.y - minY) / spanY) * 64,
+        x: 15 + ((node.x - minX + padX) / span) * 70,
+        y: 15 + ((node.y - minY + padY) / span) * 70,
       }));
     })()
     : baseNodes.map((node, index) => {
@@ -133,7 +145,8 @@ function generateNebulas(count) {
   return nebulas;
 }
 
-function TelescopeView({ query, onComplete, initialStarField }) {
+function TelescopeView({ query, onComplete, initialStarField, presetTree = null }) {
+  const isDirectOpen = Boolean(presetTree);
   const [phase, setPhase] = useState('pan-up');
   const [lensStars] = useState(() => {
     if (initialStarField?.stars?.length) {
@@ -209,9 +222,10 @@ function TelescopeView({ query, onComplete, initialStarField }) {
   const [panDir, setPanDir] = useState(null);
   const [panSpeed, setPanSpeed] = useState(null);
   const [transitionMs, setTransitionMs] = useState(0);
+  const [transitionEase, setTransitionEase] = useState(DEFAULT_SKY_TRANSITION_EASE);
   const [streakPhase, setStreakPhase] = useState(null);
   const [constellationZoom, setConstellationZoom] = useState(false);
-  const [generatedTree, setGeneratedTree] = useState(null);
+  const [generatedTree, setGeneratedTree] = useState(() => presetTree || null);
   const previewConstellation = useMemo(() => buildConstellationPreview(generatedTree), [generatedTree]);
 
   const timersRef = useRef([]);
@@ -223,7 +237,17 @@ function TelescopeView({ query, onComplete, initialStarField }) {
     generatedTreeRef.current = generatedTree;
   }, [generatedTree]);
 
+  useEffect(() => {
+    if (!presetTree) return;
+    generatedTreeRef.current = presetTree;
+    setGeneratedTree(presetTree);
+  }, [presetTree]);
+
   const ensureTreeData = useCallback(async () => {
+    if (presetTree) {
+      generatedTreeRef.current = presetTree;
+      return presetTree;
+    }
     let tree = generatedTreeRef.current;
     if (!tree && query) {
       tree = await generateCustomTree(query);
@@ -231,11 +255,11 @@ function TelescopeView({ query, onComplete, initialStarField }) {
       setGeneratedTree(tree);
     }
     return tree;
-  }, [query]);
+  }, [query, presetTree]);
 
   useEffect(() => {
     let cancelled = false;
-    if (!query) return undefined;
+    if (!query || isDirectOpen) return undefined;
 
     const preloadTree = async () => {
       try {
@@ -249,7 +273,7 @@ function TelescopeView({ query, onComplete, initialStarField }) {
 
     preloadTree();
     return () => { cancelled = true; };
-  }, [query]);
+  }, [query, isDirectOpen]);
 
   const startSearchPan = useCallback(() => {
     const dir = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
@@ -300,7 +324,7 @@ function TelescopeView({ query, onComplete, initialStarField }) {
 
   // When found, trigger completion
   useEffect(() => {
-    if (!found || !query) return undefined;
+    if (!found) return undefined;
     if (completionQueuedRef.current) return undefined;
     completionQueuedRef.current = true;
 
@@ -323,7 +347,7 @@ function TelescopeView({ query, onComplete, initialStarField }) {
 
     completeSearch();
     return () => { cancelled = true; };
-  }, [found, query, onComplete, ensureTreeData]);
+  }, [found, onComplete, ensureTreeData]);
 
   useEffect(() => {
     if (!found) completionQueuedRef.current = false;
@@ -345,11 +369,60 @@ function TelescopeView({ query, onComplete, initialStarField }) {
   useEffect(() => {
     let cancelled = false;
 
-    const t1 = setTimeout(() => setPhase('zoom-lens'), 3000);
+    if (isDirectOpen) {
+      searchLoopRef.current = false;
+      setSearching(false);
+      setFound(false);
+      setPanDir(null);
+      setPanSpeed(null);
+      setStreakPhase(null);
+      setTransitionMs(0);
+      setTransitionEase(DEFAULT_SKY_TRANSITION_EASE);
+      setSkyOffset({ x: 0, y: 0 });
+
+      const tPanLeft = setTimeout(() => {
+        if (cancelled) return;
+        setPhase('direct-pan-left');
+        setPanDir('down');
+        setPanSpeed(DIRECT_LEFT_PAN_MS);
+        setStreakPhase('accel');
+        setTransitionMs(DIRECT_LEFT_PAN_MS);
+        setTransitionEase(DIRECT_SKY_TRANSITION_EASE);
+        setSkyOffset(DIRECT_SKY_OFFSET);
+
+        const tCruise = setTimeout(() => {
+          if (!cancelled) setStreakPhase('cruise');
+        }, Math.round(DIRECT_LEFT_PAN_MS * DIRECT_ACCEL_PORTION));
+        const tDecel = setTimeout(() => {
+          if (!cancelled) setStreakPhase('decel');
+        }, Math.round(DIRECT_LEFT_PAN_MS * DIRECT_DECEL_START));
+        const tEnd = setTimeout(() => {
+          if (cancelled) return;
+          setPanDir(null);
+          setPanSpeed(null);
+          setStreakPhase(null);
+        }, DIRECT_LEFT_PAN_MS);
+        const tFound = setTimeout(() => {
+          if (cancelled) return;
+          setFound(true);
+          setPhase('found');
+        }, DIRECT_LEFT_PAN_MS + DIRECT_FOUND_DELAY_MS);
+        timersRef.current.push(tCruise, tDecel, tEnd, tFound);
+      }, DIRECT_PAN_UP_MS);
+      timersRef.current.push(tPanLeft);
+
+      return () => {
+        cancelled = true;
+        timersRef.current.forEach(clearTimeout);
+        timersRef.current = [];
+      };
+    }
+
+    const t1 = setTimeout(() => setPhase('zoom-lens'), 2000);
     const t2 = setTimeout(() => {
-      setSearching(true);
       startSearchPan();
-    }, 5500);
+      setSearching(true);
+    }, 2200);
 
     const t3 = setTimeout(() => {
       searchLoopRef.current = false;
@@ -361,6 +434,7 @@ function TelescopeView({ query, onComplete, initialStarField }) {
       setStreakPhase(null);
 
       setTransitionMs(3000);
+      setTransitionEase(DEFAULT_SKY_TRANSITION_EASE);
       setSkyOffset({ x: FOUND_PAN_DISTANCE, y: -FOUND_PAN_DISTANCE });
 
       const tFound = setTimeout(() => {
@@ -388,13 +462,15 @@ function TelescopeView({ query, onComplete, initialStarField }) {
       clearTimeout(t2);
       clearTimeout(t3);
       timersRef.current.forEach(clearTimeout);
+      timersRef.current = [];
     };
-  }, [startSearchPan, ensureTreeData]);
+  }, [startSearchPan, ensureTreeData, isDirectOpen]);
 
   const streakClass = panDir ? `streaking-${panDir}` : '';
   const phaseClass = streakPhase ? `streak-${streakPhase}` : '';
   const speedClass = panSpeed && panSpeed <= 2750 ? 'streak-fast' : panSpeed ? 'streak-slow' : '';
-  const sceneClass = `${phase}${phase === 'found' ? ' zoom-lens' : ''}${phase === 'zoom-lens' && !searching ? ' pre-search' : ''}`;
+  const directPanLeftClass = isDirectOpen && (phase === 'direct-pan-left' || phase === 'found') ? ' direct-pan-left' : '';
+  const sceneClass = `${phase}${isDirectOpen ? ' direct-open' : ''}${directPanLeftClass}${phase === 'found' ? ' zoom-lens' : ''}${phase === 'zoom-lens' && !searching ? ' pre-search' : ''}${(searching || found) ? ' search-active' : ''}`;
 
   return (
     <div className="telescope-overlay">
@@ -403,7 +479,7 @@ function TelescopeView({ query, onComplete, initialStarField }) {
           className={`telescope-sky-bg ${streakClass} ${speedClass} ${phaseClass}`}
           style={{
             transform: `translate(${skyOffset.x}%, ${skyOffset.y}%)`,
-            transition: transitionMs > 0 ? `transform ${transitionMs}ms cubic-bezier(0.7, 0, 0.12, 1)` : 'none',
+            transition: transitionMs > 0 ? `transform ${transitionMs}ms ${transitionEase}` : 'none',
           }}
         >
           {nebulas.map((nebula) => (

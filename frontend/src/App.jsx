@@ -110,6 +110,7 @@ function App() {
   const [mainEntrySequence, setMainEntrySequence] = useState(0);
   const [sharedStarField, setSharedStarField] = useState(() => generateMainStarField());
   const [telescopeMode, setTelescopeMode] = useState(false);
+  const [telescopePresetTree, setTelescopePresetTree] = useState(null);
   const [constellationMode, setConstellationMode] = useState(false);
   const [constellationReady, setConstellationReady] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
@@ -152,6 +153,7 @@ function App() {
     if (fadingOut || telescopeMode || activePage !== 'create') return;
 
     setSearchQuery(query);
+    setTelescopePresetTree(null);
     setFadingOut(true);
 
     // Wait for main UI fade-out to complete before starting search.
@@ -162,9 +164,11 @@ function App() {
 
   const handleTelescopeComplete = (tree) => {
     setTelescopeMode(false);
+    setTelescopePresetTree(null);
     if (tree) {
       const graph = parseGraphPayload(tree);
       const topic = tree.topic || searchQuery || '';
+      const isPastReplay = Boolean(tree.__fromPastOpen);
       if (!graph) {
         setConstellationData(null);
         setConstellationMode(false);
@@ -179,14 +183,16 @@ function App() {
       setActivePage('create');
       setConstellationTopic(topic);
 
-      createPastConstellation({
-        title: topic || 'Untitled Constellation',
-        query: searchQuery || '',
-        tags: [],
-        graph
-      }).catch((err) => {
-        console.error('Failed to persist constellation:', err);
-      });
+      if (!isPastReplay) {
+        createPastConstellation({
+          title: topic || 'Untitled Constellation',
+          query: searchQuery || '',
+          tags: [],
+          graph
+        }).catch((err) => {
+          console.error('Failed to persist constellation:', err);
+        });
+      }
 
       // Fade in UI after the zoom transition completes
       setTimeout(() => {
@@ -203,6 +209,7 @@ function App() {
   const handleMenuClick = (pageId) => {
     clearPastOpenTimers();
     setPastOpenTransition(null);
+    setTelescopePresetTree(null);
     setActivePage(pageId);
     setFadingOut(false);
     setTelescopeMode(false);
@@ -215,46 +222,24 @@ function App() {
   const handleOpenPastConstellation = (item, transitionMeta = {}) => {
     if (!item?.graph?.nodes || !item?.graph?.links) return;
     clearPastOpenTimers();
-
-    const shell = {
-      phase: 'glisten',
-      originRect: transitionMeta?.originRect || null,
-      stars: transitionMeta?.previewStars || buildSeededStars(item.id)
-    };
-    setPastOpenTransition(shell);
-
-    const toZoomMs = PAST_OPEN_GLINT_MS;
-    const toDissolveMs = PAST_OPEN_GLINT_MS + PAST_OPEN_ZOOM_MS;
-    const mountConstellationMs = toDissolveMs - 120;
-    const endTransitionMs = toDissolveMs + PAST_OPEN_DISSOLVE_MS;
-
+    setPastOpenTransition(null);
+    setSearchQuery(item.query || item.title || '');
+    setConstellationTopic(item.title || item.query || 'Knowledge');
+    setConstellationData(null);
+    setConstellationMode(false);
+    setConstellationReady(false);
+    setTelescopePresetTree({
+      id: item.id,
+      topic: item.title || item.query || 'Knowledge',
+      query: item.query || '',
+      graph: item.graph,
+      __fromPastOpen: true
+    });
+    setFadingOut(true);
     pastOpenTimersRef.current.push(setTimeout(() => {
-      setPastOpenTransition((prev) => (prev ? { ...prev, phase: 'zoom' } : prev));
-    }, toZoomMs));
-
-    pastOpenTimersRef.current.push(setTimeout(() => {
-      setSearchQuery(item.query || '');
-      setConstellationTopic(item.title || item.query || 'Knowledge');
-      setConstellationData(item.graph);
-      setConstellationMode(true);
-      setConstellationReady(false);
       setActivePage('create');
-      setFadingOut(false);
-      setTelescopeMode(false);
-    }, mountConstellationMs));
-
-    pastOpenTimersRef.current.push(setTimeout(() => {
-      setPastOpenTransition((prev) => (prev ? { ...prev, phase: 'dissolve' } : prev));
-    }, toDissolveMs));
-
-    pastOpenTimersRef.current.push(setTimeout(() => {
-      setConstellationReady(true);
-    }, toDissolveMs + 180));
-
-    pastOpenTimersRef.current.push(setTimeout(() => {
-      setPastOpenTransition(null);
-      clearPastOpenTimers();
-    }, endTransitionMs));
+      setTelescopeMode(true);
+    }, MAIN_UI_FADE_MS));
   };
 
   const handleSettingsChange = (patch) => {
@@ -358,6 +343,7 @@ function App() {
               query={searchQuery}
               onComplete={handleTelescopeComplete}
               initialStarField={sharedStarField}
+              presetTree={telescopePresetTree}
             />
           )}
 

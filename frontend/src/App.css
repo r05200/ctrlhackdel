@@ -507,7 +507,7 @@
 
 /* Existing splash stars become streaks during exit */
 .star-look-up {
-  animation: star-streak-down var(--exit-pan-ms, 1335ms) linear forwards !important;
+  animation: star-streak-down var(--exit-pan-ms, 1335ms) cubic-bezier(0.62, 0, 1, 1) forwards !important;
   will-change: transform, opacity, filter;
   transform: translateZ(0);
   backface-visibility: hidden;
@@ -524,7 +524,7 @@
   background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.88));
   border-radius: 50% 50% 0 0;
   filter: blur(0.45px);
-  animation: star-look-up-tail var(--exit-pan-ms, 1335ms) linear forwards;
+  animation: star-look-up-tail var(--exit-pan-ms, 1335ms) cubic-bezier(0.62, 0, 1, 1) forwards;
 }
 
 .splash-star-visible {
@@ -554,6 +554,27 @@
     opacity: var(--star-opacity, 0.92);
     transform: translateY(0) scale(1);
     filter: blur(0px);
+    animation-timing-function: cubic-bezier(0.62, 0, 0.96, 1);
+  }
+
+  22% {
+    opacity: calc(var(--star-opacity, 0.92) * 0.92);
+    transform: translateY(16vh) scale(0.99);
+    filter: blur(0.1px);
+    animation-timing-function: cubic-bezier(0.35, 0.72, 0.24, 1);
+  }
+
+  55% {
+    opacity: calc(var(--star-opacity, 0.92) * 0.86);
+    transform: translateY(94vh) scale(0.95);
+    filter: blur(0.42px);
+    animation-timing-function: linear;
+  }
+
+  82% {
+    opacity: calc(var(--star-opacity, 0.92) * 0.8);
+    transform: translateY(172vh) scale(0.92);
+    filter: blur(0.66px);
   }
 
   92% {
@@ -803,11 +824,11 @@
   pointer-events: none;
   overflow: hidden;
   background: radial-gradient(ellipse at center, #12101f 0%, #0a0815 100%);
-  transition: transform 1190ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 900ms cubic-bezier(0.62, 0, 1, 1);
 }
 
 .starry-background.pan-up-transition {
-  transform: translateY(-12vh);
+  transform: translateY(-18vh);
 }
 
 .bg-twinkle-star {
@@ -825,11 +846,53 @@
 }
 
 .starry-background.pan-up-transition .bg-twinkle-star {
-  animation: star-pan-up-streak 1190ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+  animation: star-pan-up-streak 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 }
 
 .starry-background.pan-up-transition .bg-gemini-star {
-  animation: gemini-pan-up-streak 1190ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+  animation: gemini-pan-up-streak 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+
+/* Stars streak upward with prominent tails during transition */
+.starry-background.pan-up-transition .bg-twinkle-star::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 2px;
+  height: 0;
+  transform: translateX(-50%);
+  background: linear-gradient(to top, transparent, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.85));
+  border-radius: 0 0 50% 50%;
+  filter: blur(0.4px);
+  animation: star-pan-up-tail 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+
+@keyframes star-pan-up-tail {
+  0% {
+    height: 0;
+    opacity: 0;
+  }
+
+  20% {
+    height: 28px;
+    opacity: 0.7;
+  }
+
+  50% {
+    height: 55px;
+    opacity: 0.85;
+  }
+
+  80% {
+    height: 30px;
+    opacity: 0.5;
+  }
+
+  100% {
+    height: 0;
+    opacity: 0;
+  }
 }
 
 @keyframes star-pan-up-streak {
@@ -839,15 +902,15 @@
     box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
   }
 
-  45% {
-    opacity: 0.95;
-    box-shadow: 0 12px 8px rgba(255, 255, 255, 0.32);
+  30% {
+    opacity: 1;
+    box-shadow: 0 18px 12px rgba(255, 255, 255, 0.4);
   }
 
   100% {
-    transform: translateY(-90px) scale(0.84);
-    opacity: 0.72;
-    box-shadow: 0 18px 12px rgba(255, 255, 255, 0.2);
+    transform: translateY(-140px) scale(0.78);
+    opacity: 0.5;
+    box-shadow: 0 28px 16px rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -858,9 +921,9 @@
   }
 
   100% {
-    transform: rotate(var(--bg-gem-rotation, 0deg)) translateY(-80px) scale(0.9);
-    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.75);
-    filter: blur(0.8px);
+    transform: rotate(var(--bg-gem-rotation, 0deg)) translateY(-120px) scale(0.85);
+    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.6);
+    filter: blur(1px);
   }
 }
 
@@ -920,6 +983,7 @@
 
 .bg-gemini-star.main-landing {
   animation: bg-gemini-main-land var(--land-duration, 1.52s) cubic-bezier(0.22, 1, 0.36, 1) var(--land-delay, 0s) forwards !important;
+  animation-fill-mode: both !important;
 }
 
 @keyframes bg-gemini-main-land {
@@ -934,8 +998,11 @@
     opacity: calc(var(--bg-gem-opacity, 0.58) * 0.62);
   }
 
-  70% {
-    transform: rotate(var(--bg-gem-rotation, 0deg)) translateY(-6px) scale(1);
+  84% {
+    transform: rotate(var(--bg-gem-rotation, 0deg)) translateY(0) scale(1);
+    opacity: var(--bg-gem-opacity, 0.58);
+    filter: blur(0px);
+    box-shadow: none;
   }
 
   100% {
@@ -964,57 +1031,77 @@
 @keyframes bg-gemini-pulse-in {
   0% {
     opacity: 0;
-    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.88);
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(1);
   }
 
-  22% {
-    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.24);
-    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.94);
+  18% {
+    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.22);
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.95);
   }
 
-  48% {
-    opacity: var(--bg-gem-opacity, 0.55);
+  42% {
+    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.68);
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(1.04);
+  }
+
+  56% {
+    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.96);
     transform: rotate(var(--bg-gem-rotation, 0deg)) scale(1.08);
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.62));
   }
 
-  76% {
-    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.6);
+  72% {
+    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.54);
     transform: rotate(var(--bg-gem-rotation, 0deg)) scale(1.02);
+  }
+
+  86% {
+    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.2);
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.96);
   }
 
   100% {
     opacity: 0;
-    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.9);
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.93);
   }
 }
 
 @keyframes bg-gemini-pulse-out {
   0% {
     opacity: var(--bg-gem-opacity, 0.55);
-    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(1.05);
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(1);
   }
 
-  24% {
-    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.72);
-    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(1.02);
+  16% {
+    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.86);
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(1.04);
+  }
+
+  34% {
+    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.66);
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(1.01);
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.52));
   }
 
-  52% {
-    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.46);
+  56% {
+    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.38);
     transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.98);
     filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.44));
   }
 
-  72% {
-    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.34);
-    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.95);
+  78% {
+    opacity: calc(var(--bg-gem-opacity, 0.55) * 0.14);
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.94);
+  }
+
+  90% {
+    opacity: 0;
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.93);
   }
 
   100% {
-    opacity: var(--bg-gem-opacity, 0.55);
-    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(1.05);
+    opacity: 0;
+    transform: rotate(var(--bg-gem-rotation, 0deg)) scale(0.93);
   }
 }
 
@@ -1026,6 +1113,7 @@
   pointer-events: none;
   opacity: 0;
   animation: star-land 1220ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-fill-mode: both;
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.8),
     0 0 10px rgba(255, 255, 255, 0.3);
 }
@@ -1055,9 +1143,9 @@
     opacity: 1;
   }
 
-  65% {
-    opacity: 0.9;
-    transform: translateY(-6px);
+  84% {
+    transform: translateY(0px);
+    opacity: var(--star-opacity, 0.7);
   }
 
   100% {
@@ -1205,61 +1293,81 @@
   }
 }
 
-/* Pulse-in mode: transparent -> opaque -> translucent */
+/* Pulse-in mode: transparent -> bright -> transparent */
 @keyframes star-pulse-in-forever {
   0% {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(1);
   }
 
-  20% {
-    opacity: calc(var(--star-opacity, 0.75) * 0.25);
-    transform: scale(0.95);
+  18% {
+    opacity: calc(var(--star-opacity, 0.75) * 0.22);
+    transform: scale(0.98);
   }
 
-  46% {
-    opacity: var(--star-opacity, 0.75);
-    transform: scale(1.14);
+  40% {
+    opacity: calc(var(--star-opacity, 0.75) * 0.64);
+    transform: scale(1.04);
+  }
+
+  56% {
+    opacity: calc(var(--star-opacity, 0.75) * 0.96);
+    transform: scale(1.1);
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.56);
   }
 
-  74% {
-    opacity: calc(var(--star-opacity, 0.75) * 0.62);
-    transform: scale(1.06);
+  72% {
+    opacity: calc(var(--star-opacity, 0.75) * 0.54);
+    transform: scale(1.03);
+  }
+
+  86% {
+    opacity: calc(var(--star-opacity, 0.75) * 0.18);
+    transform: scale(0.98);
   }
 
   100% {
     opacity: 0;
-    transform: scale(0.92);
+    transform: scale(0.94);
   }
 }
 
-/* Pulse-out mode: opaque -> translucent and ends translucent */
+/* Pulse-out mode: opaque -> transparent (fully dim at cycle end) */
 @keyframes star-pulse-out-forever {
   0% {
     opacity: var(--star-opacity, 0.75);
-    transform: scale(1.05);
+    transform: scale(1);
   }
 
-  22% {
-    opacity: calc(var(--star-opacity, 0.75) * 0.74);
+  16% {
+    opacity: calc(var(--star-opacity, 0.75) * 0.86);
     transform: scale(1.03);
+  }
+
+  34% {
+    opacity: calc(var(--star-opacity, 0.75) * 0.66);
+    transform: scale(1.01);
     box-shadow: 0 0 7px rgba(255, 255, 255, 0.52);
   }
 
-  50% {
-    opacity: calc(var(--star-opacity, 0.75) * 0.52);
-    transform: scale(0.99);
+  56% {
+    opacity: calc(var(--star-opacity, 0.75) * 0.38);
+    transform: scale(0.98);
   }
 
-  72% {
-    opacity: calc(var(--star-opacity, 0.75) * 0.34);
+  78% {
+    opacity: calc(var(--star-opacity, 0.75) * 0.14);
     transform: scale(0.95);
   }
 
+  90% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
   100% {
-    opacity: var(--star-opacity, 0.75);
-    transform: scale(1.05);
+    opacity: 0;
+    transform: scale(0.94);
   }
 }
 
@@ -1728,7 +1836,7 @@
 .telescope-scene-wrap {
   position: absolute;
   inset: 0;
-  --telescope-pan-accelerate: cubic-bezier(0.62, 0, 0.86, 0.34);
+  --telescope-pan-accelerate: linear;
 }
 
 /* Night sky background */
@@ -1968,17 +2076,26 @@
     transform: translateY(-80px) scale(0.8);
     opacity: 0;
     box-shadow: 0 2px 2px rgba(255, 255, 255, 0.1);
+    animation-timing-function: cubic-bezier(0.86, 0, 1, 1);
   }
 
-  12% {
-    transform: translateY(-80px) scale(0.8);
-    opacity: 0.25;
-    box-shadow: 0 2px 2px rgba(255, 255, 255, 0.1);
+  25% {
+    transform: translateY(-78px) scale(0.82);
+    opacity: 0.22;
+    box-shadow: 0 5px 5px rgba(255, 255, 255, 0.16);
+    animation-timing-function: linear;
   }
 
   45% {
     opacity: 0.78;
     box-shadow: 0 8px 8px rgba(255, 255, 255, 0.2);
+  }
+
+  75% {
+    transform: translateY(18.33px) scale(0.98);
+    opacity: 0.56;
+    box-shadow: 0 14px 10px rgba(255, 255, 255, 0.26);
+    animation-timing-function: linear;
   }
 
   100% {
@@ -1992,11 +2109,13 @@
   0% {
     height: 8px;
     opacity: 0;
+    animation-timing-function: cubic-bezier(0.86, 0, 1, 1);
   }
 
-  12% {
-    height: 8px;
-    opacity: 0.24;
+  25% {
+    height: 10px;
+    opacity: 0.16;
+    animation-timing-function: linear;
   }
 
   42% {
@@ -2004,9 +2123,10 @@
     opacity: 0.52;
   }
 
-  78% {
-    height: 58px;
-    opacity: 0.86;
+  75% {
+    height: 62px;
+    opacity: 0.84;
+    animation-timing-function: linear;
   }
 
   100% {
@@ -2020,17 +2140,26 @@
     transform: rotate(var(--gem-rotation, 0deg)) translateY(-70px) scale(0.75);
     opacity: 0;
     box-shadow: 0 2px 2px rgba(255, 255, 255, 0.08);
+    animation-timing-function: cubic-bezier(0.86, 0, 1, 1);
   }
 
-  12% {
-    transform: rotate(var(--gem-rotation, 0deg)) translateY(-70px) scale(0.75);
-    opacity: calc(var(--gem-opacity, 0.6) * 0.24);
-    box-shadow: 0 2px 2px rgba(255, 255, 255, 0.08);
+  25% {
+    transform: rotate(var(--gem-rotation, 0deg)) translateY(-66px) scale(0.78);
+    opacity: calc(var(--gem-opacity, 0.6) * 0.22);
+    box-shadow: 0 5px 5px rgba(255, 255, 255, 0.14);
+    animation-timing-function: linear;
   }
 
   45% {
     opacity: calc(var(--gem-opacity, 0.6) * 0.62);
     box-shadow: 0 9px 10px rgba(255, 255, 255, 0.2);
+  }
+
+  75% {
+    transform: rotate(var(--gem-rotation, 0deg)) translateY(8px) scale(0.98);
+    opacity: calc(var(--gem-opacity, 0.6) * 0.4);
+    box-shadow: 0 14px 12px rgba(255, 255, 255, 0.24);
+    animation-timing-function: linear;
   }
 
   100% {
@@ -2044,16 +2173,24 @@
   0% {
     opacity: 0;
     filter: blur(0.2px);
+    animation-timing-function: cubic-bezier(0.86, 0, 1, 1);
   }
 
-  12% {
-    opacity: 0.2;
-    filter: blur(0.2px);
+  25% {
+    opacity: 0.16;
+    filter: blur(0.24px);
+    animation-timing-function: linear;
   }
 
   45% {
     opacity: 0.62;
     filter: blur(0.45px);
+  }
+
+  75% {
+    opacity: 0.84;
+    filter: blur(0.95px);
+    animation-timing-function: linear;
   }
 
   80% {
@@ -2068,7 +2205,9 @@
 }
 
 .telescope-scene-wrap.pre-search .lens-star,
-.telescope-scene-wrap.pre-search .gemini-star {
+.telescope-scene-wrap.pre-search .gemini-star,
+.telescope-scene-wrap.zoom-lens:not(.search-active) .lens-star,
+.telescope-scene-wrap.zoom-lens:not(.search-active) .gemini-star {
   opacity: 0 !important;
   box-shadow: none !important;
   animation-play-state: paused;
@@ -2160,15 +2299,23 @@
 
 /* ---- Phase 1: Circle pans up from bottom ---- */
 .telescope-scene-wrap.pan-up {
-  animation: scene-fade-in 800ms ease-out forwards;
+  animation: scene-fade-in 600ms ease-out forwards;
 }
 
 .telescope-scene-wrap.pan-up .telescope-circle {
-  animation: circle-pan-up 3000ms var(--telescope-pan-accelerate) forwards;
+  animation: circle-pan-up 2000ms var(--telescope-pan-accelerate) forwards;
 }
 
 .telescope-scene-wrap.pan-up .telescope-circle-inner {
-  animation: circle-pan-up 3000ms var(--telescope-pan-accelerate) forwards;
+  animation: circle-pan-up 2000ms var(--telescope-pan-accelerate) forwards;
+}
+
+.telescope-scene-wrap.direct-open.pan-up .telescope-circle {
+  animation: circle-pan-up-direct 2000ms var(--telescope-pan-accelerate) forwards;
+}
+
+.telescope-scene-wrap.direct-open.pan-up .telescope-circle-inner {
+  animation: circle-pan-up-direct 2000ms var(--telescope-pan-accelerate) forwards;
 }
 
 @keyframes scene-fade-in {
@@ -2181,24 +2328,78 @@
   }
 }
 
-/* Circle pans from bottom of screen to center */
+/* Circle pans from below center of screen to center */
 @keyframes circle-pan-up {
   0% {
-    transform: translate(-50%, calc(-100vh - 150px));
+    transform: translate(-50%, calc(100vh + 170px));
     opacity: 0;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  10% {
-    transform: translate(-50%, calc(-100vh - 150px));
-    opacity: 0.95;
-  }
-
-  18% {
-    opacity: 1;
+  15% {
+    opacity: 0.9;
   }
 
   100% {
     transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+@keyframes circle-pan-up-direct {
+  0% {
+    transform: translate(-50%, calc(100vh + 170px));
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.84, 0, 1, 1);
+  }
+
+  15% {
+    transform: translate(-50%, calc(95vh + 150px));
+    opacity: 0.86;
+    animation-timing-function: linear;
+  }
+
+  75% {
+    transform: translate(-50%, calc(12vh + 12px));
+    opacity: 1;
+    animation-timing-function: linear;
+  }
+
+  100% {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+.telescope-scene-wrap.direct-open.direct-pan-left .telescope-circle {
+  animation: circle-pan-left-direct 920ms linear forwards;
+}
+
+.telescope-scene-wrap.direct-open.direct-pan-left .telescope-circle-inner {
+  animation: circle-pan-left-direct 920ms linear forwards;
+}
+
+@keyframes circle-pan-left-direct {
+  0% {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.84, 0, 1, 1);
+  }
+
+  15% {
+    transform: translate(calc(-50% - 4vw), -50%);
+    opacity: 1;
+    animation-timing-function: linear;
+  }
+
+  75% {
+    transform: translate(calc(-50% - 18.75vw), -50%);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0, 0, 0.42, 1);
+  }
+
+  100% {
+    transform: translate(calc(-50% - 25vw), -50%);
     opacity: 1;
   }
 }
@@ -2504,10 +2705,10 @@
 }
 
 .constellation-svg-found {
-  width: 34%;
-  height: 34%;
-  max-width: 460px;
-  max-height: 460px;
+  width: 55%;
+  height: 55%;
+  max-width: 520px;
+  max-height: 520px;
 }
 
 .constellation-line-found {

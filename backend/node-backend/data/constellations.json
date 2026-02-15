@@ -1,17 +1,15 @@
 {
   "items": [
     {
-      "id": "const_1771130112950_6jo3d9",
-      "title": "archery",
-      "query": "archery",
-      "tags": [
-        "sports"
-      ],
+      "id": "const_1771142213600_g4aypz",
+      "title": "fda",
+      "query": "fda",
+      "tags": [],
       "graph": {
         "nodes": [
           {
             "id": "basics",
-            "label": "Archery\nBasics",
+            "label": "Fda\nBasics",
             "status": "mastered",
             "level": 1,
             "description": "Fundamental concepts and introduction"
@@ -90,8 +88,1898 @@
           }
         ]
       },
-      "createdAt": "2026-02-15T04:35:12.950Z",
-      "updatedAt": "2026-02-15T04:35:31.824Z"
+      "createdAt": "2026-02-15T07:56:53.600Z",
+      "updatedAt": "2026-02-15T07:56:53.600Z"
+    },
+    {
+      "id": "const_1771142722102_990lyn",
+      "title": "fad",
+      "query": "fad",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "intro-fads",
+            "label": "Introduction to Fads",
+            "status": "active",
+            "level": 1,
+            "description": "Understand the basic concept and general overview of what a fad is."
+          },
+          {
+            "id": "defining-fad",
+            "label": "Defining a Fad",
+            "status": "locked",
+            "level": 1,
+            "description": "Learn the precise definition and scope of what constitutes a fad."
+          },
+          {
+            "id": "characteristics-fads",
+            "label": "Key Characteristics of Fads",
+            "status": "locked",
+            "level": 2,
+            "description": "Identify the distinguishing features and common attributes of fads."
+          },
+          {
+            "id": "fad-vs-trend-vs-classic",
+            "label": "Fad vs Trend vs Classic",
+            "status": "locked",
+            "level": 2,
+            "description": "Differentiate between fads, enduring trends, and timeless classics."
+          },
+          {
+            "id": "psychological-drivers",
+            "label": "Psychological Drivers of Fads",
+            "status": "locked",
+            "level": 3,
+            "description": "Explore the human psychological factors that contribute to the emergence and spread of fads."
+          },
+          {
+            "id": "historical-examples",
+            "label": "Historical Fad Examples",
+            "status": "locked",
+            "level": 3,
+            "description": "Examine notable fads from various historical periods and cultural contexts."
+          },
+          {
+            "id": "media-social-influence",
+            "label": "Role of Media and Social Influence",
+            "status": "locked",
+            "level": 3,
+            "description": "Analyze how different forms of media and social interactions propagate fads."
+          },
+          {
+            "id": "economic-impact",
+            "label": "Economic Impact of Fads",
+            "status": "locked",
+            "level": 4,
+            "description": "Investigate the financial consequences and market dynamics influenced by fads."
+          },
+          {
+            "id": "social-cultural-impact",
+            "label": "Social and Cultural Impact",
+            "status": "locked",
+            "level": 4,
+            "description": "Understand how fads affect societal norms, group identity, and cultural evolution."
+          },
+          {
+            "id": "consumer-behavior",
+            "label": "Consumer Behavior and Fads",
+            "status": "locked",
+            "level": 4,
+            "description": "Study consumer motivations and purchasing patterns driven by fad phenomena."
+          },
+          {
+            "id": "fads-in-marketing",
+            "label": "Fads in Marketing and Business",
+            "status": "locked",
+            "level": 5,
+            "description": "Discover how businesses leverage or are affected by fads in their strategies and products."
+          },
+          {
+            "id": "lifecycle-fad",
+            "label": "The Lifecycle of a Fad",
+            "status": "locked",
+            "level": 5,
+            "description": "Map the typical stages of a fad from its inception to its decline."
+          },
+          {
+            "id": "ethical-considerations",
+            "label": "Ethical Considerations of Fads",
+            "status": "locked",
+            "level": 5,
+            "description": "Discuss the ethical implications and responsibilities associated with the creation and promotion of fads."
+          },
+          {
+            "id": "differentiating-lasting-trends",
+            "label": "Differentiating Fads from Lasting Trends",
+            "status": "locked",
+            "level": 6,
+            "description": "Develop skills to accurately distinguish short-lived fads from sustainable, long-term trends."
+          },
+          {
+            "id": "analyzing-contemporary-fads",
+            "label": "Analyzing Contemporary Fads",
+            "status": "locked",
+            "level": 6,
+            "description": "Apply learned concepts to critically analyze current fads in various domains."
+          },
+          {
+            "id": "predicting-future-fads",
+            "label": "Predicting Future Fads Challenges",
+            "status": "locked",
+            "level": 6,
+            "description": "Explore the complexities and challenges involved in attempting to forecast future fads."
+          }
+        ],
+        "links": [
+          {
+            "source": "intro-fads",
+            "target": "defining-fad"
+          },
+          {
+            "source": "defining-fad",
+            "target": "characteristics-fads"
+          },
+          {
+            "source": "defining-fad",
+            "target": "fad-vs-trend-vs-classic"
+          },
+          {
+            "source": "characteristics-fads",
+            "target": "psychological-drivers"
+          },
+          {
+            "source": "characteristics-fads",
+            "target": "historical-examples"
+          },
+          {
+            "source": "psychological-drivers",
+            "target": "media-social-influence"
+          },
+          {
+            "source": "historical-examples",
+            "target": "media-social-influence"
+          },
+          {
+            "source": "fad-vs-trend-vs-classic",
+            "target": "economic-impact"
+          },
+          {
+            "source": "fad-vs-trend-vs-classic",
+            "target": "social-cultural-impact"
+          },
+          {
+            "source": "media-social-influence",
+            "target": "consumer-behavior"
+          },
+          {
+            "source": "economic-impact",
+            "target": "fads-in-marketing"
+          },
+          {
+            "source": "social-cultural-impact",
+            "target": "lifecycle-fad"
+          },
+          {
+            "source": "consumer-behavior",
+            "target": "fads-in-marketing"
+          },
+          {
+            "source": "fads-in-marketing",
+            "target": "ethical-considerations"
+          },
+          {
+            "source": "lifecycle-fad",
+            "target": "differentiating-lasting-trends"
+          },
+          {
+            "source": "ethical-considerations",
+            "target": "analyzing-contemporary-fads"
+          },
+          {
+            "source": "differentiating-lasting-trends",
+            "target": "analyzing-contemporary-fads"
+          },
+          {
+            "source": "analyzing-contemporary-fads",
+            "target": "predicting-future-fads"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T08:05:22.102Z",
+      "updatedAt": "2026-02-15T08:05:22.102Z"
+    },
+    {
+      "id": "const_1771142766511_sgurn4",
+      "title": "integrals",
+      "query": "integrals",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "L1_ANTIDERIV",
+            "label": "Antiderivatives",
+            "status": "active",
+            "level": 1,
+            "description": "Understand the concept of finding the inverse operation of differentiation."
+          },
+          {
+            "id": "L1_INDEF_INT",
+            "label": "Indefinite Integrals & Basic Rules",
+            "status": "locked",
+            "level": 1,
+            "description": "Learn the notation for indefinite integrals and fundamental integration formulas for common functions."
+          },
+          {
+            "id": "L2_SUBST",
+            "label": "Integration by Substitution",
+            "status": "locked",
+            "level": 2,
+            "description": "Master a powerful technique for simplifying integrals by changing the variable of integration."
+          },
+          {
+            "id": "L2_DEF_INT",
+            "label": "Definite Integrals & FTC",
+            "status": "locked",
+            "level": 2,
+            "description": "Calculate the area under a curve using definite integrals and the Fundamental Theorem of Calculus."
+          },
+          {
+            "id": "L3_AREA",
+            "label": "Area Between Curves",
+            "status": "locked",
+            "level": 3,
+            "description": "Apply definite integrals to find the area enclosed between two or more functions."
+          },
+          {
+            "id": "L3_VOL_DW",
+            "label": "Volumes by Disk/Washer",
+            "status": "locked",
+            "level": 3,
+            "description": "Calculate volumes of solids of revolution using the disk and washer methods."
+          },
+          {
+            "id": "L4_INT_PARTS",
+            "label": "Integration by Parts",
+            "status": "locked",
+            "level": 4,
+            "description": "Learn a technique for integrating products of functions by transforming the integral."
+          },
+          {
+            "id": "L4_TRIG_INT",
+            "label": "Trigonometric Integrals",
+            "status": "locked",
+            "level": 4,
+            "description": "Develop strategies for integrating various combinations and powers of trigonometric functions."
+          },
+          {
+            "id": "L4_TRIG_SUB",
+            "label": "Trigonometric Substitution",
+            "status": "locked",
+            "level": 4,
+            "description": "Utilize trigonometric substitutions to evaluate integrals containing specific radical expressions."
+          },
+          {
+            "id": "L4_PARTIAL_FRACT",
+            "label": "Partial Fraction Decomposition",
+            "status": "locked",
+            "level": 4,
+            "description": "Integrate rational functions by breaking them down into simpler fractions."
+          },
+          {
+            "id": "L5_VOL_CS",
+            "label": "Volumes by Cylindrical Shells",
+            "status": "locked",
+            "level": 5,
+            "description": "Explore an alternative method for calculating volumes of solids of revolution using cylindrical shells."
+          },
+          {
+            "id": "L5_IMPROPER_INT",
+            "label": "Improper Integrals",
+            "status": "locked",
+            "level": 5,
+            "description": "Evaluate integrals with infinite limits of integration or infinite discontinuities."
+          },
+          {
+            "id": "L6_APP_GEN",
+            "label": "General Applications of Integrals",
+            "status": "locked",
+            "level": 6,
+            "description": "Explore diverse real-world applications of integration in various fields like physics, economics, and engineering."
+          }
+        ],
+        "links": [
+          {
+            "source": "L1_ANTIDERIV",
+            "target": "L1_INDEF_INT"
+          },
+          {
+            "source": "L1_INDEF_INT",
+            "target": "L2_SUBST"
+          },
+          {
+            "source": "L1_INDEF_INT",
+            "target": "L2_DEF_INT"
+          },
+          {
+            "source": "L2_DEF_INT",
+            "target": "L3_AREA"
+          },
+          {
+            "source": "L2_DEF_INT",
+            "target": "L3_VOL_DW"
+          },
+          {
+            "source": "L2_SUBST",
+            "target": "L4_INT_PARTS"
+          },
+          {
+            "source": "L2_SUBST",
+            "target": "L4_TRIG_INT"
+          },
+          {
+            "source": "L2_SUBST",
+            "target": "L4_TRIG_SUB"
+          },
+          {
+            "source": "L2_SUBST",
+            "target": "L4_PARTIAL_FRACT"
+          },
+          {
+            "source": "L3_VOL_DW",
+            "target": "L5_VOL_CS"
+          },
+          {
+            "source": "L2_DEF_INT",
+            "target": "L5_IMPROPER_INT"
+          },
+          {
+            "source": "L4_INT_PARTS",
+            "target": "L5_IMPROPER_INT"
+          },
+          {
+            "source": "L4_TRIG_INT",
+            "target": "L5_IMPROPER_INT"
+          },
+          {
+            "source": "L4_TRIG_SUB",
+            "target": "L5_IMPROPER_INT"
+          },
+          {
+            "source": "L4_PARTIAL_FRACT",
+            "target": "L5_IMPROPER_INT"
+          },
+          {
+            "source": "L3_AREA",
+            "target": "L6_APP_GEN"
+          },
+          {
+            "source": "L3_VOL_DW",
+            "target": "L6_APP_GEN"
+          },
+          {
+            "source": "L5_VOL_CS",
+            "target": "L6_APP_GEN"
+          },
+          {
+            "source": "L5_IMPROPER_INT",
+            "target": "L6_APP_GEN"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T08:06:06.511Z",
+      "updatedAt": "2026-02-15T08:06:06.511Z"
+    },
+    {
+      "id": "const_1771142961115_ppqu1b",
+      "title": "derivatives",
+      "query": "derivatives",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "d01",
+            "label": "Concept of Limit",
+            "status": "active",
+            "level": 1,
+            "description": "Understand the foundational concept of a limit in calculus."
+          },
+          {
+            "id": "d02",
+            "label": "Introduction to Derivatives",
+            "status": "locked",
+            "level": 1,
+            "description": "Learn the definition of a derivative as the slope of a tangent line and its limit definition."
+          },
+          {
+            "id": "d03",
+            "label": "Basic Differentiation Rules",
+            "status": "locked",
+            "level": 2,
+            "description": "Master the power rule, constant rule, and sum/difference rules for differentiation."
+          },
+          {
+            "id": "d04",
+            "label": "Product and Quotient Rules",
+            "status": "locked",
+            "level": 2,
+            "description": "Apply specific rules for differentiating products and quotients of functions."
+          },
+          {
+            "id": "d05",
+            "label": "Chain Rule",
+            "status": "locked",
+            "level": 3,
+            "description": "Differentiate composite functions using the chain rule."
+          },
+          {
+            "id": "d06",
+            "label": "Derivatives of Trig Functions",
+            "status": "locked",
+            "level": 3,
+            "description": "Find derivatives of sine, cosine, tangent, and other trigonometric functions."
+          },
+          {
+            "id": "d07",
+            "label": "Derivatives of Exp and Log Functions",
+            "status": "locked",
+            "level": 3,
+            "description": "Calculate derivatives for exponential and logarithmic functions."
+          },
+          {
+            "id": "d08",
+            "label": "Higher Order Derivatives",
+            "status": "locked",
+            "level": 4,
+            "description": "Compute second, third, and subsequent derivatives of a function."
+          },
+          {
+            "id": "d09",
+            "label": "Implicit Differentiation",
+            "status": "locked",
+            "level": 4,
+            "description": "Differentiate equations that are not explicitly solved for one variable."
+          },
+          {
+            "id": "d10",
+            "label": "Related Rates",
+            "status": "locked",
+            "level": 5,
+            "description": "Solve problems involving rates of change of two or more related variables."
+          },
+          {
+            "id": "d11",
+            "label": "Optimization Problems",
+            "status": "locked",
+            "level": 5,
+            "description": "Use derivatives to find maximum or minimum values in real-world scenarios."
+          },
+          {
+            "id": "d12",
+            "label": "Mean Value Theorem",
+            "status": "locked",
+            "level": 5,
+            "description": "Understand and apply the Mean Value Theorem for derivatives."
+          },
+          {
+            "id": "d13",
+            "label": "L Hopital Rule",
+            "status": "locked",
+            "level": 6,
+            "description": "Evaluate indeterminate forms of limits using L'Hôpital's Rule."
+          },
+          {
+            "id": "d14",
+            "label": "Curve Sketching with Derivatives",
+            "status": "locked",
+            "level": 6,
+            "description": "Utilize first and second derivatives to analyze and sketch the graph of a function."
+          },
+          {
+            "id": "d15",
+            "label": "Taylor Series Introduction",
+            "status": "locked",
+            "level": 6,
+            "description": "Explore how derivatives are used to construct Taylor and Maclaurin series."
+          }
+        ],
+        "links": [
+          {
+            "source": "d01",
+            "target": "d02"
+          },
+          {
+            "source": "d02",
+            "target": "d03"
+          },
+          {
+            "source": "d03",
+            "target": "d04"
+          },
+          {
+            "source": "d03",
+            "target": "d05"
+          },
+          {
+            "source": "d04",
+            "target": "d05"
+          },
+          {
+            "source": "d05",
+            "target": "d06"
+          },
+          {
+            "source": "d05",
+            "target": "d07"
+          },
+          {
+            "source": "d03",
+            "target": "d08"
+          },
+          {
+            "source": "d05",
+            "target": "d09"
+          },
+          {
+            "source": "d06",
+            "target": "d09"
+          },
+          {
+            "source": "d05",
+            "target": "d10"
+          },
+          {
+            "source": "d07",
+            "target": "d10"
+          },
+          {
+            "source": "d05",
+            "target": "d11"
+          },
+          {
+            "source": "d02",
+            "target": "d12"
+          },
+          {
+            "source": "d08",
+            "target": "d13"
+          },
+          {
+            "source": "d08",
+            "target": "d14"
+          },
+          {
+            "source": "d08",
+            "target": "d15"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T08:09:21.115Z",
+      "updatedAt": "2026-02-15T08:09:21.115Z"
+    },
+    {
+      "id": "const_1771143541387_0ufks3",
+      "title": "fdsa",
+      "query": "fdsa",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "fdsa-intro",
+            "label": "Intro to FDSA",
+            "status": "active",
+            "level": 1,
+            "description": "Understand what distributed systems are and why they are used."
+          },
+          {
+            "id": "basic-concepts",
+            "label": "Basic Concepts",
+            "status": "locked",
+            "level": 1,
+            "description": "Learn about concurrency, parallelism, and fundamental distributed computing models."
+          },
+          {
+            "id": "communication-models",
+            "label": "Communication Models",
+            "status": "locked",
+            "level": 2,
+            "description": "Explore different ways components communicate like RPC, message queues, and REST."
+          },
+          {
+            "id": "distributed-storage",
+            "label": "Distributed Storage",
+            "status": "locked",
+            "level": 2,
+            "description": "Understand data storage challenges and solutions in distributed environments."
+          },
+          {
+            "id": "resource-management",
+            "label": "Resource Management",
+            "status": "locked",
+            "level": 2,
+            "description": "Learn about managing resources and scheduling tasks across multiple nodes."
+          },
+          {
+            "id": "data-consistency",
+            "label": "Data Consistency Models",
+            "status": "locked",
+            "level": 3,
+            "description": "Study different consistency models like eventual, strong, and causal consistency."
+          },
+          {
+            "id": "fault-tolerance",
+            "label": "Fault Tolerance",
+            "status": "locked",
+            "level": 3,
+            "description": "Explore techniques to handle failures in distributed systems, such as replication and leader election."
+          },
+          {
+            "id": "distributed-transactions",
+            "label": "Distributed Transactions",
+            "status": "locked",
+            "level": 3,
+            "description": "Understand challenges and solutions for transactions spanning multiple systems."
+          },
+          {
+            "id": "microservices-arch",
+            "label": "Microservices Architecture",
+            "status": "locked",
+            "level": 4,
+            "description": "Dive into the principles and benefits of microservices for building distributed systems."
+          },
+          {
+            "id": "serverless-computing",
+            "label": "Serverless Computing",
+            "status": "locked",
+            "level": 4,
+            "description": "Learn about serverless paradigms and their role in modern distributed applications."
+          },
+          {
+            "id": "deployment-orchestration",
+            "label": "Deployment Orchestration",
+            "status": "locked",
+            "level": 4,
+            "description": "Understand tools and strategies for deploying and managing distributed systems (e.g., Kubernetes)."
+          },
+          {
+            "id": "distributed-security",
+            "label": "Distributed Security",
+            "status": "locked",
+            "level": 5,
+            "description": "Address security challenges unique to distributed environments, including authentication and authorization."
+          },
+          {
+            "id": "performance-optimization",
+            "label": "Performance Optimization",
+            "status": "locked",
+            "level": 5,
+            "description": "Learn techniques to optimize the performance, latency, and scalability of distributed systems."
+          },
+          {
+            "id": "monitoring-logging",
+            "label": "Monitoring and Logging",
+            "status": "locked",
+            "level": 5,
+            "description": "Understand the importance and tools for effective monitoring and logging of distributed applications."
+          },
+          {
+            "id": "case-studies",
+            "label": "Real World Case Studies",
+            "status": "locked",
+            "level": 6,
+            "description": "Analyze successful real-world implementations of distributed systems architectures and their lessons."
+          },
+          {
+            "id": "emerging-trends",
+            "label": "Emerging Trends",
+            "status": "locked",
+            "level": 6,
+            "description": "Explore new technologies, research areas, and future directions in distributed systems."
+          }
+        ],
+        "links": [
+          {
+            "source": "fdsa-intro",
+            "target": "basic-concepts"
+          },
+          {
+            "source": "basic-concepts",
+            "target": "communication-models"
+          },
+          {
+            "source": "basic-concepts",
+            "target": "distributed-storage"
+          },
+          {
+            "source": "basic-concepts",
+            "target": "resource-management"
+          },
+          {
+            "source": "communication-models",
+            "target": "data-consistency"
+          },
+          {
+            "source": "communication-models",
+            "target": "distributed-transactions"
+          },
+          {
+            "source": "distributed-storage",
+            "target": "data-consistency"
+          },
+          {
+            "source": "distributed-storage",
+            "target": "fault-tolerance"
+          },
+          {
+            "source": "resource-management",
+            "target": "fault-tolerance"
+          },
+          {
+            "source": "data-consistency",
+            "target": "microservices-arch"
+          },
+          {
+            "source": "data-consistency",
+            "target": "performance-optimization"
+          },
+          {
+            "source": "fault-tolerance",
+            "target": "microservices-arch"
+          },
+          {
+            "source": "fault-tolerance",
+            "target": "serverless-computing"
+          },
+          {
+            "source": "distributed-transactions",
+            "target": "microservices-arch"
+          },
+          {
+            "source": "microservices-arch",
+            "target": "deployment-orchestration"
+          },
+          {
+            "source": "microservices-arch",
+            "target": "distributed-security"
+          },
+          {
+            "source": "serverless-computing",
+            "target": "deployment-orchestration"
+          },
+          {
+            "source": "serverless-computing",
+            "target": "monitoring-logging"
+          },
+          {
+            "source": "deployment-orchestration",
+            "target": "case-studies"
+          },
+          {
+            "source": "distributed-security",
+            "target": "case-studies"
+          },
+          {
+            "source": "distributed-security",
+            "target": "emerging-trends"
+          },
+          {
+            "source": "performance-optimization",
+            "target": "monitoring-logging"
+          },
+          {
+            "source": "performance-optimization",
+            "target": "case-studies"
+          },
+          {
+            "source": "monitoring-logging",
+            "target": "case-studies"
+          },
+          {
+            "source": "monitoring-logging",
+            "target": "emerging-trends"
+          },
+          {
+            "source": "case-studies",
+            "target": "emerging-trends"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T08:19:01.387Z",
+      "updatedAt": "2026-02-15T08:19:01.387Z"
+    },
+    {
+      "id": "const_1771144121409_20a6lu",
+      "title": "test",
+      "query": "test",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "node-001",
+            "label": "What is Software Testing?",
+            "status": "active",
+            "level": 1,
+            "description": "Understand the fundamental purpose and definition of software testing."
+          },
+          {
+            "id": "node-002",
+            "label": "Why Test Software?",
+            "status": "locked",
+            "level": 1,
+            "description": "Learn the importance and benefits of testing in the software development lifecycle."
+          },
+          {
+            "id": "node-003",
+            "label": "Fundamental Testing Principles",
+            "status": "locked",
+            "level": 1,
+            "description": "Explore the seven core principles that guide effective software testing practices."
+          },
+          {
+            "id": "node-004",
+            "label": "SDLC and Testing Roles",
+            "status": "locked",
+            "level": 2,
+            "description": "Identify how testing fits into various Software Development Life Cycle models."
+          },
+          {
+            "id": "node-005",
+            "label": "Basic Test Planning",
+            "status": "locked",
+            "level": 2,
+            "description": "Grasp the essential components and purpose of a basic test plan."
+          },
+          {
+            "id": "node-006",
+            "label": "Unit Testing Fundamentals",
+            "status": "locked",
+            "level": 2,
+            "description": "Understand how to test individual components or units of code in isolation."
+          },
+          {
+            "id": "node-007",
+            "label": "Integration Testing Concepts",
+            "status": "locked",
+            "level": 3,
+            "description": "Learn to test interactions and data flow between integrated modules or systems."
+          },
+          {
+            "id": "node-008",
+            "label": "System Testing Overview",
+            "status": "locked",
+            "level": 3,
+            "description": "Discover how to test a complete and integrated software system against its requirements."
+          },
+          {
+            "id": "node-009",
+            "label": "User Acceptance Testing (UAT)",
+            "status": "locked",
+            "level": 3,
+            "description": "Understand the process of verifying if the software meets user needs and business requirements."
+          },
+          {
+            "id": "node-010",
+            "label": "Test Case Design Techniques",
+            "status": "locked",
+            "level": 4,
+            "description": "Explore methods like equivalence partitioning and boundary value analysis to create effective test cases."
+          },
+          {
+            "id": "node-011",
+            "label": "Defect Management Lifecycle",
+            "status": "locked",
+            "level": 4,
+            "description": "Learn how to identify, track, prioritize, and resolve software defects efficiently."
+          },
+          {
+            "id": "node-012",
+            "label": "Introduction to Test Automation",
+            "status": "locked",
+            "level": 5,
+            "description": "Get started with the concepts, benefits, and challenges of automating test processes."
+          },
+          {
+            "id": "node-013",
+            "label": "Regression Testing Strategies",
+            "status": "locked",
+            "level": 4,
+            "description": "Understand how to re-run existing tests to ensure recent changes haven't introduced new defects."
+          },
+          {
+            "id": "node-014",
+            "label": "Performance Testing",
+            "status": "locked",
+            "level": 5,
+            "description": "Learn to evaluate a system's speed, scalability, and stability under various loads."
+          },
+          {
+            "id": "node-015",
+            "label": "Testing in Agile & DevOps",
+            "status": "locked",
+            "level": 6,
+            "description": "Explore how testing roles and practices adapt within Agile and DevOps methodologies."
+          }
+        ],
+        "links": [
+          {
+            "source": "node-001",
+            "target": "node-002"
+          },
+          {
+            "source": "node-001",
+            "target": "node-003"
+          },
+          {
+            "source": "node-002",
+            "target": "node-004"
+          },
+          {
+            "source": "node-003",
+            "target": "node-005"
+          },
+          {
+            "source": "node-004",
+            "target": "node-006"
+          },
+          {
+            "source": "node-005",
+            "target": "node-006"
+          },
+          {
+            "source": "node-006",
+            "target": "node-007"
+          },
+          {
+            "source": "node-007",
+            "target": "node-008"
+          },
+          {
+            "source": "node-008",
+            "target": "node-009"
+          },
+          {
+            "source": "node-008",
+            "target": "node-010"
+          },
+          {
+            "source": "node-009",
+            "target": "node-011"
+          },
+          {
+            "source": "node-010",
+            "target": "node-013"
+          },
+          {
+            "source": "node-011",
+            "target": "node-013"
+          },
+          {
+            "source": "node-010",
+            "target": "node-012"
+          },
+          {
+            "source": "node-013",
+            "target": "node-012"
+          },
+          {
+            "source": "node-012",
+            "target": "node-014"
+          },
+          {
+            "source": "node-012",
+            "target": "node-015"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T08:28:41.409Z",
+      "updatedAt": "2026-02-15T08:28:41.409Z"
+    },
+    {
+      "id": "const_1771144323291_praclb",
+      "title": "test",
+      "query": "test",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "introToTesting",
+            "label": "Intro to Software Testing",
+            "status": "active",
+            "level": 1,
+            "description": "Understand the fundamental purpose and importance of software testing in the development lifecycle."
+          },
+          {
+            "id": "sdlcStlc",
+            "label": "SDLC and STLC",
+            "status": "locked",
+            "level": 2,
+            "description": "Learn how testing integrates within the Software Development Life Cycle (SDLC) and the Software Testing Life Cycle (STLC)."
+          },
+          {
+            "id": "testLevels",
+            "label": "Test Levels",
+            "status": "locked",
+            "level": 2,
+            "description": "Differentiate between various levels of testing like Unit, Integration, System, and Acceptance Testing."
+          },
+          {
+            "id": "testTypesFunctional",
+            "label": "Functional Test Types",
+            "status": "locked",
+            "level": 3,
+            "description": "Explore testing focused on verifying the software's specified requirements and functions."
+          },
+          {
+            "id": "testTypesNonFunctional",
+            "label": "Non-Functional Test Types",
+            "status": "locked",
+            "level": 3,
+            "description": "Examine testing aspects like performance, security, usability, and reliability."
+          },
+          {
+            "id": "blackBoxTesting",
+            "label": "Black Box Testing",
+            "status": "locked",
+            "level": 4,
+            "description": "Understand testing without knowledge of internal code structure, focusing on input and output."
+          },
+          {
+            "id": "whiteBoxTesting",
+            "label": "White Box Testing",
+            "status": "locked",
+            "level": 4,
+            "description": "Learn testing with knowledge of the internal code structure and logic paths."
+          },
+          {
+            "id": "testDesignTechniques",
+            "label": "Test Design Techniques",
+            "status": "locked",
+            "level": 4,
+            "description": "Master methods like Equivalence Partitioning and Boundary Value Analysis for effective test case creation."
+          },
+          {
+            "id": "testExecutionReporting",
+            "label": "Test Execution & Reporting",
+            "status": "locked",
+            "level": 3,
+            "description": "Understand the process of executing test cases and documenting results and observations."
+          },
+          {
+            "id": "defectManagement",
+            "label": "Defect Management",
+            "status": "locked",
+            "level": 4,
+            "description": "Learn the lifecycle of defects, from identification to resolution and retesting."
+          },
+          {
+            "id": "introTestAutomation",
+            "label": "Intro to Test Automation",
+            "status": "locked",
+            "level": 5,
+            "description": "Discover the concepts and benefits of automating repetitive test cases for efficiency."
+          },
+          {
+            "id": "agileTesting",
+            "label": "Agile Testing Principles",
+            "status": "locked",
+            "level": 5,
+            "description": "Explore how testing practices adapt and thrive within agile development methodologies."
+          },
+          {
+            "id": "performanceTesting",
+            "label": "Performance Testing Fundamentals",
+            "status": "locked",
+            "level": 5,
+            "description": "Grasp the basics of testing for speed, responsiveness, and stability under various loads."
+          },
+          {
+            "id": "securityTesting",
+            "label": "Security Testing Basics",
+            "status": "locked",
+            "level": 5,
+            "description": "Understand fundamental concepts for identifying vulnerabilities and risks in software."
+          },
+          {
+            "id": "continuousTesting",
+            "label": "Continuous Testing (CI/CD)",
+            "status": "locked",
+            "level": 6,
+            "description": "Learn about integrating testing seamlessly throughout the Continuous Integration and Delivery pipeline."
+          },
+          {
+            "id": "testMetricsAnalytics",
+            "label": "Test Metrics & Analytics",
+            "status": "locked",
+            "level": 6,
+            "description": "Explore key performance indicators and data analysis for improving testing processes and quality."
+          }
+        ],
+        "links": [
+          {
+            "source": "introToTesting",
+            "target": "sdlcStlc"
+          },
+          {
+            "source": "introToTesting",
+            "target": "testLevels"
+          },
+          {
+            "source": "sdlcStlc",
+            "target": "testTypesFunctional"
+          },
+          {
+            "source": "sdlcStlc",
+            "target": "testTypesNonFunctional"
+          },
+          {
+            "source": "testLevels",
+            "target": "testTypesFunctional"
+          },
+          {
+            "source": "testLevels",
+            "target": "testTypesNonFunctional"
+          },
+          {
+            "source": "testTypesFunctional",
+            "target": "blackBoxTesting"
+          },
+          {
+            "source": "testTypesFunctional",
+            "target": "whiteBoxTesting"
+          },
+          {
+            "source": "testTypesFunctional",
+            "target": "testExecutionReporting"
+          },
+          {
+            "source": "testTypesNonFunctional",
+            "target": "performanceTesting"
+          },
+          {
+            "source": "testTypesNonFunctional",
+            "target": "securityTesting"
+          },
+          {
+            "source": "blackBoxTesting",
+            "target": "testDesignTechniques"
+          },
+          {
+            "source": "whiteBoxTesting",
+            "target": "testDesignTechniques"
+          },
+          {
+            "source": "testDesignTechniques",
+            "target": "testExecutionReporting"
+          },
+          {
+            "source": "testExecutionReporting",
+            "target": "defectManagement"
+          },
+          {
+            "source": "defectManagement",
+            "target": "introTestAutomation"
+          },
+          {
+            "source": "testExecutionReporting",
+            "target": "introTestAutomation"
+          },
+          {
+            "source": "sdlcStlc",
+            "target": "agileTesting"
+          },
+          {
+            "source": "introTestAutomation",
+            "target": "continuousTesting"
+          },
+          {
+            "source": "agileTesting",
+            "target": "continuousTesting"
+          },
+          {
+            "source": "defectManagement",
+            "target": "testMetricsAnalytics"
+          },
+          {
+            "source": "continuousTesting",
+            "target": "testMetricsAnalytics"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T08:32:03.291Z",
+      "updatedAt": "2026-02-15T08:32:03.291Z"
+    },
+    {
+      "id": "const_1771144332109_z989pz",
+      "title": "kljk",
+      "query": "kljk",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "kljk-intro",
+            "label": "Introduction to Kljk",
+            "status": "active",
+            "level": 1,
+            "description": "Understand the fundamental concepts and history of Kljk."
+          },
+          {
+            "id": "kljk-principles",
+            "label": "Basic Kljk Principles",
+            "status": "locked",
+            "level": 2,
+            "description": "Explore the core laws and underlying tenets governing Kljk phenomena."
+          },
+          {
+            "id": "kljk-taxonomy",
+            "label": "Kljk Taxonomy and Classification",
+            "status": "locked",
+            "level": 2,
+            "description": "Learn how Kljk entities are classified and categorized based on their properties."
+          },
+          {
+            "id": "kljk-measurement",
+            "label": "Kljk Measurement Units",
+            "status": "locked",
+            "level": 2,
+            "description": "Familiarize yourself with the standardized units and methods for quantifying Kljk attributes."
+          },
+          {
+            "id": "kljk-interaction",
+            "label": "Kljk Interaction Models",
+            "status": "locked",
+            "level": 3,
+            "description": "Analyze different models describing how Kljk elements interact with each other and their environment."
+          },
+          {
+            "id": "kljk-flux",
+            "label": "Kljk Flux Dynamics",
+            "status": "locked",
+            "level": 3,
+            "description": "Investigate the principles governing the flow and movement of Kljk energy or material."
+          },
+          {
+            "id": "kljk-transitions",
+            "label": "Kljk State Transitions",
+            "status": "locked",
+            "level": 3,
+            "description": "Study the various states Kljk can exist in and the mechanisms of transition between them."
+          },
+          {
+            "id": "kljk-systems",
+            "label": "Complex Kljk Systems Analysis",
+            "status": "locked",
+            "level": 4,
+            "description": "Delve into the methodologies for analyzing large and intricate systems involving multiple Kljk components."
+          },
+          {
+            "id": "kljk-modeling",
+            "label": "Predictive Kljk Modeling",
+            "status": "locked",
+            "level": 4,
+            "description": "Develop skills in creating models to forecast future behaviors and states of Kljk systems."
+          },
+          {
+            "id": "kljk-resonance",
+            "label": "Kljk Resonance Theory",
+            "status": "locked",
+            "level": 4,
+            "description": "Understand the specialized theory behind resonant frequencies and their effects within Kljk structures."
+          },
+          {
+            "id": "kljk-engineering",
+            "label": "Applied Kljk Engineering",
+            "status": "locked",
+            "level": 5,
+            "description": "Learn practical applications and design principles for building technologies based on Kljk."
+          },
+          {
+            "id": "kljk-interface",
+            "label": "Kljk Interface Design",
+            "status": "locked",
+            "level": 5,
+            "description": "Explore the principles of designing effective and intuitive interfaces for interacting with Kljk systems."
+          },
+          {
+            "id": "kljk-ethics",
+            "label": "Ethical Implications of Kljk",
+            "status": "locked",
+            "level": 5,
+            "description": "Examine the societal, moral, and ethical considerations arising from Kljk research and application."
+          },
+          {
+            "id": "kljk-emerging",
+            "label": "Emerging Kljk Paradigms",
+            "status": "locked",
+            "level": 6,
+            "description": "Discover cutting-edge concepts and revolutionary frameworks shaping the future of Kljk studies."
+          },
+          {
+            "id": "kljk-research",
+            "label": "Open Questions in Kljk Research",
+            "status": "locked",
+            "level": 6,
+            "description": "Identify unresolved challenges and areas ripe for further exploration in the field of Kljk."
+          }
+        ],
+        "links": [
+          {
+            "source": "kljk-intro",
+            "target": "kljk-principles"
+          },
+          {
+            "source": "kljk-intro",
+            "target": "kljk-taxonomy"
+          },
+          {
+            "source": "kljk-intro",
+            "target": "kljk-measurement"
+          },
+          {
+            "source": "kljk-principles",
+            "target": "kljk-interaction"
+          },
+          {
+            "source": "kljk-principles",
+            "target": "kljk-flux"
+          },
+          {
+            "source": "kljk-principles",
+            "target": "kljk-transitions"
+          },
+          {
+            "source": "kljk-taxonomy",
+            "target": "kljk-interaction"
+          },
+          {
+            "source": "kljk-measurement",
+            "target": "kljk-flux"
+          },
+          {
+            "source": "kljk-measurement",
+            "target": "kljk-transitions"
+          },
+          {
+            "source": "kljk-interaction",
+            "target": "kljk-systems"
+          },
+          {
+            "source": "kljk-interaction",
+            "target": "kljk-modeling"
+          },
+          {
+            "source": "kljk-flux",
+            "target": "kljk-systems"
+          },
+          {
+            "source": "kljk-flux",
+            "target": "kljk-resonance"
+          },
+          {
+            "source": "kljk-transitions",
+            "target": "kljk-modeling"
+          },
+          {
+            "source": "kljk-transitions",
+            "target": "kljk-resonance"
+          },
+          {
+            "source": "kljk-systems",
+            "target": "kljk-engineering"
+          },
+          {
+            "source": "kljk-systems",
+            "target": "kljk-interface"
+          },
+          {
+            "source": "kljk-modeling",
+            "target": "kljk-engineering"
+          },
+          {
+            "source": "kljk-modeling",
+            "target": "kljk-interface"
+          },
+          {
+            "source": "kljk-resonance",
+            "target": "kljk-engineering"
+          },
+          {
+            "source": "kljk-engineering",
+            "target": "kljk-ethics"
+          },
+          {
+            "source": "kljk-engineering",
+            "target": "kljk-emerging"
+          },
+          {
+            "source": "kljk-interface",
+            "target": "kljk-ethics"
+          },
+          {
+            "source": "kljk-interface",
+            "target": "kljk-emerging"
+          },
+          {
+            "source": "kljk-ethics",
+            "target": "kljk-research"
+          },
+          {
+            "source": "kljk-emerging",
+            "target": "kljk-research"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T08:32:12.109Z",
+      "updatedAt": "2026-02-15T08:32:12.109Z"
+    },
+    {
+      "id": "const_1771144599315_2wvqkt",
+      "title": "test",
+      "query": "test",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "test-intro",
+            "label": "Introduction to Testing",
+            "status": "active",
+            "level": 1,
+            "description": "Understand the fundamental purpose and importance of software testing in the development lifecycle."
+          },
+          {
+            "id": "why-test",
+            "label": "Why We Test Software",
+            "status": "locked",
+            "level": 1,
+            "description": "Explore the benefits of testing, including quality assurance, risk mitigation, and cost reduction."
+          },
+          {
+            "id": "test-basics",
+            "label": "Basic Testing Concepts",
+            "status": "locked",
+            "level": 2,
+            "description": "Learn key terminology such as defects, errors, failures, test cases, and test scenarios."
+          },
+          {
+            "id": "qa-qc",
+            "label": "QA vs QC vs Testing",
+            "status": "locked",
+            "level": 2,
+            "description": "Differentiate between Quality Assurance, Quality Control, and the specific activity of testing."
+          },
+          {
+            "id": "stlc-overview",
+            "label": "Software Test Life Cycle (STLC)",
+            "status": "locked",
+            "level": 3,
+            "description": "Examine the different phases of the testing process from planning to test closure."
+          },
+          {
+            "id": "manual-testing",
+            "label": "Manual Testing Fundamentals",
+            "status": "locked",
+            "level": 3,
+            "description": "Learn the principles and techniques involved in executing tests manually without automation tools."
+          },
+          {
+            "id": "test-artifacts",
+            "label": "Test Documentation & Artifacts",
+            "status": "locked",
+            "level": 3,
+            "description": "Understand how to create essential documents like test plans, test cases, and test reports."
+          },
+          {
+            "id": "unit-testing",
+            "label": "Unit Testing",
+            "status": "locked",
+            "level": 4,
+            "description": "Focus on testing individual components or units of source code in isolation."
+          },
+          {
+            "id": "integration-testing",
+            "label": "Integration Testing",
+            "status": "locked",
+            "level": 4,
+            "description": "Learn to verify the interactions and data flow between integrated modules of an application."
+          },
+          {
+            "id": "system-testing",
+            "label": "System Testing",
+            "status": "locked",
+            "level": 4,
+            "description": "Evaluate the complete and integrated software system against specified requirements."
+          },
+          {
+            "id": "acceptance-testing",
+            "label": "User Acceptance Testing (UAT)",
+            "status": "locked",
+            "level": 4,
+            "description": "Understand how end-users or clients verify if the system meets their business needs."
+          },
+          {
+            "id": "test-automation-intro",
+            "label": "Introduction to Test Automation",
+            "status": "locked",
+            "level": 5,
+            "description": "Explore the concepts, benefits, and challenges of automating test cases."
+          },
+          {
+            "id": "performance-testing",
+            "label": "Performance Testing",
+            "status": "locked",
+            "level": 5,
+            "description": "Measure the speed, responsiveness, and stability of a system under various loads."
+          },
+          {
+            "id": "security-testing",
+            "label": "Security Testing",
+            "status": "locked",
+            "level": 5,
+            "description": "Identify vulnerabilities and weaknesses in a system that could lead to security breaches."
+          },
+          {
+            "id": "exploratory-testing",
+            "label": "Exploratory Testing",
+            "status": "locked",
+            "level": 5,
+            "description": "Learn an unscripted, simultaneous process of test design and test execution."
+          },
+          {
+            "id": "tdd-bdd",
+            "label": "TDD & BDD Concepts",
+            "status": "locked",
+            "level": 6,
+            "description": "Understand Test Driven Development (TDD) and Behavior Driven Development (BDD) methodologies."
+          },
+          {
+            "id": "test-metrics",
+            "label": "Test Metrics and Reporting",
+            "status": "locked",
+            "level": 6,
+            "description": "Learn to collect, analyze, and report on test data to assess project status and quality."
+          },
+          {
+            "id": "defect-management",
+            "label": "Defect Management Process",
+            "status": "locked",
+            "level": 6,
+            "description": "Examine the full lifecycle of a defect from discovery to resolution and closure."
+          }
+        ],
+        "links": [
+          {
+            "source": "test-intro",
+            "target": "why-test"
+          },
+          {
+            "source": "why-test",
+            "target": "test-basics"
+          },
+          {
+            "source": "test-basics",
+            "target": "qa-qc"
+          },
+          {
+            "source": "qa-qc",
+            "target": "stlc-overview"
+          },
+          {
+            "source": "stlc-overview",
+            "target": "manual-testing"
+          },
+          {
+            "source": "stlc-overview",
+            "target": "test-artifacts"
+          },
+          {
+            "source": "manual-testing",
+            "target": "unit-testing"
+          },
+          {
+            "source": "manual-testing",
+            "target": "integration-testing"
+          },
+          {
+            "source": "manual-testing",
+            "target": "system-testing"
+          },
+          {
+            "source": "manual-testing",
+            "target": "acceptance-testing"
+          },
+          {
+            "source": "test-artifacts",
+            "target": "unit-testing"
+          },
+          {
+            "source": "test-artifacts",
+            "target": "defect-management"
+          },
+          {
+            "source": "unit-testing",
+            "target": "integration-testing"
+          },
+          {
+            "source": "integration-testing",
+            "target": "system-testing"
+          },
+          {
+            "source": "system-testing",
+            "target": "acceptance-testing"
+          },
+          {
+            "source": "unit-testing",
+            "target": "test-automation-intro"
+          },
+          {
+            "source": "integration-testing",
+            "target": "test-automation-intro"
+          },
+          {
+            "source": "system-testing",
+            "target": "test-automation-intro"
+          },
+          {
+            "source": "test-automation-intro",
+            "target": "performance-testing"
+          },
+          {
+            "source": "test-automation-intro",
+            "target": "security-testing"
+          },
+          {
+            "source": "test-automation-intro",
+            "target": "tdd-bdd"
+          },
+          {
+            "source": "acceptance-testing",
+            "target": "tdd-bdd"
+          },
+          {
+            "source": "performance-testing",
+            "target": "exploratory-testing"
+          },
+          {
+            "source": "security-testing",
+            "target": "exploratory-testing"
+          },
+          {
+            "source": "exploratory-testing",
+            "target": "defect-management"
+          },
+          {
+            "source": "defect-management",
+            "target": "test-metrics"
+          },
+          {
+            "source": "tdd-bdd",
+            "target": "test-metrics"
+          },
+          {
+            "source": "test-artifacts",
+            "target": "test-metrics"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T08:36:39.315Z",
+      "updatedAt": "2026-02-15T08:36:39.315Z"
+    },
+    {
+      "id": "const_1771144816124_xnjg56",
+      "title": "gfa",
+      "query": "gfa",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "intro-genome-assembly",
+            "label": "Introduction to Genome Assembly",
+            "status": "active",
+            "level": 1,
+            "description": "Understand the basics of how genomes are put together from short sequencing reads."
+          },
+          {
+            "id": "need-sequence-graphs",
+            "label": "Why Sequence Graphs",
+            "status": "locked",
+            "level": 1,
+            "description": "Explore the limitations of linear genome assemblies and the necessity of graph representations."
+          },
+          {
+            "id": "basic-graph-theory",
+            "label": "Basic Graph Theory",
+            "status": "locked",
+            "level": 1,
+            "description": "Learn fundamental concepts of graphs including nodes, edges, and paths."
+          },
+          {
+            "id": "gfa-overview",
+            "label": "GFA Format Overview",
+            "status": "locked",
+            "level": 2,
+            "description": "Get a high-level understanding of the Graphical Fragment Assembly format and its purpose."
+          },
+          {
+            "id": "gfa-core-components",
+            "label": "GFA Core Components",
+            "status": "locked",
+            "level": 2,
+            "description": "Identify the main building blocks of a GFA graph: segments and links."
+          },
+          {
+            "id": "gfa-segment-lines",
+            "label": "GFA Segment Lines (S)",
+            "status": "locked",
+            "level": 3,
+            "description": "Understand how individual DNA sequences are represented as segments (nodes) in GFA."
+          },
+          {
+            "id": "gfa-link-lines",
+            "label": "GFA Link Lines (L)",
+            "status": "locked",
+            "level": 3,
+            "description": "Learn how overlaps and connections between segments are represented as links (edges)."
+          },
+          {
+            "id": "gfa-header-metadata",
+            "label": "GFA Header and Metadata",
+            "status": "locked",
+            "level": 3,
+            "description": "Examine the structure of the GFA header and how general metadata is stored."
+          },
+          {
+            "id": "gfa-path-lines",
+            "label": "GFA Path Lines (P)",
+            "status": "locked",
+            "level": 4,
+            "description": "Discover how paths through the graph represent assembled contigs or chromosomes."
+          },
+          {
+            "id": "gfa-containment-lines",
+            "label": "GFA Containment Lines (C)",
+            "status": "locked",
+            "level": 4,
+            "description": "Understand how one segment can be entirely contained within another using containment lines."
+          },
+          {
+            "id": "gfa-optional-fields",
+            "label": "GFA Optional Fields (Tags)",
+            "status": "locked",
+            "level": 4,
+            "description": "Explore the use of custom tags for adding detailed, non-standard information to GFA lines."
+          },
+          {
+            "id": "parsing-gfa",
+            "label": "Parsing GFA Files",
+            "status": "locked",
+            "level": 5,
+            "description": "Learn methods and tools for programmatically reading and interpreting GFA data."
+          },
+          {
+            "id": "visualizing-gfa",
+            "label": "Visualizing GFA Graphs",
+            "status": "locked",
+            "level": 5,
+            "description": "Explore software and techniques for graphically displaying GFA sequence graphs."
+          },
+          {
+            "id": "gfa-in-assemblers",
+            "label": "GFA in Assembly Workflows",
+            "status": "locked",
+            "level": 5,
+            "description": "Understand how genome assemblers generate and utilize the GFA format in their pipelines."
+          },
+          {
+            "id": "advanced-graph-algs",
+            "label": "Advanced GFA Graph Algorithms",
+            "status": "locked",
+            "level": 6,
+            "description": "Dive into algorithms for graph simplification, traversal, and error correction specific to GFA."
+          },
+          {
+            "id": "gfa-variation-graphs",
+            "label": "GFA and Variation Graphs",
+            "status": "locked",
+            "level": 6,
+            "description": "Explore the application of GFA for representing genetic variation in pangenome analysis."
+          }
+        ],
+        "links": [
+          {
+            "source": "intro-genome-assembly",
+            "target": "need-sequence-graphs"
+          },
+          {
+            "source": "intro-genome-assembly",
+            "target": "basic-graph-theory"
+          },
+          {
+            "source": "need-sequence-graphs",
+            "target": "gfa-overview"
+          },
+          {
+            "source": "basic-graph-theory",
+            "target": "gfa-overview"
+          },
+          {
+            "source": "gfa-overview",
+            "target": "gfa-core-components"
+          },
+          {
+            "source": "gfa-core-components",
+            "target": "gfa-segment-lines"
+          },
+          {
+            "source": "gfa-core-components",
+            "target": "gfa-link-lines"
+          },
+          {
+            "source": "gfa-overview",
+            "target": "gfa-header-metadata"
+          },
+          {
+            "source": "gfa-segment-lines",
+            "target": "gfa-path-lines"
+          },
+          {
+            "source": "gfa-link-lines",
+            "target": "gfa-path-lines"
+          },
+          {
+            "source": "gfa-segment-lines",
+            "target": "gfa-containment-lines"
+          },
+          {
+            "source": "gfa-header-metadata",
+            "target": "gfa-optional-fields"
+          },
+          {
+            "source": "gfa-segment-lines",
+            "target": "gfa-optional-fields"
+          },
+          {
+            "source": "gfa-link-lines",
+            "target": "gfa-optional-fields"
+          },
+          {
+            "source": "gfa-path-lines",
+            "target": "parsing-gfa"
+          },
+          {
+            "source": "gfa-containment-lines",
+            "target": "parsing-gfa"
+          },
+          {
+            "source": "gfa-optional-fields",
+            "target": "parsing-gfa"
+          },
+          {
+            "source": "parsing-gfa",
+            "target": "visualizing-gfa"
+          },
+          {
+            "source": "parsing-gfa",
+            "target": "gfa-in-assemblers"
+          },
+          {
+            "source": "visualizing-gfa",
+            "target": "advanced-graph-algs"
+          },
+          {
+            "source": "gfa-in-assemblers",
+            "target": "advanced-graph-algs"
+          },
+          {
+            "source": "gfa-in-assemblers",
+            "target": "gfa-variation-graphs"
+          },
+          {
+            "source": "advanced-graph-algs",
+            "target": "gfa-variation-graphs"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T08:40:16.124Z",
+      "updatedAt": "2026-02-15T08:40:16.124Z"
     }
   ]
 }

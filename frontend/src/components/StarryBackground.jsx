@@ -9,13 +9,14 @@ import {
 const METEOR_ANGLE_DEG = 22.6;
 const METEOR_ANGLE_RAD = (METEOR_ANGLE_DEG * Math.PI) / 180;
 const METEOR_INITIAL_DELAY = 3.0; // seconds
-const MAIN_PULSE_START_DELAY_MS = 1850;
 const HIDE_MIN_MS = 250;
 const HIDE_VAR_MS = 540;
 const CYCLES_PER_RESPAWN = 4;
 const RESPAWN_FADE_IN_DELAY_MS = 45;
-const LAST_CYCLE_HIDE_PHASE_IN = 0.92;
-const LAST_CYCLE_HIDE_PHASE_OUT = 0.72;
+const LAST_CYCLE_HIDE_PHASE_IN = 1.0;
+const LAST_CYCLE_HIDE_PHASE_OUT = 1.0;
+const MAIN_PULSE_SETTLE_BUFFER_MS = 220;
+const MAIN_PULSE_MIN_DELAY_MS = 900;
 
 function createMeteor(id) {
   // Get screen dimensions
@@ -78,13 +79,10 @@ function StarryBackground({
   hideMeteors = false,
   enableGeminiStars = false,
   panUpTransition = false,
-<<<<<<< HEAD
   showStars = true,
   mainEntrySequence = 0,
   initialStarField = null,
-=======
   starColor = '#ffffff',
->>>>>>> c34bbf9bf291b7d40484fe4f8382fd0fb0e107e8
 }) {
   const [mainStars, setMainStars] = useState([]);
   const [geminiStars, setGeminiStars] = useState([]);
@@ -146,6 +144,13 @@ function StarryBackground({
       ? initialStarField.stars.map((star) => ({ ...star, phase: 'landing', hidden: false }))
       : Array.from({ length: MAIN_STAR_COUNT }, (_, i) => createMainStar(i));
     setMainStars(initialStars);
+    const landingCompleteMs = initialStars.reduce((maxMs, star) => (
+      Math.max(maxMs, Math.round((star.landingDelay || 0) + (star.landingDuration || 0)))
+    ), 0);
+    const pulseStartDelayMs = Math.max(
+      MAIN_PULSE_MIN_DELAY_MS,
+      landingCompleteMs + MAIN_PULSE_SETTLE_BUFFER_MS,
+    );
 
     const clearTimersForStar = (starId) => {
       ['hide', 'respawn', 'show'].forEach((stage) => {
@@ -191,7 +196,7 @@ function StarryBackground({
       dotPulseActiveRef.current = true;
       setMainStars(prev => prev.map(star => ({ ...star, phase: 'pulse', hidden: false })));
       initialStars.forEach((star) => scheduleDotRespawn({ ...star, phase: 'pulse', hidden: false }));
-    }, MAIN_PULSE_START_DELAY_MS);
+    }, pulseStartDelayMs);
 
     return () => {
       dotPulseActiveRef.current = false;
@@ -214,6 +219,13 @@ function StarryBackground({
       ? initialStarField.gemini.map((star) => ({ ...star, phase: 'landing', hidden: false }))
       : Array.from({ length: MAIN_GEMINI_COUNT }, (_, i) => createMainGeminiStar(i));
     setGeminiStars(initialStars);
+    const landingCompleteMs = initialStars.reduce((maxMs, star) => (
+      Math.max(maxMs, Math.round((star.landingDelay || 0) + (star.landingDuration || 0)))
+    ), 0);
+    const pulseStartDelayMs = Math.max(
+      MAIN_PULSE_MIN_DELAY_MS,
+      landingCompleteMs + MAIN_PULSE_SETTLE_BUFFER_MS,
+    );
 
     const clearTimersForStar = (starId) => {
       ['hide', 'respawn', 'show'].forEach((stage) => {
@@ -259,7 +271,7 @@ function StarryBackground({
       geminiPulseActiveRef.current = true;
       setGeminiStars(prev => prev.map(star => ({ ...star, phase: 'pulse', hidden: false })));
       initialStars.forEach((star) => scheduleGeminiRespawn({ ...star, phase: 'pulse', hidden: false }));
-    }, MAIN_PULSE_START_DELAY_MS);
+    }, pulseStartDelayMs);
 
     return () => {
       geminiPulseActiveRef.current = false;
@@ -278,10 +290,6 @@ function StarryBackground({
   })();
 
   return (
-<<<<<<< HEAD
-    <div className={`starry-background ${panUpTransition ? 'pan-up-transition' : ''}`}>
-      {showStars && mainStars.map((star) => (
-=======
     <div
       className={`starry-background ${panUpTransition ? 'pan-up-transition' : ''}`}
       style={{
@@ -289,9 +297,7 @@ function StarryBackground({
         '--bg-star-rgb': starColorRgb
       }}
     >
-      {/* Stars always visible in twinkle mode */}
-      {visibleStars.map((star, i) => (
->>>>>>> c34bbf9bf291b7d40484fe4f8382fd0fb0e107e8
+      {showStars && mainStars.map((star) => (
         <div
           key={star.id}
           className={`${star.phase === 'landing' ? 'star-landing' : 'bg-twinkle-star'} ${star.hidden ? 'is-hidden' : ''}`}
@@ -303,20 +309,20 @@ function StarryBackground({
             animationName: star.phase === 'pulse'
               ? (star.pulseMode === 'out' ? 'star-pulse-out-forever' : 'star-pulse-in-forever')
               : undefined,
-            animationTimingFunction: star.phase === 'pulse' ? 'cubic-bezier(0.32, 0, 0.2, 1)' : undefined,
+            animationTimingFunction: star.phase === 'pulse' ? 'linear' : undefined,
             animationDuration: star.phase === 'landing' ? `${star.landingDuration}ms` : `${star.pulseDuration}s`,
             animationDelay: star.phase === 'landing' ? `${star.landingDelay}ms` : `${star.pulseDelay}s`,
             '--travel-down': `${star.travelDown}px`,
             '--streak-len': `${star.streakLen}px`,
             '--star-opacity': star.opacity,
-            opacity: star.hidden ? 0 : star.opacity,
+            opacity: star.phase === 'landing' ? undefined : (star.hidden ? 0 : star.opacity),
           }}
         />
       ))}
       {showStars && enableGeminiStars && geminiStars.map((star) => (
         <div
           key={`main-gemini-${star.id}`}
-          className={`bg-gemini-star ${star.hidden ? 'is-hidden' : 'is-visible'} ${star.phase === 'landing' ? 'main-landing' : ''}`}
+          className={`bg-gemini-star ${star.hidden ? 'is-hidden' : ''} ${star.phase === 'landing' ? 'main-landing' : 'is-visible'}`}
           style={{
             left: `${star.x}%`,
             top: `${star.y}%`,
@@ -325,7 +331,7 @@ function StarryBackground({
             animationName: star.phase === 'pulse'
               ? (star.pulseMode === 'out' ? 'bg-gemini-pulse-out' : 'bg-gemini-pulse-in')
               : undefined,
-            animationTimingFunction: star.phase === 'pulse' ? 'cubic-bezier(0.32, 0, 0.2, 1)' : undefined,
+            animationTimingFunction: star.phase === 'pulse' ? 'linear' : undefined,
             animationDuration: star.phase === 'landing' ? undefined : `${star.pulseDuration}s`,
             animationDelay: star.phase === 'landing' ? undefined : `${star.pulseDelay}s`,
             '--bg-gem-opacity': star.opacity,
