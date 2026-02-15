@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import './App.css';
 import Sidebar from './components/SideBar';
 import Header from './components/Header';
@@ -14,9 +15,10 @@ import SettingsView from './components/SettingsView';
 import { createPastConstellation } from './services/api';
 
 const MAIN_UI_FADE_MS = 900;
-const PAST_OPEN_GLINT_MS = 700;
-const PAST_OPEN_ZOOM_MS = 850;
-const PAST_OPEN_DISSOLVE_MS = 550;
+const PAST_OPEN_GLINT_MS = 1000;
+const PAST_OPEN_ENVELOP_MS = 900;
+const PAST_OPEN_DISSOLVE_MS = 520;
+const CONSTELLATION_LEAVE_DISSOLVE_MS = 520;
 const APP_SETTINGS_KEY = 'ctrlhackdel_app_settings';
 const DEFAULT_APP_SETTINGS = {
   disableStartingAnimation: false,
@@ -114,7 +116,9 @@ function App() {
   const [constellationTopic, setConstellationTopic] = useState('');
   const [activePage, setActivePage] = useState('create');
   const [pastOpenTransition, setPastOpenTransition] = useState(null);
+  const [constellationLeaveTransition, setConstellationLeaveTransition] = useState(false);
   const pastOpenTimersRef = useRef([]);
+  const constellationLeaveTimerRef = useRef(null);
   const [appSettings, setAppSettings] = useState(initialSettings);
 
   const [splashDone, setSplashDone] = useState(false);
@@ -123,8 +127,17 @@ function App() {
     pastOpenTimersRef.current.forEach((id) => clearTimeout(id));
     pastOpenTimersRef.current = [];
   };
+  const clearConstellationLeaveTimer = () => {
+    if (constellationLeaveTimerRef.current) {
+      clearTimeout(constellationLeaveTimerRef.current);
+      constellationLeaveTimerRef.current = null;
+    }
+  };
 
-  useEffect(() => () => clearPastOpenTimers(), []);
+  useEffect(() => () => {
+    clearPastOpenTimers();
+    clearConstellationLeaveTimer();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(appSettings));
@@ -189,8 +202,26 @@ function App() {
   };
 
   const handleMenuClick = (pageId) => {
+    if (constellationLeaveTransition) return;
     clearPastOpenTimers();
     setPastOpenTransition(null);
+    const isLeavingConstellation = constellationMode && constellationData && activePage === 'create' && pageId !== 'create';
+    if (isLeavingConstellation) {
+      setConstellationLeaveTransition(true);
+      setConstellationReady(false);
+      clearConstellationLeaveTimer();
+      constellationLeaveTimerRef.current = setTimeout(() => {
+        setConstellationLeaveTransition(false);
+        setConstellationMode(false);
+        setConstellationReady(false);
+        setActivePage(pageId);
+        constellationLeaveTimerRef.current = null;
+      }, CONSTELLATION_LEAVE_DISSOLVE_MS);
+      return;
+    }
+
+    clearConstellationLeaveTimer();
+    setConstellationLeaveTransition(false);
     setActivePage(pageId);
     setFadingOut(false);
     setTelescopeMode(false);
@@ -211,14 +242,14 @@ function App() {
     };
     setPastOpenTransition(shell);
 
-    const toZoomMs = PAST_OPEN_GLINT_MS;
-    const toDissolveMs = PAST_OPEN_GLINT_MS + PAST_OPEN_ZOOM_MS;
-    const mountConstellationMs = toDissolveMs - 120;
+    const toEnvelopMs = PAST_OPEN_GLINT_MS;
+    const toDissolveMs = PAST_OPEN_GLINT_MS + PAST_OPEN_ENVELOP_MS;
+    const mountConstellationMs = toDissolveMs;
     const endTransitionMs = toDissolveMs + PAST_OPEN_DISSOLVE_MS;
 
     pastOpenTimersRef.current.push(setTimeout(() => {
-      setPastOpenTransition((prev) => (prev ? { ...prev, phase: 'zoom' } : prev));
-    }, toZoomMs));
+      setPastOpenTransition((prev) => (prev ? { ...prev, phase: 'envelop' } : prev));
+    }, toEnvelopMs));
 
     pastOpenTimersRef.current.push(setTimeout(() => {
       setSearchQuery(item.query || '');
@@ -237,7 +268,7 @@ function App() {
 
     pastOpenTimersRef.current.push(setTimeout(() => {
       setConstellationReady(true);
-    }, toDissolveMs + 180));
+    }, toDissolveMs + 160));
 
     pastOpenTimersRef.current.push(setTimeout(() => {
       setPastOpenTransition(null);
@@ -290,7 +321,7 @@ function App() {
       {/* Constellation view */}
       {showConstellationView && (
         <>
-          <div className={`constellation-sidebar-rail ${constellationReady ? 'constellation-ui-visible' : 'constellation-ui-hidden'}`}>
+          <div className={`constellation-sidebar-rail ${constellationReady ? 'constellation-ui-visible' : 'constellation-ui-hidden'} ${constellationLeaveTransition ? 'constellation-dissolve-out' : ''}`}>
             <Sidebar
               isHovered={isHovered}
               setIsHovered={setIsHovered}
@@ -320,7 +351,7 @@ function App() {
               </div>
             </div>
           </div>
-          <div className={`constellation-content-offset ${isHovered ? 'wide' : 'narrow'}`}>
+          <div className={`constellation-content-offset ${isHovered ? 'wide' : 'narrow'} ${constellationLeaveTransition ? 'constellation-dissolve-out' : ''}`}>
             <ConstellationView
               graphData={constellationData}
               query={searchQuery}
@@ -331,6 +362,7 @@ function App() {
               starColor={starColor}
             />
           </div>
+          {constellationLeaveTransition && <div className="constellation-leave-dissolve-overlay" />}
         </>
       )}
 
@@ -355,25 +387,36 @@ function App() {
                 <Header isHovered={isHovered} />
               </div>
               <div className="flex-1 p-4 flex flex-col justify-center items-center">
-                {activePage === 'create' ? (
-                  <>
-                    <Greeting name={greetingName} />
-                    <div className="w-[55vw]">
-                      <TextBox onSubmit={handleTextSubmit} />
-                    </div>
-                  </>
-                ) : activePage === 'past' ? (
-                  <PastConstellationsView onOpenConstellation={handleOpenPastConstellation} />
-                ) : activePage === 'settings' ? (
-                  <SettingsView settings={appSettings} onChange={handleSettingsChange} />
-                ) : activePage === 'profile' ? (
-                  <ProfileView />
-                ) : (
-                  <SimpleOutlinePage
-                    title={PAGE_CONTENT[activePage]?.title || 'Page'}
-                    subtitle={PAGE_CONTENT[activePage]?.subtitle || 'Simple outline view'}
-                  />
-                )}
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={activePage}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.28, ease: 'easeInOut' }}
+                    className="w-full h-full flex flex-col justify-center items-center"
+                  >
+                    {activePage === 'create' ? (
+                      <>
+                        <Greeting name={greetingName} />
+                        <div className="w-[55vw]">
+                          <TextBox onSubmit={handleTextSubmit} />
+                        </div>
+                      </>
+                    ) : activePage === 'past' ? (
+                      <PastConstellationsView onOpenConstellation={handleOpenPastConstellation} />
+                    ) : activePage === 'settings' ? (
+                      <SettingsView settings={appSettings} onChange={handleSettingsChange} />
+                    ) : activePage === 'profile' ? (
+                      <ProfileView />
+                    ) : (
+                      <SimpleOutlinePage
+                        title={PAGE_CONTENT[activePage]?.title || 'Page'}
+                        subtitle={PAGE_CONTENT[activePage]?.subtitle || 'Simple outline view'}
+                      />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
           </div>
