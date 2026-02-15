@@ -45,7 +45,7 @@ export default function SettingsView({ settings, onChange }) {
           <div className="settings-copy">
             <div className="settings-item-title">Disable Background Elements</div>
             <div className="settings-item-desc">
-              Turn off animated star/aurora background and keep a plain black background.
+              Turn off animated star background and keep a plain black background.
             </div>
           </div>
           <input

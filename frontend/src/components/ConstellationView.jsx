@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { knowledgeGraphData } from '../data/knowledgeGraph';
+import FIXED_STARS from '../data/stars';
 import { fetchKnowledgeGraph, completeNode, verifyExplanation, generateCustomTree } from '../services/api';
 import BossFightModal from './BossFightModal';
 import ConstellationLoader from './ConstellationLoader';
@@ -63,6 +64,15 @@ const withAlpha = (hex, alpha = 1) => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
+const hexToRgbString = (hex) => {
+  const safeHex = isHexColor(hex) ? hex : '#ffffff';
+  const n = safeHex.replace('#', '');
+  const r = parseInt(n.slice(0, 2), 16);
+  const g = parseInt(n.slice(2, 4), 16);
+  const b = parseInt(n.slice(4, 6), 16);
+  return `${r}, ${g}, ${b}`;
+};
+
 const getStatusHighlightColor = (status) => {
   if (status === 'mastered') return '#3b82f6';
   if (status === 'active') return '#22c55e';
@@ -74,6 +84,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
   const nodeStyle = getNodeStyleByStatus(normalizedStatus);
   const baseColor = isHexColor(nodeColor) ? nodeColor : '#ffffff';
   const shimmerHighlight = getStatusHighlightColor(normalizedStatus);
+  const glowColor = shimmerHighlight || baseColor;
   const size = nodeStyle.size;
   const motionProfile = useMemo(() => getNodeMotionProfile(node.id), [node.id]);
 
@@ -145,7 +156,14 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
             }
           }}
         >
-          <svg width={size} height={size} viewBox="0 0 100 100" style={{ filter: `drop-shadow(${nodeStyle.shadow})` }}>
+          <svg
+            width={size}
+            height={size}
+            viewBox="0 0 100 100"
+            style={{
+              filter: `drop-shadow(0 0 12px ${withAlpha(glowColor, 0.85)}) drop-shadow(${nodeStyle.shadow})`
+            }}
+          >
             <motion.path
               d="M50 6 L58 42 L94 50 L58 58 L50 94 L42 58 L6 50 L42 42 Z"
               fill={baseColor}
@@ -370,9 +388,9 @@ function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [], 
         const isAnimating = animatingEdges.includes(i);
         
         // Subtle link styling - much less obvious
-        let strokeOpacity = 0.1;
-        let strokeWidth = 0.5;
-        let strokeColor = baseColor;
+        let strokeOpacity = 0.16;
+        let strokeWidth = 0.8;
+        let strokeColor = withAlpha(baseColor, 0.55);
         
         const sourceStatus = sourceNode ? normalizeNodeStatus(sourceNode) : 'locked';
         if (sourceStatus === 'mastered' || sourceStatus === 'active') {
@@ -455,12 +473,31 @@ function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [], 
               y2={`${targetPos.y}%`}
               stroke={strokeColor}
               strokeWidth={strokeWidth}
+              filter="url(#constellation-glow)"
               initial={{ opacity: 0 }}
               animate={{
                 opacity: strokeOpacity
               }}
               transition={{
                 opacity: { duration: 0.5, delay: i * 0.03 }
+              }}
+            />
+            <motion.line
+              x1={`${sourcePos.x}%`}
+              y1={`${sourcePos.y}%`}
+              x2={`${targetPos.x}%`}
+              y2={`${targetPos.y}%`}
+              stroke={withAlpha(pulseColor, 0.95)}
+              strokeWidth={strokeWidth + 0.9}
+              filter="url(#constellation-glow)"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.55, 0] }}
+              transition={{
+                duration: pulseDuration,
+                ease: 'easeInOut',
+                repeat: Infinity,
+                delay: pulseDelay,
+                repeatDelay: 0.22 + (i % 3) * 0.08
               }}
             />
             <motion.circle
@@ -502,7 +539,9 @@ export default function ConstellationView({
   query = '',
   hideSideHud = false,
   onTopicResolved,
-  nodeColor = '#ffffff'
+  nodeColor = '#ffffff',
+  backgroundStarsEnabled = true,
+  starColor = '#ffffff'
 }) {
   const [selectedNode, setSelectedNode] = useState(null);
   const [graphData, setGraphData] = useState(knowledgeGraphData); // Start with local data as fallback
@@ -515,6 +554,12 @@ export default function ConstellationView({
   const [animatingEdges, setAnimatingEdges] = useState([]);
   const graphContainerRef = useRef(null);
   const [cursorPoint, setCursorPoint] = useState(null);
+  const constellationBgStars = useMemo(
+    () => FIXED_STARS.filter((star, idx) => idx % 2 === 0),
+    []
+  );
+  const constellationStarColor = isHexColor(starColor) ? starColor : '#ffffff';
+  const constellationStarRgb = hexToRgbString(constellationStarColor);
   const [toast, setToast] = useState(null); // { type: 'success'|'error'|'info', title, lines[] }
   
   // Resolve graph from props or backend
@@ -843,6 +888,31 @@ export default function ConstellationView({
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
+      {backgroundStarsEnabled && (
+        <div
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{
+            '--bg-star-color': constellationStarColor,
+            '--bg-star-rgb': constellationStarRgb
+          }}
+        >
+          {constellationBgStars.map((star, idx) => (
+            <div
+              key={`const-map-star-${star.id}`}
+              className="bg-twinkle-star"
+              style={{
+                left: `${star.x}%`,
+                top: `${star.y}%`,
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                animation: `star-twinkle-forever ${3.2 + (idx % 6) * 0.5}s ease-in-out infinite`,
+                animationDelay: `${(idx * 0.13) % 4.4}s`,
+                opacity: 0.42
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Topic Header (if generated from prompt) */}
       {!hideSideHud && generatedTopic && (
