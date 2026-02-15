@@ -809,12 +809,6 @@ export default function ConstellationView({
           setShowBossFight(false);
           setCurrentBossNode(null);
           
-          // Show success message
-          console.log('OK', result.message);
-          if (dependentNodeIds.length > 0) {
-            console.log('Unlocked:', dependentNodeIds);
-          }
-
           const previousBest = verifyResult.previousBestScore;
           const currentBest = verifyResult.bestScore || verifyResult.score;
           const deltaPercent = verifyResult.scoreDeltaPercent;
@@ -835,8 +829,6 @@ export default function ConstellationView({
           });
         }
       } else {
-        // Show feedback to user
-        console.log('❌ Verification failed:', verifyResult.message);
         setToast({
           type: 'error',
           title: '❌ Not Quite There',
@@ -940,8 +932,6 @@ export default function ConstellationView({
       </div>
     );
   }
-  
-  console.log('🎨 Rendering constellation with', graphData.nodes.length, 'nodes');
   
   // Position nodes on a centered diagonal flow (top-left -> bottom-right)
   const nodePositions = {};

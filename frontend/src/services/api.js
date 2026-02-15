@@ -1,6 +1,38 @@
 // API Service for Backend Integration
-const API_BASE_URL = 'http://localhost:5000';
-const API_FALLBACK_BASE_URL = 'http://localhost:5000';
+// Always call backend directly (no Vite proxy dependency).
+const DEFAULT_API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '');
+const apiUrl = (path) => `${API_BASE_URL}${String(path).startsWith('/') ? path : `/${path}`}`;
+const DEBUG_LOGS = import.meta.env.DEV && import.meta.env.VITE_DEBUG_LOGS === '1';
+
+const buildFallbackGeneratedTree = (topic = 'New Topic') => {
+  const base = String(topic || 'New Topic').trim() || 'New Topic';
+  const topicClean = base.replace(/\s+/g, ' ').slice(0, 40);
+  const topicId = topicClean.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'topic';
+  return {
+    success: true,
+    topic: topicClean,
+    generation: {
+      source: 'fallback',
+      reason: 'frontend-fallback'
+    },
+    graph: {
+      nodes: [
+        { id: `${topicId}-basics`, label: `${topicClean}\nBasics`, status: 'active', level: 1, description: `Foundations of ${topicClean}` },
+        { id: `${topicId}-concepts`, label: 'Core\nConcepts', status: 'locked', level: 2, description: `Key concepts in ${topicClean}` },
+        { id: `${topicId}-practice`, label: 'Guided\nPractice', status: 'locked', level: 3, description: `Practice patterns for ${topicClean}` },
+        { id: `${topicId}-advanced`, label: 'Advanced\nTopics', status: 'locked', level: 4, description: `Advanced ideas in ${topicClean}` },
+        { id: `${topicId}-mastery`, label: 'Mastery', status: 'locked', level: 5, description: `Integrate and apply ${topicClean}` }
+      ],
+      links: [
+        { source: `${topicId}-basics`, target: `${topicId}-concepts` },
+        { source: `${topicId}-concepts`, target: `${topicId}-practice` },
+        { source: `${topicId}-practice`, target: `${topicId}-advanced` },
+        { source: `${topicId}-advanced`, target: `${topicId}-mastery` }
+      ]
+    }
+  };
+};
 
 // Helper function to handle API errors
 const handleResponse = async (response) => {
@@ -14,7 +46,7 @@ const handleResponse = async (response) => {
 // Get the knowledge graph
 export const fetchKnowledgeGraph = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/graph`);
+    const response = await fetch(apiUrl('/api/graph'));
     const data = await handleResponse(response);
     return data.data; // Returns the graph object
   } catch (error) {
@@ -26,7 +58,7 @@ export const fetchKnowledgeGraph = async () => {
 // Get user progress
 export const fetchUserProgress = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/progress`);
+    const response = await fetch(apiUrl('/api/progress'));
     const data = await handleResponse(response);
     return data; // Returns { success, stats, userProgress }
   } catch (error) {
@@ -48,7 +80,7 @@ export const completeNode = async (nodeId, score = null) => {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/node/${nodeId}/complete`, {
+    const response = await fetch(apiUrl(`/api/node/${nodeId}/complete`), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -88,7 +120,7 @@ export const verifyExplanation = async (
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/verify`, {
+    const response = await fetch(apiUrl('/api/verify'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -134,7 +166,7 @@ export const generateStarTrialQuestions = async (nodeId, nodeData = null) => {
   };
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/star-trial/questions`, {
+    const response = await fetch(apiUrl('/api/star-trial/questions'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -155,7 +187,7 @@ export const generateStarTrialQuestions = async (nodeId, nodeData = null) => {
 // Reset progress (for testing)
 export const resetProgress = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/reset`, {
+    const response = await fetch(apiUrl('/api/reset'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -172,7 +204,7 @@ export const resetProgress = async () => {
 // Generate custom tree (bonus feature - requires LLM)
 export const generateCustomTree = async (topic, difficulty = 'medium') => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/generate-tree`, {
+    const response = await fetch(apiUrl('/api/generate-tree'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -183,10 +215,21 @@ export const generateCustomTree = async (topic, difficulty = 'medium') => {
       }),
     });
     const data = await handleResponse(response);
+    const meta = data?.generation;
+    if (meta && DEBUG_LOGS) {
+      console.log(
+        `[TreeGen] source=${meta.source} reason=${meta.reason || 'none'} apiKeyStatus=${meta.apiKeyStatus} modelAvailable=${meta.modelAvailable}`
+      );
+    } else if (!meta && DEBUG_LOGS) {
+      console.warn('[TreeGen] No generation metadata returned by backend');
+    }
     return data;
   } catch (error) {
-    console.error('Error generating custom tree:', error);
-    throw error;
+    if (DEBUG_LOGS) {
+      console.error('Error generating custom tree:', error);
+      console.warn('Falling back to local generated tree due to API failure.');
+    }
+    return buildFallbackGeneratedTree(topic);
   }
 };
 
@@ -195,7 +238,7 @@ export const transcribeAudio = async (audioBlob, filename = 'recording.webm') =>
   const formData = new FormData();
   formData.append('audio', audioBlob, filename);
 
-  const response = await fetch(`${API_BASE_URL}/api/voice/transcribe`, {
+  const response = await fetch(apiUrl('/api/voice/transcribe'), {
     method: 'POST',
     body: formData, // no Content-Type header – browser sets multipart boundary
   });
@@ -215,7 +258,7 @@ export const transcribeAudio = async (audioBlob, filename = 'recording.webm') =>
 // Check if backend is running
 export const checkBackendHealth = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/`);
+    const response = await fetch(apiUrl('/api/graph'));
     const data = await handleResponse(response);
     return data;
   } catch (error) {
@@ -225,9 +268,7 @@ export const checkBackendHealth = async () => {
 };
 
 // Past constellations CRUD (local JSON-backed on backend)
-const constellationApiBases = [API_BASE_URL, API_FALLBACK_BASE_URL].filter(
-  (base, idx, arr) => arr.indexOf(base) === idx
-);
+const constellationApiBases = [API_BASE_URL];
 
 const requestConstellationApi = async (path, options = {}) => {
   let lastError = null;

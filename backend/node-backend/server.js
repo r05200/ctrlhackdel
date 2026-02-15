@@ -1,9 +1,9 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs/promises');
-const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Import route modules from src/
@@ -13,19 +13,208 @@ const treeRoutes = require('./src/routes/treeRoutes');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Initialize Gemini AI
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-console.log('🔑 Loading GEMINI_API_KEY:', GEMINI_API_KEY ? `"${GEMINI_API_KEY.substring(0, 4)}...${GEMINI_API_KEY.substring(GEMINI_API_KEY.length - 4)}"` : 'Not Found');
-const genAI = GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_here' 
-  ? new GoogleGenerativeAI(GEMINI_API_KEY) 
-  : null;
-const model = genAI ? genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) : null;
-
-// Middleware
+// Core middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.options('*', cors());
+app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Initialize Gemini AI
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_MODEL_FALLBACKS = String(
+  process.env.GEMINI_MODEL_FALLBACKS || 'gemini-2.0-flash,gemini-1.5-flash,gemini-1.5-pro'
+)
+  .split(',')
+  .map((modelName) => modelName.trim())
+  .filter(Boolean)
+  .filter((modelName, index, list) => list.indexOf(modelName) === index && modelName !== GEMINI_MODEL);
+const geminiKeyPreview = GEMINI_API_KEY
+  ? GEMINI_API_KEY.length > 10
+    ? `"${GEMINI_API_KEY.slice(0, 4)}...${GEMINI_API_KEY.slice(-4)}"`
+    : '"configured"'
+  : 'Not Found';
+console.log('Loading GEMINI_API_KEY:', geminiKeyPreview);
+
+let genAI = null;
+let apiKeyStatus = 'unknown';
+let model = null;
+let activeGeminiModelName = GEMINI_MODEL;
+
+function classifyGeminiError(error) {
+  const message = String(error?.message || '').toLowerCase();
+  if (!message) return 'runtime_error';
+  if (
+    message.includes('resource has been exhausted') ||
+    message.includes('quota') ||
+    message.includes('429')
+  ) {
+    return 'quota_exhausted';
+  }
+  if (
+    message.includes('api key not valid') ||
+    message.includes('invalid api key') ||
+    message.includes('unauthenticated')
+  ) {
+    return 'invalid_key';
+  }
+  if (message.includes('permission') || message.includes('forbidden') || message.includes('403')) {
+    return 'forbidden';
+  }
+  if (
+    message.includes('is not found for api version') ||
+    message.includes('model not found') ||
+    (message.includes('model') && message.includes('not found'))
+  ) {
+    return 'model_not_found';
+  }
+  if (message.includes('deprecated') || message.includes('no longer supported')) {
+    return 'model_deprecated';
+  }
+  return 'runtime_error';
+}
+
+function getGeminiModelCandidates() {
+  return [GEMINI_MODEL, ...GEMINI_MODEL_FALLBACKS].filter(
+    (modelName, index, list) => list.indexOf(modelName) === index
+  );
+}
+
+function setActiveGeminiModel(modelName) {
+  model = genAI.getGenerativeModel({ model: modelName });
+  activeGeminiModelName = modelName;
+  return model;
+}
+
+function initializeGeminiClient() {
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'your_gemini_api_key_here') {
+    apiKeyStatus = 'missing';
+    genAI = null;
+    model = null;
+    console.log('API key not configured - AI features disabled');
+    return;
+  }
+
+  try {
+    genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    setActiveGeminiModel(GEMINI_MODEL);
+    apiKeyStatus = 'configured';
+    console.log(`Gemini client initialized (${activeGeminiModelName})`);
+  } catch (error) {
+    genAI = null;
+    model = null;
+    apiKeyStatus = 'init_error';
+    console.log('Gemini client initialization failed:', error.message);
+  }
+}
+
+initializeGeminiClient();
+
+async function generateWithGeminiFailover(prompt) {
+  if (!genAI) {
+    initializeGeminiClient();
+  }
+
+  if (!genAI) {
+    throw new Error(`Gemini unavailable: ${apiKeyStatus}`);
+  }
+
+  const attempts = [];
+  const candidates = getGeminiModelCandidates();
+
+  for (const modelName of candidates) {
+    try {
+      if (!model || activeGeminiModelName !== modelName) {
+        setActiveGeminiModel(modelName);
+      }
+      const result = await model.generateContent(prompt);
+      apiKeyStatus = 'configured';
+      return result;
+    } catch (error) {
+      const classification = classifyGeminiError(error);
+      attempts.push(`${modelName}:${classification}`);
+
+      if (classification === 'quota_exhausted') {
+        apiKeyStatus = 'quota_exhausted';
+        break;
+      }
+      if (classification === 'invalid_key' || classification === 'forbidden') {
+        apiKeyStatus = classification;
+        break;
+      }
+      if (classification !== 'model_not_found' && classification !== 'model_deprecated') {
+        apiKeyStatus = classification;
+        break;
+      }
+    }
+  }
+
+  const reason = attempts.length ? attempts.join(',') : 'unknown';
+  throw new Error(`Gemini generation failed (${reason})`);
+}
+
+function summarizeTreeStructure(tree) {
+  if (!tree || typeof tree !== 'object') {
+    return { valid: false, issues: ['tree_not_object'] };
+  }
+
+  const issues = [];
+  const nodes = Array.isArray(tree.nodes) ? tree.nodes : null;
+  const links = Array.isArray(tree.links) ? tree.links : null;
+
+  if (!nodes) issues.push('nodes_not_array');
+  if (!links) issues.push('links_not_array');
+
+  if (nodes) {
+    if (nodes.length === 0) issues.push('nodes_empty');
+    nodes.forEach((node, index) => {
+      if (!node || typeof node !== 'object') {
+        issues.push(`node_${index}_not_object`);
+        return;
+      }
+      if (!node.id) issues.push(`node_${index}_missing_id`);
+      if (!node.label) issues.push(`node_${index}_missing_label`);
+    });
+  }
+
+  if (links) {
+    links.forEach((link, index) => {
+      if (!link || typeof link !== 'object') {
+        issues.push(`link_${index}_not_object`);
+        return;
+      }
+      if (!link.source) issues.push(`link_${index}_missing_source`);
+      if (!link.target) issues.push(`link_${index}_missing_target`);
+    });
+  }
+
+  const levelHistogram = {};
+  if (nodes) {
+    nodes.forEach((node) => {
+      const levelKey = Number.isFinite(Number(node?.level)) ? String(Number(node.level)) : 'unknown';
+      levelHistogram[levelKey] = (levelHistogram[levelKey] || 0) + 1;
+    });
+  }
+
+  return {
+    valid: issues.length === 0,
+    issues,
+    nodeCount: nodes ? nodes.length : 0,
+    linkCount: links ? links.length : 0,
+    levelHistogram
+  };
+}
+
+function logTreeFallback(topic, reason, details = {}) {
+  console.log('\n[TreeGen][Fallback]');
+  console.log(`Topic="${topic}" reason=${reason}`);
+  const detailKeys = Object.keys(details || {});
+  if (detailKeys.length > 0) {
+    detailKeys.forEach((key) => {
+      console.log(`- ${key}:`, details[key]);
+    });
+  }
+}
 // In-memory database (for hackathon speed)
 let knowledgeGraph = {
   nodes: [
@@ -680,9 +869,11 @@ app.post('/api/generate-tree', async (req, res) => {
   try {
     console.log('🚀 Starting tree generation...');
     // Generate a learning tree based on the topic using Gemini AI
-    const generatedTree = await generateLearningTreeWithAI(topic.trim());
+    const generated = await generateLearningTreeWithAI(topic.trim());
+    const generatedTree = generated.graph;
     
     console.log('✅ Tree generation successful!');
+    console.log(`🧭 Generation source: ${generated.source}${generated.reason ? ` (${generated.reason})` : ''}`);
     console.log('Generated nodes:', generatedTree.nodes.length);
     console.log('Generated links:', generatedTree.links.length);
     console.log('Node IDs:', generatedTree.nodes.map(n => n.id).join(', '));
@@ -691,7 +882,14 @@ app.post('/api/generate-tree', async (req, res) => {
     res.json({
       success: true,
       topic: topic,
-      graph: generatedTree
+      graph: generatedTree,
+      generation: {
+        source: generated.source,
+        reason: generated.reason || null,
+        apiKeyStatus,
+        modelAvailable: Boolean(model),
+        modelName: activeGeminiModelName
+      }
     });
   } catch (error) {
     console.error('❌ Error generating tree:', error);
@@ -711,12 +909,27 @@ async function generateLearningTreeWithAI(topic) {
   console.log('\n🤖 AI Generation Function Called');
   console.log('Topic received:', topic);
   
-  // If Gemini API not configured, use fallback
+  // If Gemini API not configured, attempt to initialize once.
+  if (!model) {
+    initializeGeminiClient();
+  }
+
+  // If still unavailable, use fallback.
   if (!model) {
     console.log('⚠️  Gemini API not configured (model is null)');
     console.log('📄 Using FALLBACK generic template');
     console.log('💡 To enable AI: Set GEMINI_API_KEY in .env file');
-    return generateGenericTree(topic);
+    const reason = `model_unavailable:${apiKeyStatus || 'unknown'}`;
+    logTreeFallback(topic, reason, {
+      apiKeyStatus,
+      modelAvailable: Boolean(model),
+      modelName: activeGeminiModelName
+    });
+    return {
+      graph: generateGenericTree(topic),
+      source: 'fallback',
+      reason
+    };
   }
 
   console.log('✓ Gemini API configured - using AI generation');
@@ -757,7 +970,7 @@ Return ONLY valid JSON, no markdown code blocks.`;
     console.log('\n📤 Sending prompt to Gemini AI...');
     console.log('Prompt length:', prompt.length, 'characters');
     
-    const result = await model.generateContent(prompt);
+    const result = await generateWithGeminiFailover(prompt);
     console.log('📥 Received response from Gemini AI');
     
     const response = await result.response;
@@ -779,7 +992,7 @@ Return ONLY valid JSON, no markdown code blocks.`;
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       console.error('❌ Could not find valid JSON in the AI response.');
-      throw new Error('Invalid response format from AI: No JSON found.');
+      throw new Error('invalid_tree_structure:json_not_found');
     }
     
     console.log('📝 Extracted JSON preview:', jsonMatch[0].substring(0, 200) + '...');
@@ -790,12 +1003,15 @@ Return ONLY valid JSON, no markdown code blocks.`;
     
     // Validate structure
     console.log('\n🔍 Validating tree structure...');
-    if (!tree.nodes || !Array.isArray(tree.nodes) || !tree.links || !Array.isArray(tree.links)) {
-      throw new Error('Invalid tree structure from AI - missing nodes or links arrays');
+    const structureSummary = summarizeTreeStructure(tree);
+    if (!structureSummary.valid) {
+      console.error('❌ Tree structure invalid:', structureSummary.issues.join(', '));
+      throw new Error(`invalid_tree_structure:${structureSummary.issues.join(',')}`);
     }
     console.log('✓ Tree structure valid');
-    console.log('  - Nodes:', tree.nodes.length);
-    console.log('  - Links:', tree.links.length);
+    console.log('  - Nodes:', structureSummary.nodeCount);
+    console.log('  - Links:', structureSummary.linkCount);
+    console.log('  - Levels:', JSON.stringify(structureSummary.levelHistogram));
     
     // Ensure only the first node is active, all others locked
     console.log('\n🔧 Adjusting node statuses...');
@@ -815,7 +1031,11 @@ Return ONLY valid JSON, no markdown code blocks.`;
       console.log(`  ${i+1}. [${node.status.padEnd(8)}] ${node.label.replace(/\n/g, ' ')} (level ${node.level})`);
     });
     
-    return tree;
+    return {
+      graph: tree,
+      source: 'gemini',
+      reason: null
+    };
   } catch (error) {
     console.error('\n❌ AI generation failed!');
     console.error('Error type:', error.constructor.name);
@@ -823,7 +1043,17 @@ Return ONLY valid JSON, no markdown code blocks.`;
     if (error.stack) console.error('Stack trace:', error.stack);
     console.log('\n📄 Falling back to generic template...');
     // Fallback to a generic tree if AI fails
-    return generateGenericTree(topic);
+    const reason = `gemini_error:${error.message}`;
+    logTreeFallback(topic, reason, {
+      apiKeyStatus,
+      modelAvailable: Boolean(model),
+      modelName: activeGeminiModelName
+    });
+    return {
+      graph: generateGenericTree(topic),
+      source: 'fallback',
+      reason
+    };
   }
 }
 
@@ -909,6 +1139,10 @@ function buildFallbackStarTrialQuestions(node) {
 
 async function generateStarTrialQuestionsWithAI(node) {
   if (!model) {
+    initializeGeminiClient();
+  }
+
+  if (!model) {
     return {
       questions: buildFallbackStarTrialQuestions(node),
       usingFallback: true,
@@ -946,7 +1180,7 @@ Rules:
 - Keep "whatToLookFor" concise (2-4 items each).`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await generateWithGeminiFailover(prompt);
     const response = await result.response;
     let text = response.text();
     text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -1004,6 +1238,10 @@ async function verifyExplanationWithAI(node, explanation, trialAnswers = [], tri
     : [];
 
   if (!model) {
+    initializeGeminiClient();
+  }
+
+  if (!model) {
     return {
       ...fallbackVerification(node, explanation, normalizedAnswers, normalizedQuestions),
       usingFallback: true,
@@ -1053,7 +1291,7 @@ Scoring weights:
 Pass threshold: score >= 70.`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await generateWithGeminiFailover(prompt);
     const response = await result.response;
     let text = response.text();
     text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
