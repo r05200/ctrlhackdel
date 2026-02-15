@@ -264,6 +264,12 @@ const STATUS = {
   ACTIVE: 0
 };
 
+function normalizeTreeNodeCap(value, fallback = 12) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(1, Math.min(12, Math.floor(parsed)));
+}
+
 function statusToNumber(status) {
   if (typeof status === 'number' && Number.isFinite(status)) {
     return status;
@@ -295,16 +301,40 @@ async function ensureConstellationStore() {
 async function readConstellationStore() {
   await ensureConstellationStore();
   const raw = await fs.readFile(CONSTELLATION_STORE_FILE, 'utf-8');
-  const parsed = JSON.parse(raw);
-  if (!parsed.items || !Array.isArray(parsed.items)) {
-    return { items: [] };
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) {
+    const emptyStore = { items: [] };
+    await writeConstellationStore(emptyStore);
+    return emptyStore;
   }
-  return parsed;
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (!parsed.items || !Array.isArray(parsed.items)) {
+      return { items: [] };
+    }
+    return parsed;
+  } catch (error) {
+    const backupPath = path.join(
+      CONSTELLATION_STORE_DIR,
+      `constellations.corrupt.${Date.now()}.json`
+    );
+    await fs.writeFile(backupPath, trimmed, 'utf-8');
+    const emptyStore = { items: [] };
+    await writeConstellationStore(emptyStore);
+    console.warn(
+      'Constellation store was invalid JSON and has been reset. Backup saved to:',
+      backupPath
+    );
+    return emptyStore;
+  }
 }
 
 async function writeConstellationStore(store) {
   await ensureConstellationStore();
-  await fs.writeFile(CONSTELLATION_STORE_FILE, JSON.stringify(store, null, 2), 'utf-8');
+  const tmpFile = `${CONSTELLATION_STORE_FILE}.tmp`;
+  await fs.writeFile(tmpFile, JSON.stringify(store, null, 2), 'utf-8');
+  await fs.rename(tmpFile, CONSTELLATION_STORE_FILE);
 }
 
 // Routes
@@ -850,12 +880,14 @@ app.post('/api/reset', (req, res) => {
 
 // Generate custom tree with Gemini AI
 app.post('/api/generate-tree', async (req, res) => {
-  const { topic } = req.body;
+  const { topic, maxNodes } = req.body;
+  const cappedMaxNodes = normalizeTreeNodeCap(maxNodes, 12);
   
   console.log('\n========================================');
   console.log('📝 NEW TOPIC REQUEST RECEIVED');
   console.log('========================================');
   console.log('Topic:', topic);
+  console.log('Requested maxNodes:', maxNodes, '=> capped:', cappedMaxNodes);
   console.log('Timestamp:', new Date().toISOString());
   
   if (!topic || !topic.trim()) {
@@ -869,7 +901,7 @@ app.post('/api/generate-tree', async (req, res) => {
   try {
     console.log('🚀 Starting tree generation...');
     // Generate a learning tree based on the topic using Gemini AI
-    const generated = await generateLearningTreeWithAI(topic.trim());
+    const generated = await generateLearningTreeWithAI(topic.trim(), cappedMaxNodes);
     const generatedTree = generated.graph;
     
     console.log('✅ Tree generation successful!');
@@ -888,7 +920,8 @@ app.post('/api/generate-tree', async (req, res) => {
         reason: generated.reason || null,
         apiKeyStatus,
         modelAvailable: Boolean(model),
-        modelName: activeGeminiModelName
+        modelName: activeGeminiModelName,
+        maxNodes: cappedMaxNodes
       }
     });
   } catch (error) {
@@ -905,9 +938,11 @@ app.post('/api/generate-tree', async (req, res) => {
 });
 
 // AI-powered function to generate learning tree with Gemini
-async function generateLearningTreeWithAI(topic) {
+async function generateLearningTreeWithAI(topic, maxNodes = 12) {
+  const cappedMaxNodes = normalizeTreeNodeCap(maxNodes, 12);
   console.log('\n🤖 AI Generation Function Called');
   console.log('Topic received:', topic);
+  console.log('Node cap:', cappedMaxNodes);
   
   // If Gemini API not configured, attempt to initialize once.
   if (!model) {
@@ -926,7 +961,7 @@ async function generateLearningTreeWithAI(topic) {
       modelName: activeGeminiModelName
     });
     return {
-      graph: generateGenericTree(topic),
+      graph: generateGenericTree(topic, cappedMaxNodes),
       source: 'fallback',
       reason
     };
@@ -956,7 +991,8 @@ Create a JSON object with this structure:
 }
 
 Requirements:
-- Generate 12-20 nodes
+- Generate 1-${cappedMaxNodes} nodes
+- Never exceed ${cappedMaxNodes} nodes
 - First node only: status "active" (current node to work on)
 - All other nodes: status "locked" (not yet accessible)
 - Use levels 1-6 to show progression (beginner to advanced)
@@ -1024,6 +1060,13 @@ Return ONLY valid JSON, no markdown code blocks.`;
         tree.nodes[index].status = 'locked';
       }
     });
+
+    if (tree.nodes.length > cappedMaxNodes) {
+      const allowedIds = new Set(tree.nodes.slice(0, cappedMaxNodes).map((node) => node.id));
+      tree.nodes = tree.nodes.slice(0, cappedMaxNodes);
+      tree.links = tree.links.filter((link) => allowedIds.has(link.source) && allowedIds.has(link.target));
+      console.log(`🔪 Trimmed AI tree to node cap: ${tree.nodes.length}`);
+    }
     
     console.log('\n✅ AI generation complete!');
     console.log('Final tree preview:');
@@ -1050,16 +1093,18 @@ Return ONLY valid JSON, no markdown code blocks.`;
       modelName: activeGeminiModelName
     });
     return {
-      graph: generateGenericTree(topic),
+      graph: generateGenericTree(topic, cappedMaxNodes),
       source: 'fallback',
       reason
     };
   }
 }
 
-function generateGenericTree(topic) {
+function generateGenericTree(topic, maxNodes = 12) {
+  const cappedMaxNodes = normalizeTreeNodeCap(maxNodes, 12);
   console.log('\n📋 Generating generic fallback tree');
   console.log('Topic:', topic);
+  console.log('Fallback node cap:', cappedMaxNodes);
   
   // Generic template for any topic (fallback)
   const capitalizedTopic = topic.charAt(0).toUpperCase() + topic.slice(1);
@@ -1109,6 +1154,11 @@ function generateGenericTree(topic) {
       { source: 'practical-2', target: 'mastery' },
     ]
   };
+  if (Array.isArray(tree.nodes) && tree.nodes.length > cappedMaxNodes) {
+    const allowedIds = new Set(tree.nodes.slice(0, cappedMaxNodes).map((node) => node.id));
+    tree.nodes = tree.nodes.slice(0, cappedMaxNodes);
+    tree.links = tree.links.filter((link) => allowedIds.has(link.source) && allowedIds.has(link.target));
+  }
   
   console.log('✓ Generic tree created with', tree.nodes.length, 'nodes');
   return tree;

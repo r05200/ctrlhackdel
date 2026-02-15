@@ -167,7 +167,7 @@ function generateNebulas(count) {
   return nebulas;
 }
 
-function TelescopeView({ query, onComplete, initialStarField, presetTree = null }) {
+function TelescopeView({ query, onComplete, initialStarField, presetTree = null, stargazeNodeCap = 12 }) {
   const isDirectOpen = Boolean(presetTree);
   const [phase, setPhase] = useState('pan-up');
   const [lensStars] = useState(() => {
@@ -273,12 +273,12 @@ function TelescopeView({ query, onComplete, initialStarField, presetTree = null 
     }
     let tree = generatedTreeRef.current;
     if (!tree && query) {
-      tree = await generateCustomTree(query);
+      tree = await generateCustomTree(query, 'medium', stargazeNodeCap);
       generatedTreeRef.current = tree;
       setGeneratedTree(tree);
     }
     return tree;
-  }, [query, presetTree]);
+  }, [query, presetTree, stargazeNodeCap]);
 
   useEffect(() => {
     let cancelled = false;
@@ -286,7 +286,7 @@ function TelescopeView({ query, onComplete, initialStarField, presetTree = null 
 
     const preloadTree = async () => {
       try {
-        const result = await generateCustomTree(query);
+        const result = await generateCustomTree(query, 'medium', stargazeNodeCap);
         if (cancelled) return;
         setGeneratedTree(result);
       } catch (error) {
@@ -296,7 +296,7 @@ function TelescopeView({ query, onComplete, initialStarField, presetTree = null 
 
     preloadTree();
     return () => { cancelled = true; };
-  }, [query, isDirectOpen]);
+  }, [query, isDirectOpen, stargazeNodeCap]);
 
   const startSearchPan = useCallback(() => {
     const dir = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];

@@ -91,6 +91,24 @@ export default function SettingsView({ settings, onChange }) {
             <span className="settings-color-code">{settings?.nodeColor || '#ffffff'}</span>
           </div>
         </label>
+
+        <label className="settings-item">
+          <div className="settings-copy">
+            <div className="settings-item-title">Stargaze Node Cap</div>
+            <div className="settings-item-desc">
+              Maximum nodes generated for each new Stargaze constellation (1-12).
+            </div>
+          </div>
+          <input
+            className="settings-text-input"
+            type="number"
+            min={1}
+            max={12}
+            step={1}
+            value={settings?.stargazeNodeCap ?? 12}
+            onChange={(e) => onChange?.({ stargazeNodeCap: e.target.value })}
+          />
+        </label>
       </div>
     </div>
   );

@@ -5,10 +5,33 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL)
 const apiUrl = (path) => `${API_BASE_URL}${String(path).startsWith('/') ? path : `/${path}`}`;
 const DEBUG_LOGS = import.meta.env.DEV && import.meta.env.VITE_DEBUG_LOGS === '1';
 
-const buildFallbackGeneratedTree = (topic = 'New Topic') => {
+const clampNodeCap = (value, fallback = 12) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(1, Math.min(12, Math.floor(parsed)));
+};
+
+const buildFallbackGeneratedTree = (topic = 'New Topic', maxNodes = 12) => {
   const base = String(topic || 'New Topic').trim() || 'New Topic';
   const topicClean = base.replace(/\s+/g, ' ').slice(0, 40);
   const topicId = topicClean.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'topic';
+  const cappedNodeCount = clampNodeCap(maxNodes, 12);
+  const templateNodes = [
+    { id: `${topicId}-basics`, label: `${topicClean}\nBasics`, status: 'active', level: 1, description: `Foundations of ${topicClean}` },
+    { id: `${topicId}-concepts`, label: 'Core\nConcepts', status: 'locked', level: 2, description: `Key concepts in ${topicClean}` },
+    { id: `${topicId}-practice`, label: 'Guided\nPractice', status: 'locked', level: 3, description: `Practice patterns for ${topicClean}` },
+    { id: `${topicId}-advanced`, label: 'Advanced\nTopics', status: 'locked', level: 4, description: `Advanced ideas in ${topicClean}` },
+    { id: `${topicId}-mastery`, label: 'Mastery', status: 'locked', level: 5, description: `Integrate and apply ${topicClean}` }
+  ];
+  const nodes = templateNodes.slice(0, cappedNodeCount);
+  const nodeIds = new Set(nodes.map((node) => node.id));
+  const links = [
+    { source: `${topicId}-basics`, target: `${topicId}-concepts` },
+    { source: `${topicId}-concepts`, target: `${topicId}-practice` },
+    { source: `${topicId}-practice`, target: `${topicId}-advanced` },
+    { source: `${topicId}-advanced`, target: `${topicId}-mastery` }
+  ].filter((link) => nodeIds.has(link.source) && nodeIds.has(link.target));
+
   return {
     success: true,
     topic: topicClean,
@@ -17,19 +40,8 @@ const buildFallbackGeneratedTree = (topic = 'New Topic') => {
       reason: 'frontend-fallback'
     },
     graph: {
-      nodes: [
-        { id: `${topicId}-basics`, label: `${topicClean}\nBasics`, status: 'active', level: 1, description: `Foundations of ${topicClean}` },
-        { id: `${topicId}-concepts`, label: 'Core\nConcepts', status: 'locked', level: 2, description: `Key concepts in ${topicClean}` },
-        { id: `${topicId}-practice`, label: 'Guided\nPractice', status: 'locked', level: 3, description: `Practice patterns for ${topicClean}` },
-        { id: `${topicId}-advanced`, label: 'Advanced\nTopics', status: 'locked', level: 4, description: `Advanced ideas in ${topicClean}` },
-        { id: `${topicId}-mastery`, label: 'Mastery', status: 'locked', level: 5, description: `Integrate and apply ${topicClean}` }
-      ],
-      links: [
-        { source: `${topicId}-basics`, target: `${topicId}-concepts` },
-        { source: `${topicId}-concepts`, target: `${topicId}-practice` },
-        { source: `${topicId}-practice`, target: `${topicId}-advanced` },
-        { source: `${topicId}-advanced`, target: `${topicId}-mastery` }
-      ]
+      nodes,
+      links
     }
   };
 };
@@ -202,7 +214,8 @@ export const resetProgress = async () => {
 };
 
 // Generate custom tree (bonus feature - requires LLM)
-export const generateCustomTree = async (topic, difficulty = 'medium') => {
+export const generateCustomTree = async (topic, difficulty = 'medium', maxNodes = 12) => {
+  const cappedMaxNodes = clampNodeCap(maxNodes, 12);
   try {
     const response = await fetch(apiUrl('/api/generate-tree'), {
       method: 'POST',
@@ -212,6 +225,7 @@ export const generateCustomTree = async (topic, difficulty = 'medium') => {
       body: JSON.stringify({
         topic,
         difficulty,
+        maxNodes: cappedMaxNodes
       }),
     });
     const data = await handleResponse(response);
@@ -229,7 +243,7 @@ export const generateCustomTree = async (topic, difficulty = 'medium') => {
       console.error('Error generating custom tree:', error);
       console.warn('Falling back to local generated tree due to API failure.');
     }
-    return buildFallbackGeneratedTree(topic);
+    return buildFallbackGeneratedTree(topic, cappedMaxNodes);
   }
 };
 

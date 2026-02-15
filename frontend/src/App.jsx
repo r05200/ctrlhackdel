@@ -26,7 +26,8 @@ const DEFAULT_APP_SETTINGS = {
   disableBackgroundElements: false,
   userName: '',
   starColor: '#ffffff',
-  nodeColor: '#ffffff'
+  nodeColor: '#ffffff',
+  stargazeNodeCap: 12
 };
 
 const PAGE_CONTENT = {
@@ -99,6 +100,12 @@ function getStoredAppSettings() {
 function sanitizeHexColor(value, fallback = '#ffffff') {
   const raw = String(value || '').trim();
   return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw.toLowerCase() : fallback;
+}
+
+function sanitizeNodeCap(value, fallback = 12) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(1, Math.min(12, Math.floor(parsed)));
 }
 
 function isMasteredStatus(status) {
@@ -327,6 +334,12 @@ function App() {
       if (Object.prototype.hasOwnProperty.call(patch, 'nodeColor')) {
         next.nodeColor = sanitizeHexColor(patch.nodeColor, prev.nodeColor || DEFAULT_APP_SETTINGS.nodeColor);
       }
+      if (Object.prototype.hasOwnProperty.call(patch, 'stargazeNodeCap')) {
+        next.stargazeNodeCap = sanitizeNodeCap(
+          patch.stargazeNodeCap,
+          prev.stargazeNodeCap || DEFAULT_APP_SETTINGS.stargazeNodeCap
+        );
+      }
       if (patch.disableStartingAnimation) {
         setShowSplash(false);
         setMainVisible(true);
@@ -338,6 +351,7 @@ function App() {
   const greetingName = String(appSettings.userName || '').trim() || 'Explorer';
   const starColor = sanitizeHexColor(appSettings.starColor, DEFAULT_APP_SETTINGS.starColor);
   const nodeColor = sanitizeHexColor(appSettings.nodeColor, DEFAULT_APP_SETTINGS.nodeColor);
+  const stargazeNodeCap = sanitizeNodeCap(appSettings.stargazeNodeCap, DEFAULT_APP_SETTINGS.stargazeNodeCap);
 
   const showConstellationView = constellationMode && constellationData && activePage === 'create';
   const showMainUI = !showConstellationView;
@@ -436,6 +450,7 @@ function App() {
               onComplete={handleTelescopeComplete}
               initialStarField={sharedStarField}
               presetTree={telescopePresetTree}
+              stargazeNodeCap={stargazeNodeCap}
             />
           )}
 
@@ -473,7 +488,7 @@ function App() {
                     ) : activePage === 'past' ? (
                       <PastConstellationsView onOpenConstellation={handleOpenPastConstellation} />
                     ) : activePage === 'settings' ? (
-                      <SettingsView settings={appSettings} onChange={handleSettingsChange} />
+                      <SettingsView settings={{ ...appSettings, stargazeNodeCap }} onChange={handleSettingsChange} />
                     ) : activePage === 'profile' ? (
                       <ProfileView />
                     ) : (

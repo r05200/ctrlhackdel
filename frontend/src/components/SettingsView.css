@@ -1,6 +1,7 @@
 .settings-view {
   width: min(980px, 90vw);
   max-height: 80vh;
+  overflow: hidden;
   padding: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
@@ -32,6 +33,10 @@
 .settings-list {
   display: grid;
   gap: 0.8rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.25rem;
 }
 
 .settings-item {
