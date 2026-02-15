@@ -25,12 +25,12 @@ const getNodeBestScore = (node) => {
 const getNodeStyleByStatus = (status) => {
   switch (status) {
     case 'mastered':
-      return { opacity: 1, size: 68, pulseSize: 2.2, shadow: '0 0 34px rgba(255,255,255,1)', rotate: true };
+      return { opacity: 1, size: 76, pulseSize: 2.2, shadow: '0 0 34px rgba(255,255,255,1)', rotate: true };
     case 'active':
-      return { opacity: 0.86, size: 60, pulseSize: 2, shadow: '0 0 26px rgba(255,255,255,0.82)', rotate: true };
+      return { opacity: 0.86, size: 68, pulseSize: 2, shadow: '0 0 26px rgba(255,255,255,0.82)', rotate: true };
     case 'locked':
     default:
-      return { opacity: 0.42, size: 50, pulseSize: 1.2, shadow: '0 0 14px rgba(255,255,255,0.42)', rotate: true };
+      return { opacity: 0.42, size: 58, pulseSize: 1.2, shadow: '0 0 14px rgba(255,255,255,0.42)', rotate: true };
   }
 };
 
@@ -761,8 +761,7 @@ export default function ConstellationView({
   
   console.log('🎨 Rendering constellation with', graphData.nodes.length, 'nodes');
   
-  // Position nodes in a constellation pattern (top to bottom)
-  // Dynamic positioning based on node levels
+  // Position nodes on a centered diagonal flow (top-left -> bottom-right)
   const nodePositions = {};
   const nodesByLevel = {};
   
@@ -774,28 +773,39 @@ export default function ConstellationView({
     nodesByLevel[node.level].push(node);
   });
   
-  // Calculate positions for each level
-  const maxLevel = Math.max(...graphData.nodes.map(n => n.level));
-  const verticalSpacing = 70 / (maxLevel); // Distribute 70% of height
-  
-  Object.keys(nodesByLevel).forEach(level => {
-    const nodes = nodesByLevel[level];
+  const levelValues = Object.keys(nodesByLevel).map((value) => parseInt(value, 10)).sort((a, b) => a - b);
+  const minLevel = Math.min(...levelValues);
+  const maxLevel = Math.max(...levelValues);
+  const levelRange = Math.max(1, maxLevel - minLevel);
+
+  // Diagonal lane centered in viewport.
+  const laneStart = { x: 24, y: 18 };
+  const laneEnd = { x: 76, y: 82 };
+  // Spread siblings perpendicular to the diagonal.
+  const siblingPerpX = -0.85;
+  const siblingPerpY = 0.85;
+
+  levelValues.forEach((levelNum) => {
+    const nodes = nodesByLevel[levelNum] || [];
     const count = nodes.length;
-    const levelNum = parseInt(level);
-    
-    // Vertical position based on level
-    const y = 10 + (levelNum - 1) * verticalSpacing;
-    
-    // Horizontal distribution
+    const t = (levelNum - minLevel) / levelRange;
+    const baseX = laneStart.x + (laneEnd.x - laneStart.x) * t;
+    const baseY = laneStart.y + (laneEnd.y - laneStart.y) * t;
+
     if (count === 1) {
-      nodePositions[nodes[0].id] = { x: 50, y };
-    } else {
-      const spacing = 60 / (count + 1); // Distribute across 60% of width
-      nodes.forEach((node, idx) => {
-        const x = 20 + spacing * (idx + 1);
-        nodePositions[node.id] = { x, y };
-      });
+      nodePositions[nodes[0].id] = { x: baseX, y: baseY };
+      return;
     }
+
+    const spread = Math.min(18, 9 + count * 1.6);
+    nodes.forEach((node, idx) => {
+      const centeredIndex = idx - (count - 1) / 2;
+      const offset = (centeredIndex / Math.max(1, count - 1)) * spread;
+      nodePositions[node.id] = {
+        x: baseX + siblingPerpX * offset,
+        y: baseY + siblingPerpY * offset
+      };
+    });
   });
   const dynamicNodePositions = {};
   const bounds = graphContainerRef.current?.getBoundingClientRect();
