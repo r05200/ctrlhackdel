@@ -1,9 +1,9 @@
 // API Service for Backend Integration
-// In Vite dev, use same-origin `/api` with proxy to avoid CORS/preflight issues.
-const API_BASE_URL = import.meta.env.DEV
-  ? ''
-  : (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-const apiUrl = (path) => `${API_BASE_URL}${path}`;
+// Always call backend directly (no Vite proxy dependency).
+const DEFAULT_API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, '');
+const apiUrl = (path) => `${API_BASE_URL}${String(path).startsWith('/') ? path : `/${path}`}`;
+const DEBUG_LOGS = import.meta.env.DEV && import.meta.env.VITE_DEBUG_LOGS === '1';
 
 const buildFallbackGeneratedTree = (topic = 'New Topic') => {
   const base = String(topic || 'New Topic').trim() || 'New Topic';
@@ -216,17 +216,19 @@ export const generateCustomTree = async (topic, difficulty = 'medium') => {
     });
     const data = await handleResponse(response);
     const meta = data?.generation;
-    if (meta) {
+    if (meta && DEBUG_LOGS) {
       console.log(
         `[TreeGen] source=${meta.source} reason=${meta.reason || 'none'} apiKeyStatus=${meta.apiKeyStatus} modelAvailable=${meta.modelAvailable}`
       );
-    } else {
+    } else if (!meta && DEBUG_LOGS) {
       console.warn('[TreeGen] No generation metadata returned by backend');
     }
     return data;
   } catch (error) {
-    console.error('Error generating custom tree:', error);
-    console.warn('Falling back to local generated tree due to API failure.');
+    if (DEBUG_LOGS) {
+      console.error('Error generating custom tree:', error);
+      console.warn('Falling back to local generated tree due to API failure.');
+    }
     return buildFallbackGeneratedTree(topic);
   }
 };
