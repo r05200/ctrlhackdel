@@ -42,9 +42,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
   return (
     <motion.div
       className="absolute cursor-pointer group"
-      style={{
-        transform: 'translate(-50%, -50%)'
-      }}
+      style={{ position: 'absolute' }}
       initial={{ scale: 0, opacity: 0, rotate: -180 }}
       animate={isUnlocking ? {
         left: `${position.x}%`,
@@ -80,20 +78,27 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
       whileHover={{ scale: 1.4, transition: { duration: 0.3 } }}
       onClick={() => onClick(node)}
     >
-      {/* Diamond/Hexagon shape instead of circle */}
-      <motion.div
+      {/* Center anchor wrapper so link coordinates land at node center */}
+      <div
         style={{
           position: 'relative',
-          width: `${size}px`,
-          height: `${size}px`
-        }}
-        animate={nodeStyle.rotate ? {
-          rotate: [0, 360]
-        } : {}}
-        transition={{
-          rotate: { duration: 20, repeat: Infinity, ease: 'linear' }
+          transform: 'translate(-50%, -50%)'
         }}
       >
+        {/* Diamond/Hexagon shape instead of circle */}
+        <motion.div
+          style={{
+            position: 'relative',
+            width: `${size}px`,
+            height: `${size}px`
+          }}
+          animate={nodeStyle.rotate ? {
+            rotate: [0, 360]
+          } : {}}
+          transition={{
+            rotate: { duration: 20, repeat: Infinity, ease: 'linear' }
+          }}
+        >
         {/* Star burst shape with 8 rays - shortened */}
         <svg width={size} height={size} viewBox="0 0 100 100" style={{ filter: `drop-shadow(${nodeStyle.shadow})` }}>
           {/* Main rays - 4 primary directions */}
@@ -344,51 +349,52 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
             </svg>
           </>
         )}
-      </motion.div>
+        </motion.div>
 
-      {/* Label with smooth fade */}
-      <motion.div
-        className="absolute whitespace-nowrap font-mono text-sm font-medium"
-        style={{
-          left: `${size + 15}px`,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          color: baseColor,
-          textShadow: `0 0 ${15 * nodeStyle.opacity}px rgba(255, 255, 255, ${nodeStyle.opacity * 0.8}), 0 2px 4px rgba(0,0,0,0.5)`,
-          pointerEvents: 'none'
-        }}
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ 
-          opacity: nodeStyle.opacity * 0.95, 
-          x: 0 
-        }}
-        transition={{ 
-          delay: node.level * 0.15 + 0.4,
-          duration: 0.8,
-          type: 'spring'
-        }}
-      >
-        {node.label.replace('\n', ' ')}
-      </motion.div>
+        {/* Label with smooth fade */}
+        <motion.div
+          className="absolute whitespace-nowrap font-mono text-sm font-medium"
+          style={{
+            left: `${size + 15}px`,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: baseColor,
+            textShadow: `0 0 ${15 * nodeStyle.opacity}px rgba(255, 255, 255, ${nodeStyle.opacity * 0.8}), 0 2px 4px rgba(0,0,0,0.5)`,
+            pointerEvents: 'none'
+          }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ 
+            opacity: nodeStyle.opacity * 0.95, 
+            x: 0 
+          }}
+          transition={{ 
+            delay: node.level * 0.15 + 0.4,
+            duration: 0.8,
+            type: 'spring'
+          }}
+        >
+          {node.label.replace('\n', ' ')}
+        </motion.div>
 
-      {/* Statistics display */}
-      <motion.div
-        className="absolute whitespace-nowrap font-mono text-xs"
-        style={{
-          left: `${size + 15}px`,
-          top: 'calc(50% + 20px)',
-          color: normalizedStatus === 'mastered' ? '#60a5fa' : normalizedStatus === 'active' ? '#99ff00' : '#888888',
-          opacity: nodeStyle.opacity * 0.8,
-          textShadow: `0 0 8px rgba(255, 255, 255, ${nodeStyle.opacity * 0.4})`,
-          pointerEvents: 'none',
-          fontSize: '10px'
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: nodeStyle.opacity * 0.8 }}
-        transition={{ delay: node.level * 0.15 + 0.6, duration: 0.8 }}
-      >
-        {normalizedStatus === 'mastered' ? `Best Score: ${getNodeBestScore(node) || 95}%` : 'Incomplete'}
-      </motion.div>
+        {/* Statistics display */}
+        <motion.div
+          className="absolute whitespace-nowrap font-mono text-xs"
+          style={{
+            left: `${size + 15}px`,
+            top: 'calc(50% + 20px)',
+            color: normalizedStatus === 'mastered' ? '#60a5fa' : normalizedStatus === 'active' ? '#99ff00' : '#888888',
+            opacity: nodeStyle.opacity * 0.8,
+            textShadow: `0 0 8px rgba(255, 255, 255, ${nodeStyle.opacity * 0.4})`,
+            pointerEvents: 'none',
+            fontSize: '10px'
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: nodeStyle.opacity * 0.8 }}
+          transition={{ delay: node.level * 0.15 + 0.6, duration: 0.8 }}
+        >
+          {normalizedStatus === 'mastered' ? `Best Score: ${getNodeBestScore(node) || 95}%` : 'Incomplete'}
+        </motion.div>
+      </div>
     </motion.div>
   );
 }
