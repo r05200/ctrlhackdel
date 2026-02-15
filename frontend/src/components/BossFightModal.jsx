@@ -321,6 +321,16 @@ const BossFightModal = ({ node, onClose, onComplete }) => {
                 SUBMIT STAR TRIAL
               </button>
             )}
+            {inputMode === 'mic' && (
+              <button
+                className="start-btn"
+                onClick={handleSubmitRecording}
+                disabled={!audioBlob || isRecording || isTranscribing}
+                style={{ marginTop: 14 }}
+              >
+                {isTranscribing ? 'PROCESSING...' : 'SUBMIT STAR TRIAL'}
+              </button>
+            )}
           </div>
         )}
 

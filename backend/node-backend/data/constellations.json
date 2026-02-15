@@ -228,6 +228,174 @@
       },
       "createdAt": "2026-02-15T06:55:30.936Z",
       "updatedAt": "2026-02-15T09:20:52.315Z"
+    },
+    {
+      "id": "const_1771148441037_afurg1",
+      "title": "calculus",
+      "query": "calculus",
+      "tags": [],
+      "graph": {
+        "nodes": [
+          {
+            "id": "calc-001",
+            "label": "Limits and Continuity",
+            "status": "active",
+            "level": 1,
+            "description": "Understand the concept of a limit and how it relates to function continuity."
+          },
+          {
+            "id": "calc-002",
+            "label": "Definition of the Derivative",
+            "status": "locked",
+            "level": 2,
+            "description": "Learn the formal definition of the derivative as a limit and its geometric interpretation."
+          },
+          {
+            "id": "calc-003",
+            "label": "Differentiation Rules",
+            "status": "locked",
+            "level": 2,
+            "description": "Master fundamental rules for differentiation including power, product, and quotient rules."
+          },
+          {
+            "id": "calc-004",
+            "label": "Chain Rule",
+            "status": "locked",
+            "level": 3,
+            "description": "Apply the chain rule to differentiate composite functions efficiently."
+          },
+          {
+            "id": "calc-005",
+            "label": "Implicit Differentiation",
+            "status": "locked",
+            "level": 3,
+            "description": "Differentiate equations that are not explicitly solved for one variable in terms of another."
+          },
+          {
+            "id": "calc-006",
+            "label": "Related Rates",
+            "status": "locked",
+            "level": 4,
+            "description": "Solve problems involving rates of change of two or more related variables."
+          },
+          {
+            "id": "calc-007",
+            "label": "Optimization",
+            "status": "locked",
+            "level": 4,
+            "description": "Use derivatives to find maximum or minimum values of functions in real-world scenarios."
+          },
+          {
+            "id": "calc-008",
+            "label": "Antiderivatives and Indefinite Integrals",
+            "status": "locked",
+            "level": 2,
+            "description": "Understand antiderivatives as the inverse of derivatives and calculate indefinite integrals."
+          },
+          {
+            "id": "calc-009",
+            "label": "Definite Integrals and Riemann Sums",
+            "status": "locked",
+            "level": 3,
+            "description": "Explore definite integrals as accumulated change and their approximation using Riemann sums."
+          },
+          {
+            "id": "calc-010",
+            "label": "Fundamental Theorem of Calculus",
+            "status": "locked",
+            "level": 4,
+            "description": "Grasp the pivotal theorem linking differentiation and integration."
+          },
+          {
+            "id": "calc-011",
+            "label": "Integration Techniques",
+            "status": "locked",
+            "level": 5,
+            "description": "Learn various methods for solving complex integrals, including u-substitution and integration by parts."
+          },
+          {
+            "id": "calc-012",
+            "label": "Applications of Integration",
+            "status": "locked",
+            "level": 5,
+            "description": "Apply definite integrals to calculate areas, volumes, and other physical quantities."
+          },
+          {
+            "id": "calc-013",
+            "label": "Sequences and Series",
+            "status": "locked",
+            "level": 6,
+            "description": "Study the behavior and convergence of infinite sequences and series."
+          },
+          {
+            "id": "calc-014",
+            "label": "Introduction to Multivariable Calculus",
+            "status": "locked",
+            "level": 6,
+            "description": "Begin exploring functions of multiple variables, partial derivatives, and multiple integrals."
+          }
+        ],
+        "links": [
+          {
+            "source": "calc-001",
+            "target": "calc-002"
+          },
+          {
+            "source": "calc-001",
+            "target": "calc-008"
+          },
+          {
+            "source": "calc-001",
+            "target": "calc-013"
+          },
+          {
+            "source": "calc-002",
+            "target": "calc-003"
+          },
+          {
+            "source": "calc-003",
+            "target": "calc-004"
+          },
+          {
+            "source": "calc-003",
+            "target": "calc-005"
+          },
+          {
+            "source": "calc-004",
+            "target": "calc-006"
+          },
+          {
+            "source": "calc-004",
+            "target": "calc-007"
+          },
+          {
+            "source": "calc-008",
+            "target": "calc-009"
+          },
+          {
+            "source": "calc-009",
+            "target": "calc-010"
+          },
+          {
+            "source": "calc-010",
+            "target": "calc-011"
+          },
+          {
+            "source": "calc-010",
+            "target": "calc-012"
+          },
+          {
+            "source": "calc-007",
+            "target": "calc-014"
+          },
+          {
+            "source": "calc-012",
+            "target": "calc-014"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T09:40:41.037Z",
+      "updatedAt": "2026-02-15T09:40:41.037Z"
     }
   ]
 }
