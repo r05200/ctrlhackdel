@@ -179,6 +179,7 @@ function App() {
       setConstellationReady(false);
       setActivePage('create');
       setConstellationTopic(topic);
+      setFadingOut(false);
 
       createPastConstellation({
         title: topic || 'Untitled Constellation',
@@ -215,6 +216,8 @@ function App() {
         setConstellationMode(false);
         setConstellationReady(false);
         setActivePage(pageId);
+        setFadingOut(false);
+        setTelescopeMode(false);
         constellationLeaveTimerRef.current = null;
       }, CONSTELLATION_LEAVE_DISSOLVE_MS);
       return;
