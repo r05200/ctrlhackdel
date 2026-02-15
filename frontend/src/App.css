@@ -1500,6 +1500,8 @@
   transform-origin: center;
   transform: rotate(var(--gem-rotation, 0deg)) scale(1);
   transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 .gemini-star.fade-out {

@@ -109,8 +109,8 @@ function App() {
       {/* Always-mounted StarryBackground — eliminates black flash between views */}
       <StarryBackground
         hideMeteors={showSplash}
-        enableGeminiStars={!showSplash && !showConstellationView}
-        panUpTransition={fadingOut && !telescopeMode}
+        enableGeminiStars={!showSplash && !showConstellationView && !telescopeMode}
+        panUpTransition={fadingOut || telescopeMode || showConstellationView}
       />
 
       {/* Splash screen overlays on top */}

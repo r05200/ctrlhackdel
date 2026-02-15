@@ -353,39 +353,52 @@ export default function ConstellationView({
     const loadGraphData = async () => {
       try {
         setIsLoading(true);
+        console.log('🎬 Starting loadGraphData - userPrompt:', userPrompt);
 
-        if (promptText.trim()) {
-          const generated = await generateCustomTree(promptText);
-          const parsed = parseGraphPayload(generated);
-          if (!parsed) {
-            throw new Error('Generated tree payload did not contain graph data.');
-          }
-          if (!cancelled) {
-            setGraphData(parsed.graph);
-            setGeneratedTopic(parsed.topic || promptText);
+        // If user provided a prompt, generate custom tree
+        if (userPrompt && userPrompt.trim()) {
+          console.log('🔍 Fetching custom tree for:', userPrompt);
+          const result = await generateCustomTree(userPrompt);
+          const parsed = parseGraphPayload(result);
+
+          if (parsed && parsed.graph && parsed.graph.nodes && parsed.graph.links) {
+            console.log('✅ Valid graph data - setting state!');
+
+            // Force new object reference to ensure React detects change
+            const newGraph = {
+              nodes: [...parsed.graph.nodes],
+              links: [...parsed.graph.links]
+            };
+
+            setGraphData(newGraph);
+            setGeneratedTopic(parsed.topic || userPrompt);
             setError(null);
+            console.log('✅ State updated! New graph has', newGraph.nodes.length, 'nodes');
+          } else {
+            console.error('❌ Invalid graph structure:', result);
+            throw new Error('Failed to generate custom tree - invalid structure');
           }
         } else {
-          const fetched = await fetchKnowledgeGraph();
-          const parsed = parseGraphPayload(fetched);
-          if (!parsed) {
-            throw new Error('Fetched graph payload did not contain graph data.');
-          }
-          if (!cancelled) {
+          // Otherwise load default tree
+          console.log('📚 Loading default tree (no userPrompt)');
+          const data = await fetchKnowledgeGraph();
+          const parsed = parseGraphPayload(data);
+
+          if (parsed && parsed.graph && parsed.graph.nodes && parsed.graph.links) {
             setGraphData(parsed.graph);
             setError(null);
+          } else {
+            console.error('❌ Invalid default graph data:', data);
+            throw new Error('Invalid default graph data');
           }
         }
       } catch (err) {
-        console.error('Failed to load graph data, using local fallback:', err);
-        if (!cancelled) {
-          setGraphData(knowledgeGraphData);
-          setError('Using offline data');
-        }
+        console.error('❌ Failed to fetch graph, using local fallback:', err);
+        setError('Using offline data');
+        setGraphData(knowledgeGraphData); // Explicitly set fallback data
       } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
+        console.log('✅ loadGraphData complete');
       }
     };
 
@@ -600,6 +613,27 @@ export default function ConstellationView({
   if (isLoading) {
     return <ConstellationLoader />;
   }
+
+  // Validate graph data before rendering
+  if (!graphData || !graphData.nodes || !Array.isArray(graphData.nodes) || graphData.nodes.length === 0) {
+    console.error('❌ Invalid graph data structure:', graphData);
+    return (
+      <div className="w-full h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-2xl mb-4">⚠️ Error loading constellation</p>
+          <p className="text-gray-400">Graph data is invalid or empty</p>
+          <button
+            onClick={onBack}
+            className="mt-6 px-6 py-3 bg-white/20 border border-white/30 rounded-lg hover:bg-white/30"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('🎨 Rendering constellation with', graphData.nodes.length, 'nodes');
 
   return (
     <motion.div

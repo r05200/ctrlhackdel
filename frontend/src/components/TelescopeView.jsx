@@ -341,7 +341,7 @@ function TelescopeView({ query, onComplete }) {
           {lensStars.map((star) => (
             <div
               key={star.id}
-              className="lens-star"
+              className={`lens-star ${constellationZoom ? 'fade-out-zoom' : ''}`}
               style={{
                 left: `${star.x}%`,
                 top: `${star.y}%`,
@@ -356,7 +356,7 @@ function TelescopeView({ query, onComplete }) {
           {geminiStars.map((gemini) => (
             <div
               key={`gem-${gemini.id}`}
-              className="gemini-star"
+              className={`gemini-star ${constellationZoom ? 'fade-out-zoom' : ''}`}
               style={{
                 left: `${gemini.x}%`,
                 top: `${gemini.y}%`,
