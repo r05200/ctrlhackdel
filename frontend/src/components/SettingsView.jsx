@@ -73,6 +73,24 @@ export default function SettingsView({ settings, onChange }) {
             <span className="settings-color-code">{settings?.starColor || '#ffffff'}</span>
           </div>
         </label>
+
+        <label className="settings-item">
+          <div className="settings-copy">
+            <div className="settings-item-title">Constellation Node Color</div>
+            <div className="settings-item-desc">
+              Sets the base color of constellation nodes.
+            </div>
+          </div>
+          <div className="settings-color-wrap">
+            <input
+              className="settings-color-input"
+              type="color"
+              value={settings?.nodeColor || '#ffffff'}
+              onChange={(e) => onChange?.({ nodeColor: e.target.value })}
+            />
+            <span className="settings-color-code">{settings?.nodeColor || '#ffffff'}</span>
+          </div>
+        </label>
       </div>
     </div>
   );

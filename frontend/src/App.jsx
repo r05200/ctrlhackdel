@@ -22,7 +22,8 @@ const DEFAULT_APP_SETTINGS = {
   disableStartingAnimation: false,
   disableBackgroundElements: false,
   userName: '',
-  starColor: '#ffffff'
+  starColor: '#ffffff',
+  nodeColor: '#ffffff'
 };
 
 const PAGE_CONTENT = {
@@ -92,7 +93,7 @@ function getStoredAppSettings() {
   }
 }
 
-function sanitizeStarColor(value, fallback = '#ffffff') {
+function sanitizeHexColor(value, fallback = '#ffffff') {
   const raw = String(value || '').trim();
   return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw.toLowerCase() : fallback;
 }
@@ -251,7 +252,10 @@ function App() {
         next.userName = String(patch.userName || '').slice(0, 25);
       }
       if (Object.prototype.hasOwnProperty.call(patch, 'starColor')) {
-        next.starColor = sanitizeStarColor(patch.starColor, prev.starColor || DEFAULT_APP_SETTINGS.starColor);
+        next.starColor = sanitizeHexColor(patch.starColor, prev.starColor || DEFAULT_APP_SETTINGS.starColor);
+      }
+      if (Object.prototype.hasOwnProperty.call(patch, 'nodeColor')) {
+        next.nodeColor = sanitizeHexColor(patch.nodeColor, prev.nodeColor || DEFAULT_APP_SETTINGS.nodeColor);
       }
       if (patch.disableStartingAnimation) {
         setShowSplash(false);
@@ -262,7 +266,8 @@ function App() {
   };
 
   const greetingName = String(appSettings.userName || '').trim() || 'Explorer';
-  const starColor = sanitizeStarColor(appSettings.starColor, DEFAULT_APP_SETTINGS.starColor);
+  const starColor = sanitizeHexColor(appSettings.starColor, DEFAULT_APP_SETTINGS.starColor);
+  const nodeColor = sanitizeHexColor(appSettings.nodeColor, DEFAULT_APP_SETTINGS.nodeColor);
 
   const showConstellationView = constellationMode && constellationData && activePage === 'create';
   const showMainUI = !showConstellationView;
@@ -321,6 +326,7 @@ function App() {
               query={searchQuery}
               hideSideHud={true}
               onTopicResolved={setConstellationTopic}
+              nodeColor={nodeColor}
             />
           </div>
         </>

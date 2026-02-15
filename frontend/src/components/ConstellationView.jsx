@@ -51,11 +51,29 @@ const getNodeMotionProfile = (nodeId) => {
   const shimmerDelay = ((hash >>> 5) % 14) / 10; // 0..1.3 sec
   return { dir, swing, rotationDuration, shimmerDuration, shimmerDelay };
 };
+
+const isHexColor = (value) => /^#[0-9a-fA-F]{6}$/.test(String(value || '').trim());
+
+const withAlpha = (hex, alpha = 1) => {
+  const safeHex = isHexColor(hex) ? hex : '#ffffff';
+  const n = safeHex.replace('#', '');
+  const r = parseInt(n.slice(0, 2), 16);
+  const g = parseInt(n.slice(2, 4), 16);
+  const b = parseInt(n.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const getStatusHighlightColor = (status) => {
+  if (status === 'mastered') return '#3b82f6';
+  if (status === 'active') return '#22c55e';
+  return null;
+};
 // Constellation-style node positioning
-function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = false }) {
+function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = false, nodeColor = '#ffffff' }) {
   const normalizedStatus = normalizeNodeStatus(node);
   const nodeStyle = getNodeStyleByStatus(normalizedStatus);
-  const baseColor = '#ffffff';
+  const baseColor = isHexColor(nodeColor) ? nodeColor : '#ffffff';
+  const shimmerHighlight = getStatusHighlightColor(normalizedStatus);
   const size = nodeStyle.size;
   const motionProfile = useMemo(() => getNodeMotionProfile(node.id), [node.id]);
 
@@ -157,6 +175,22 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
                 delay: motionProfile.shimmerDelay * 0.6
               }}
             />
+            {shimmerHighlight && (
+              <motion.path
+                d="M50 6 L58 42 L94 50 L58 58 L50 94 L42 58 L6 50 L42 42 Z"
+                fill={shimmerHighlight}
+                opacity={0.2}
+                animate={{
+                  opacity: [0.08, 0.45, 0.12, 0.38, 0.08]
+                }}
+                transition={{
+                  duration: motionProfile.shimmerDuration * 0.9,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                  delay: motionProfile.shimmerDelay * 0.5
+                }}
+              />
+            )}
             <motion.circle
               cx="50"
               cy="50"
@@ -248,7 +282,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
             top: '50%',
             transform: 'translateY(-50%)',
             color: baseColor,
-            textShadow: `0 0 ${15 * nodeStyle.opacity}px rgba(255, 255, 255, ${nodeStyle.opacity * 0.8}), 0 2px 4px rgba(0,0,0,0.5)`,
+            textShadow: `0 0 ${15 * nodeStyle.opacity}px ${withAlpha(baseColor, nodeStyle.opacity * 0.8)}, 0 2px 4px rgba(0,0,0,0.5)`,
             pointerEvents: 'none'
           }}
           initial={{ opacity: 0, x: -20 }}
@@ -272,7 +306,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
             top: 'calc(50% + 20px)',
             color: normalizedStatus === 'mastered' ? '#60a5fa' : normalizedStatus === 'active' ? '#99ff00' : '#888888',
             opacity: nodeStyle.opacity * 0.8,
-            textShadow: `0 0 8px rgba(255, 255, 255, ${nodeStyle.opacity * 0.4})`,
+            textShadow: `0 0 8px ${withAlpha(baseColor, nodeStyle.opacity * 0.45)}`,
             pointerEvents: 'none',
             fontSize: '10px'
           }}
@@ -288,7 +322,8 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
 }
 
 // Connection lines between nodes with flowing energy
-function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [] }) {
+function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [], nodeColor = '#ffffff' }) {
+  const baseColor = isHexColor(nodeColor) ? nodeColor : '#ffffff';
   return (
     <svg
       className="absolute inset-0 pointer-events-none"
@@ -335,9 +370,9 @@ function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [] }
         const isAnimating = animatingEdges.includes(i);
         
         // Subtle link styling - much less obvious
-        let strokeOpacity = 0.08;
+        let strokeOpacity = 0.1;
         let strokeWidth = 0.5;
-        let strokeColor = '#ffffff';
+        let strokeColor = baseColor;
         
         const sourceStatus = sourceNode ? normalizeNodeStatus(sourceNode) : 'locked';
         if (sourceStatus === 'mastered' || sourceStatus === 'active') {
@@ -407,23 +442,46 @@ function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [] }
           );
         }
 
+        const pulseColor = sourceStatus === 'mastered' ? '#3b82f6' : sourceStatus === 'active' ? '#22c55e' : baseColor;
+        const pulseDuration = 1.05 + (i % 4) * 0.22;
+        const pulseDelay = (i % 7) * 0.12;
+
         return (
-          <motion.line
-            key={i}
-            x1={`${sourcePos.x}%`}
-            y1={`${sourcePos.y}%`}
-            x2={`${targetPos.x}%`}
-            y2={`${targetPos.y}%`}
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: strokeOpacity
-            }}
-            transition={{ 
-              opacity: { duration: 0.5, delay: i * 0.03 }
-            }}
-          />
+          <g key={i}>
+            <motion.line
+              x1={`${sourcePos.x}%`}
+              y1={`${sourcePos.y}%`}
+              x2={`${targetPos.x}%`}
+              y2={`${targetPos.y}%`}
+              stroke={strokeColor}
+              strokeWidth={strokeWidth}
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: strokeOpacity
+              }}
+              transition={{
+                opacity: { duration: 0.5, delay: i * 0.03 }
+              }}
+            />
+            <motion.circle
+              r="2.8"
+              fill={pulseColor}
+              filter="url(#constellation-glow)"
+              initial={{ cx: `${sourcePos.x}%`, cy: `${sourcePos.y}%`, opacity: 0 }}
+              animate={{
+                cx: [`${sourcePos.x}%`, `${targetPos.x}%`],
+                cy: [`${sourcePos.y}%`, `${targetPos.y}%`],
+                opacity: [0, 0.95, 0]
+              }}
+              transition={{
+                duration: pulseDuration,
+                ease: 'linear',
+                repeat: Infinity,
+                delay: pulseDelay,
+                repeatDelay: 0.22 + (i % 3) * 0.08
+              }}
+            />
+          </g>
         );
       })}
     </svg>
@@ -443,7 +501,8 @@ export default function ConstellationView({
   graphData: initialGraphData = null,
   query = '',
   hideSideHud = false,
-  onTopicResolved
+  onTopicResolved,
+  nodeColor = '#ffffff'
 }) {
   const [selectedNode, setSelectedNode] = useState(null);
   const [graphData, setGraphData] = useState(knowledgeGraphData); // Start with local data as fallback
@@ -811,6 +870,7 @@ export default function ConstellationView({
             nodePositions={dynamicNodePositions}
             nodes={graphData.nodes}
             animatingEdges={animatingEdges}
+            nodeColor={nodeColor}
           />
           
           {/* Nodes */}
@@ -822,6 +882,7 @@ export default function ConstellationView({
               onClick={handleNodeClick}
               isSelected={selectedNode?.id === node.id}
               isUnlocking={unlockedNodes.includes(node.id)}
+              nodeColor={nodeColor}
             />
           ))}
         </div>
