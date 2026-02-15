@@ -327,6 +327,8 @@ function App() {
               hideSideHud={true}
               onTopicResolved={setConstellationTopic}
               nodeColor={nodeColor}
+              backgroundStarsEnabled={!appSettings.disableBackgroundElements}
+              starColor={starColor}
             />
           </div>
         </>
