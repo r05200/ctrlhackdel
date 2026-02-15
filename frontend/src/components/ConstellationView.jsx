@@ -387,15 +387,15 @@ function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [], 
         // Check if this edge is animating
         const isAnimating = animatingEdges.includes(i);
         
-        // Subtle link styling - much less obvious
-        let strokeOpacity = 0.16;
-        let strokeWidth = 0.8;
+        // Base edge styling
+        let strokeOpacity = 0.32;
+        let strokeWidth = 5.2;
         let strokeColor = withAlpha(baseColor, 0.55);
         
         const sourceStatus = sourceNode ? normalizeNodeStatus(sourceNode) : 'locked';
         if (sourceStatus === 'mastered' || sourceStatus === 'active') {
-          strokeOpacity = sourceStatus === 'mastered' ? 0.25 : 0.15;
-          strokeWidth = sourceStatus === 'mastered' ? 1 : 0.7;
+          strokeOpacity = sourceStatus === 'mastered' ? 0.52 : 0.4;
+          strokeWidth = sourceStatus === 'mastered' ? 2.3 : 1.9;
         }
 
         // Neural animation for newly unlocked edges
@@ -460,65 +460,27 @@ function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [], 
           );
         }
 
-        const pulseColor = sourceStatus === 'mastered' ? '#3b82f6' : sourceStatus === 'active' ? '#22c55e' : baseColor;
-        const pulseDuration = 1.05 + (i % 4) * 0.22;
-        const pulseDelay = (i % 7) * 0.12;
+        const breatheDuration = 2.6 + (i % 6) * 0.28;
+        const breatheDelay = (i % 9) * 0.1;
 
         return (
-          <g key={i}>
-            <motion.line
-              x1={`${sourcePos.x}%`}
-              y1={`${sourcePos.y}%`}
-              x2={`${targetPos.x}%`}
-              y2={`${targetPos.y}%`}
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-              filter="url(#constellation-glow)"
-              initial={{ opacity: 0 }}
-              animate={{
-                opacity: strokeOpacity
-              }}
-              transition={{
-                opacity: { duration: 0.5, delay: i * 0.03 }
-              }}
-            />
-            <motion.line
-              x1={`${sourcePos.x}%`}
-              y1={`${sourcePos.y}%`}
-              x2={`${targetPos.x}%`}
-              y2={`${targetPos.y}%`}
-              stroke={withAlpha(pulseColor, 0.95)}
-              strokeWidth={strokeWidth + 0.9}
-              filter="url(#constellation-glow)"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 0.55, 0] }}
-              transition={{
-                duration: pulseDuration,
-                ease: 'easeInOut',
-                repeat: Infinity,
-                delay: pulseDelay,
-                repeatDelay: 0.22 + (i % 3) * 0.08
-              }}
-            />
-            <motion.circle
-              r="2.8"
-              fill={pulseColor}
-              filter="url(#constellation-glow)"
-              initial={{ cx: `${sourcePos.x}%`, cy: `${sourcePos.y}%`, opacity: 0 }}
-              animate={{
-                cx: [`${sourcePos.x}%`, `${targetPos.x}%`],
-                cy: [`${sourcePos.y}%`, `${targetPos.y}%`],
-                opacity: [0, 0.95, 0]
-              }}
-              transition={{
-                duration: pulseDuration,
-                ease: 'linear',
-                repeat: Infinity,
-                delay: pulseDelay,
-                repeatDelay: 0.22 + (i % 3) * 0.08
-              }}
-            />
-          </g>
+          <motion.line
+            key={i}
+            x1={`${sourcePos.x}%`}
+            y1={`${sourcePos.y}%`}
+            x2={`${targetPos.x}%`}
+            y2={`${targetPos.y}%`}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            filter="url(#constellation-glow)"
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: [strokeOpacity * 0.8, strokeOpacity, strokeOpacity * 0.6]
+            }}
+            transition={{
+              opacity: { duration: breatheDuration, delay: breatheDelay, repeat: Infinity, ease: 'easeInOut' }
+            }}
+          />
         );
       })}
     </svg>
