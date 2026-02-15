@@ -628,9 +628,8 @@ Create a JSON object with this structure:
 
 Requirements:
 - Generate 8-12 nodes
-- First node: status "mastered", level 1
-- Second node: status "active"
-- All other nodes: status "locked"
+- First node only: status "active" (current node to work on)
+- All other nodes: status "locked" (not yet accessible)
 - Use levels 1-6 to show progression (beginner to advanced)
 - Create logical links showing prerequisites
 - Keep labels clear and concise (no special characters)
@@ -682,19 +681,17 @@ Return ONLY valid JSON, no markdown code blocks.`;
     console.log('  - Nodes:', tree.nodes.length);
     console.log('  - Links:', tree.links.length);
     
-    // Ensure at least one mastered and one active node
+    // Ensure only the first node is active, all others locked
     console.log('\n🔧 Adjusting node statuses...');
-    if (!tree.nodes.some(n => n.status === 'mastered')) {
-      console.log('  - Setting first node to "mastered"');
-      tree.nodes[0].status = 'mastered';
-    }
-    if (!tree.nodes.some(n => n.status === 'active')) {
-      const firstLocked = tree.nodes.findIndex(n => n.status === 'locked');
-      if (firstLocked > -1) {
-        console.log(`  - Setting node ${firstLocked} to "active"`);
-        tree.nodes[firstLocked].status = 'active';
+    tree.nodes.forEach((node, index) => {
+      if (index === 0) {
+        console.log(`  - Setting first node "${node.label}" to "active"`);
+        tree.nodes[index].status = 'active';
+      } else {
+        console.log(`  - Setting node "${node.label}" to "locked"`);
+        tree.nodes[index].status = 'locked';
       }
-    }
+    });
     
     console.log('\n✅ AI generation complete!');
     console.log('Final tree preview:');
@@ -723,8 +720,8 @@ function generateGenericTree(topic) {
   
   const tree = {
     nodes: [
-      { id: 'basics', label: `${capitalizedTopic}\nBasics`, status: 'mastered', level: 1, description: 'Fundamental concepts and introduction' },
-      { id: 'fundamentals', label: 'Core\nFundamentals', status: 'active', level: 2, description: 'Essential principles and practices' },
+      { id: 'basics', label: `${capitalizedTopic}\nBasics`, status: 'active', level: 1, description: 'Fundamental concepts and introduction' },
+      { id: 'fundamentals', label: 'Core\nFundamentals', status: 'locked', level: 2, description: 'Essential principles and practices' },
       { id: 'intermediate', label: 'Intermediate\nConcepts', status: 'locked', level: 3, description: 'Building on the foundations' },
       { id: 'advanced-1', label: 'Advanced\nTopics I', status: 'locked', level: 4, description: 'Deep dive into complex areas' },
       { id: 'advanced-2', label: 'Advanced\nTopics II', status: 'locked', level: 4, description: 'Specialized knowledge' },
