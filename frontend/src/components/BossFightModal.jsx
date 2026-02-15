@@ -1,9 +1,16 @@
 import React from 'react';
 import './BossFightModal.css';
-import { verifyExplanation } from '../services/api';
+import { verifyExplanation, transcribeAudio } from '../services/api';
+
+// ── MediaRecorder mime negotiation ──
+function pickMime() {
+  for (const m of ['audio/webm;codecs=opus', 'audio/webm']) {
+    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m)) return m;
+  }
+  return undefined; // let browser pick default
+}
 
 const BossFightModal = ({ node, onClose, onComplete }) => {
-  const [isRecording, setIsRecording] = React.useState(false);
   const [transcript, setTranscript] = React.useState('');
   const [feedback, setFeedback] = React.useState('');
   const [stage, setStage] = React.useState('intro'); // intro, input, checking, result
@@ -11,10 +18,81 @@ const BossFightModal = ({ node, onClose, onComplete }) => {
   const [verificationResult, setVerificationResult] = React.useState(null);
   const [error, setError] = React.useState(null);
 
+  // ── Mic‑mode state ──
+  const [inputMode, setInputMode] = React.useState('type'); // 'type' | 'mic'
+  const [isRecording, setIsRecording] = React.useState(false);
+  const [audioBlob, setAudioBlob] = React.useState(null);
+  const [audioUrl, setAudioUrl] = React.useState(null);
+  const [micStatus, setMicStatus] = React.useState(''); // user‑facing status line
+  const [isTranscribing, setIsTranscribing] = React.useState(false);
+
+  const mediaRecorderRef = React.useRef(null);
+  const chunksRef = React.useRef([]);
+
+  // Cleanup object URLs on unmount
+  React.useEffect(() => {
+    return () => { if (audioUrl) URL.revokeObjectURL(audioUrl); };
+  }, [audioUrl]);
+
   const handleStartBossFight = () => {
     setStage('input');
   };
 
+  // ── Recording helpers ──
+  const startRecording = async () => {
+    setError(null);
+    setMicStatus('Requesting microphone…');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = pickMime();
+      const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
+        if (audioUrl) URL.revokeObjectURL(audioUrl);
+        setAudioBlob(blob);
+        setAudioUrl(URL.createObjectURL(blob));
+        setMicStatus('Recording saved. You can play it back or submit.');
+        // stop mic tracks
+        stream.getTracks().forEach((t) => t.stop());
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+      setMicStatus('🔴 Recording… click Stop when done.');
+    } catch (err) {
+      console.error('Mic error:', err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setError('Microphone permission denied. Please allow access and try again.');
+      } else {
+        setError(`Microphone error: ${err.message}`);
+      }
+      setMicStatus('');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+
+  const discardRecording = () => {
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    setAudioBlob(null);
+    setAudioUrl(null);
+    setMicStatus('Discarded. Record again when ready.');
+    setError(null);
+  };
+
+  // ── Submit flows ──
+
+  // Typed mode (unchanged logic)
   const handleSubmitExplanation = async () => {
     if (!userExplanation.trim()) {
       alert('Please provide an explanation before submitting.');
@@ -30,9 +108,7 @@ const BossFightModal = ({ node, onClose, onComplete }) => {
     setError(null);
 
     try {
-      // Call backend API to verify the explanation
       const result = await verifyExplanation(node.id, userExplanation, null, node);
-      
       setVerificationResult(result);
       setFeedback(result.feedback || result.message);
       setTranscript(userExplanation);
@@ -41,6 +117,34 @@ const BossFightModal = ({ node, onClose, onComplete }) => {
       console.error('Error verifying explanation:', err);
       setError('Failed to verify explanation. Please try again.');
       setStage('input');
+    }
+  };
+
+  // Mic mode: transcribe → verify
+  const handleSubmitRecording = async () => {
+    if (!audioBlob) return;
+    setError(null);
+    setIsTranscribing(true);
+    setMicStatus('Transcribing audio…');
+
+    try {
+      const text = await transcribeAudio(audioBlob);
+      setMicStatus('Transcript received. Grading…');
+      setUserExplanation(text);
+      setStage('checking');
+
+      const result = await verifyExplanation(node.id, text, null, node);
+      setVerificationResult(result);
+      setFeedback(result.feedback || result.message);
+      setTranscript(text);
+      setStage('result');
+    } catch (err) {
+      console.error('Mic submit error:', err);
+      setError(err.message || 'Transcription / grading failed. You can retry.');
+      setMicStatus('');
+      setStage('input');
+    } finally {
+      setIsTranscribing(false);
     }
   };
 
@@ -89,43 +193,103 @@ const BossFightModal = ({ node, onClose, onComplete }) => {
             <p className="ai-message">
               "Explain <strong>{node.label}</strong> in your own words:"
             </p>
-            <textarea
-              className="explanation-input"
-              value={userExplanation}
-              onChange={(e) => {
-                console.log('📝 Textarea changed:', e.target.value.length, 'chars');
-                setUserExplanation(e.target.value);
-              }}
-              placeholder="Type your explanation here... (minimum 20 words recommended)"
-              rows="6"
-              style={{
-                width: '100%',
-                padding: '12px',
-                background: 'rgba(0, 0, 0, 0.5)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '8px',
-                color: 'white',
-                fontFamily: 'monospace',
-                fontSize: '14px',
-                resize: 'vertical',
-                marginTop: '15px'
-              }}
-            />
-            <div style={{ marginTop: '10px', fontSize: '12px', color: '#999' }}>
-              Words: {userExplanation.split(/\s+/).filter(w => w).length}
+
+            {/* ── Type / Mic toggle ── */}
+            <div style={{
+              display: 'flex', justifyContent: 'center', gap: '0', margin: '12px 0',
+              border: '1px solid rgba(255,255,255,0.25)', borderRadius: '8px', overflow: 'hidden', width: 'fit-content', alignSelf: 'center', marginLeft: 'auto', marginRight: 'auto'
+            }}>
+              {['type', 'mic'].map((m) => (
+                <button key={m} onClick={() => { setInputMode(m); setError(null); }}
+                  style={{
+                    padding: '8px 20px', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+                    border: 'none', color: 'white',
+                    background: inputMode === m ? 'rgba(138,43,226,0.6)' : 'rgba(255,255,255,0.08)',
+                    transition: 'background 0.2s'
+                  }}>
+                  {m === 'type' ? '⌨️ Type' : '🎤 Mic'}
+                </button>
+              ))}
             </div>
-            {error && (
-              <div style={{ color: '#ff4444', marginTop: '10px', fontSize: '14px' }}>
-                ⚠️ {error}
+
+            {/* ── TYPE MODE ── */}
+            {inputMode === 'type' && (
+              <>
+                <textarea
+                  className="explanation-input"
+                  value={userExplanation}
+                  onChange={(e) => {
+                    console.log('📝 Textarea changed:', e.target.value.length, 'chars');
+                    setUserExplanation(e.target.value);
+                  }}
+                  placeholder="Type your explanation here… (minimum 20 words recommended)"
+                  rows="6"
+                  style={{
+                    width: '100%', padding: '12px',
+                    background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.3)',
+                    borderRadius: '8px', color: 'white', fontFamily: 'monospace',
+                    fontSize: '14px', resize: 'vertical', marginTop: '15px'
+                  }}
+                />
+                <div style={{ marginTop: '10px', fontSize: '12px', color: '#999' }}>
+                  Words: {userExplanation.split(/\s+/).filter(w => w).length}
+                </div>
+                {error && (
+                  <div style={{ color: '#ff4444', marginTop: '10px', fontSize: '14px' }}>
+                    ⚠️ {error}
+                  </div>
+                )}
+                <button className="start-btn" onClick={handleSubmitExplanation} style={{ marginTop: '15px' }}>
+                  SUBMIT EXPLANATION
+                </button>
+              </>
+            )}
+
+            {/* ── MIC MODE ── */}
+            {inputMode === 'mic' && (
+              <div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                {/* controls row */}
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {!isRecording && !audioBlob && (
+                    <button className="start-btn" onClick={startRecording} style={{ fontSize: '14px', padding: '10px 20px' }}>
+                      🎤 Start Recording
+                    </button>
+                  )}
+                  {isRecording && (
+                    <button className="start-btn" onClick={stopRecording}
+                      style={{ fontSize: '14px', padding: '10px 20px', background: 'rgba(255,60,60,0.6)' }}>
+                      ⏹ Stop Recording
+                    </button>
+                  )}
+                  {audioBlob && !isRecording && (
+                    <>
+                      <button className="start-btn" onClick={discardRecording}
+                        style={{ fontSize: '14px', padding: '10px 20px', background: 'rgba(255,255,255,0.12)' }}>
+                        🔄 Re‑record
+                      </button>
+                      <button className="start-btn" onClick={handleSubmitRecording}
+                        disabled={isTranscribing}
+                        style={{ fontSize: '14px', padding: '10px 20px', opacity: isTranscribing ? 0.5 : 1 }}>
+                        {isTranscribing ? '⏳ Processing…' : '🚀 Submit Recording'}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* playback */}
+                {audioUrl && !isRecording && (
+                  <audio controls src={audioUrl} style={{ width: '100%', maxWidth: '400px', marginTop: '4px' }} />
+                )}
+
+                {/* status */}
+                {micStatus && (
+                  <div style={{ fontSize: '13px', color: '#ccc', textAlign: 'center' }}>{micStatus}</div>
+                )}
+                {error && (
+                  <div style={{ color: '#ff4444', fontSize: '14px', textAlign: 'center' }}>⚠️ {error}</div>
+                )}
               </div>
             )}
-            <button 
-              className="start-btn" 
-              onClick={handleSubmitExplanation}
-              style={{ marginTop: '15px' }}
-            >
-              SUBMIT EXPLANATION
-            </button>
           </div>
         )}
 

@@ -6,6 +6,10 @@ const fs = require('fs/promises');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+// Import route modules from src/
+const voiceRoutes = require('./src/routes/voiceRoutes');
+const treeRoutes = require('./src/routes/treeRoutes');
+
 const app = express();
 const PORT = process.env.PORT || 5001;
 
@@ -913,6 +917,10 @@ function fallbackVerification(node, explanation) {
   };
 }
 
+// Mount modular routes
+app.use('/api/voice', voiceRoutes);
+app.use('/api/trees', treeRoutes);
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -935,7 +943,9 @@ app.use((req, res) => {
       'POST /api/node/:nodeId/complete',
       'POST /api/verify',
       'POST /api/reset',
-      'POST /api/generate-tree'
+      'POST /api/generate-tree',
+      'POST /api/voice/transcribe',
+      'CRUD /api/trees/:userId'
     ]
   });
 });
@@ -957,6 +967,8 @@ app.listen(PORT, () => {
   ✓ POST /api/verify             - Verify explanation
   ✓ POST /api/reset              - Reset progress
   ✓ POST /api/generate-tree      - Generate custom tree
+  ✓ POST /api/voice/transcribe   - Transcribe voice input
+  ✓ CRUD /api/trees/:userId      - Manage custom trees
   
   💡 Tip: Visit http://localhost:${PORT} for full API info
   `);

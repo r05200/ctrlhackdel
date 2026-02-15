@@ -139,6 +139,28 @@ export const generateCustomTree = async (topic, difficulty = 'medium') => {
   }
 };
 
+// Transcribe audio via ElevenLabs (voice route)
+export const transcribeAudio = async (audioBlob, filename = 'recording.webm') => {
+  const formData = new FormData();
+  formData.append('audio', audioBlob, filename);
+
+  const response = await fetch(`${API_BASE_URL}/api/voice/transcribe`, {
+    method: 'POST',
+    body: formData, // no Content-Type header – browser sets multipart boundary
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ error: 'Transcription failed' }));
+    throw new Error(err.error || 'Transcription failed');
+  }
+
+  const json = await response.json();
+  // ElevenLabs returns { text: "..." } inside data wrapper
+  const text = json?.data?.text ?? '';
+  if (!text.trim()) throw new Error('Transcription returned empty text. Please try again.');
+  return text;
+};
+
 // Check if backend is running
 export const checkBackendHealth = async () => {
   try {
