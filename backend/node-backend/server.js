@@ -71,6 +71,19 @@ const STATUS = {
   ACTIVE: 0
 };
 
+function statusToNumber(status) {
+  if (typeof status === 'number' && Number.isFinite(status)) {
+    return status;
+  }
+  if (typeof status === 'string') {
+    const normalized = status.trim().toLowerCase();
+    if (normalized === 'locked') return STATUS.LOCKED;
+    if (normalized === 'active') return STATUS.ACTIVE;
+    if (normalized === 'mastered') return 95;
+  }
+  return STATUS.LOCKED;
+}
+
 const CONSTELLATION_STORE_DIR = path.join(__dirname, 'data');
 const CONSTELLATION_STORE_FILE = path.join(CONSTELLATION_STORE_DIR, 'constellations.json');
 
@@ -279,12 +292,17 @@ app.delete('/api/constellations/:id', async (req, res) => {
 
 // Get user progress
 app.get('/api/progress', (req, res) => {
+  const nodeStatuses = knowledgeGraph.nodes.map((n) => statusToNumber(n.status));
+  const masteredCount = nodeStatuses.filter((status) => status > STATUS.ACTIVE).length;
+  const activeCount = nodeStatuses.filter((status) => status === STATUS.ACTIVE).length;
+  const lockedCount = nodeStatuses.filter((status) => status === STATUS.LOCKED).length;
+
   const stats = {
     total: knowledgeGraph.nodes.length,
-    mastered: knowledgeGraph.nodes.filter(n => n.status > STATUS.ACTIVE).length,
-    active: knowledgeGraph.nodes.filter(n => n.status === STATUS.ACTIVE).length,
-    locked: knowledgeGraph.nodes.filter(n => n.status === STATUS.LOCKED).length,
-    percentage: Math.round((knowledgeGraph.nodes.filter(n => n.status > STATUS.ACTIVE).length / knowledgeGraph.nodes.length) * 100)
+    mastered: masteredCount,
+    active: activeCount,
+    locked: lockedCount,
+    percentage: Math.round((masteredCount / knowledgeGraph.nodes.length) * 100)
   };
   
   res.json({
