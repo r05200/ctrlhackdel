@@ -542,7 +542,21 @@ function ConstellationLinks({ links, nodePositions, nodes, animatingEdges = [] }
   );
 }
 
-export default function ConstellationView({ onBack, userPrompt }) {
+const parseGraphPayload = (payload) => {
+  if (!payload) return null;
+  if (payload.graph?.nodes && payload.graph?.links) return payload.graph;
+  if (payload.nodes && payload.links) return payload;
+  return null;
+};
+
+export default function ConstellationView({
+  onBack,
+  userPrompt,
+  graphData: initialGraphData = null,
+  query = '',
+  hideSideHud = false,
+  onTopicResolved
+}) {
   const [selectedNode, setSelectedNode] = useState(null);
   const [graphData, setGraphData] = useState(knowledgeGraphData); // Start with local data as fallback
   const [isLoading, setIsLoading] = useState(true);
@@ -555,54 +569,41 @@ export default function ConstellationView({ onBack, userPrompt }) {
   const graphContainerRef = useRef(null);
   const [cursorPoint, setCursorPoint] = useState(null);
   
-  // Fetch knowledge graph from backend on mount
+  // Resolve graph from props or backend
   useEffect(() => {
     const loadGraphData = async () => {
       try {
         setIsLoading(true);
-        console.log('🎬 Starting loadGraphData - userPrompt:', userPrompt);
-        
-        // If user provided a prompt, generate custom tree
-        if (userPrompt && userPrompt.trim()) {
-          console.log('🔍 Fetching custom tree for:', userPrompt);
-          const result = await generateCustomTree(userPrompt);
-          console.log('📦 Received API result:', JSON.stringify(result, null, 2));
-          console.log('📊 Result structure check:', {
-            hasResult: !!result,
-            hasSuccess: result?.success,
-            hasGraph: !!result?.graph,
-            hasNodes: !!result?.graph?.nodes,
-            nodesIsArray: Array.isArray(result?.graph?.nodes),
-            nodesCount: result?.graph?.nodes?.length,
-            hasLinks: !!result?.graph?.links,
-            linksIsArray: Array.isArray(result?.graph?.links),
-            linksCount: result?.graph?.links?.length
-          });
-          
+        const prompt = userPrompt || query;
+        const providedGraph = parseGraphPayload(initialGraphData);
+
+        if (providedGraph) {
+          setGraphData(providedGraph);
+          const resolvedTopic = initialGraphData?.topic || prompt || '';
+          setGeneratedTopic(resolvedTopic);
+          if (onTopicResolved) onTopicResolved(resolvedTopic);
+          setError(null);
+          return;
+        }
+
+        if (prompt && prompt.trim()) {
+          const result = await generateCustomTree(prompt);
+
           if (result && result.success && result.graph && result.graph.nodes && result.graph.links) {
-            console.log('✅ Valid graph data - setting state!');
-            console.log('   Nodes:', result.graph.nodes.length);
-            console.log('   Links:', result.graph.links.length);
-            console.log('   First node:', result.graph.nodes[0]);
-            
-            // Force new object reference to ensure React detects change
             const newGraph = {
               nodes: [...result.graph.nodes],
               links: [...result.graph.links]
             };
-            
+
             setGraphData(newGraph);
-            setGeneratedTopic(result.topic);
+            const resolvedTopic = result.topic || prompt;
+            setGeneratedTopic(resolvedTopic);
+            if (onTopicResolved) onTopicResolved(resolvedTopic);
             setError(null);
-            console.log('✅ State updated! New graph has', newGraph.nodes.length, 'nodes');
           } else {
-            console.error('❌ Invalid graph structure:', result);
-            console.error('   Validation failed - check structure above');
             throw new Error('Failed to generate custom tree - invalid structure');
           }
         } else {
-          // Otherwise load default tree
-          console.log('📚 Loading default tree (no userPrompt)');
           const data = await fetchKnowledgeGraph();
           if (data && data.nodes && data.links) {
             setGraphData(data);
@@ -612,19 +613,16 @@ export default function ConstellationView({ onBack, userPrompt }) {
           }
         }
       } catch (err) {
-        console.error('❌ Failed to fetch graph, using local fallback:', err);
-        console.error('   Error details:', err.message);
-        console.error('   Stack:', err.stack);
+        console.error('Failed to fetch graph, using local fallback:', err);
         setError('Using offline data');
-        setGraphData(knowledgeGraphData); // Explicitly set fallback data
+        setGraphData(knowledgeGraphData);
       } finally {
         setIsLoading(false);
-        console.log('✅ loadGraphData complete');
       }
     };
 
     loadGraphData();
-  }, [userPrompt]);
+  }, [userPrompt, query, initialGraphData, onTopicResolved]);
 
   // Handle node click - open boss fight for active nodes
   const handleNodeClick = (node) => {
@@ -758,12 +756,14 @@ export default function ConstellationView({ onBack, userPrompt }) {
         <div className="text-white text-center">
           <p className="text-2xl mb-4">⚠️ Error loading constellation</p>
           <p className="text-gray-400">Graph data is invalid or empty</p>
-          <button 
-            onClick={onBack}
-            className="mt-6 px-6 py-3 bg-white/20 border border-white/30 rounded-lg hover:bg-white/30"
-          >
-            Go Back
-          </button>
+          {typeof onBack === 'function' && (
+            <button
+              onClick={onBack}
+              className="mt-6 px-6 py-3 bg-white/20 border border-white/30 rounded-lg hover:bg-white/30"
+            >
+              Go Back
+            </button>
+          )}
         </div>
       </div>
     );
@@ -853,12 +853,13 @@ export default function ConstellationView({ onBack, userPrompt }) {
       attractionEase = clampedT * clampedT * (3 - 2 * clampedT); // smoothstep
     }
 
-    const cursorXPercent = (cursorPoint.x / width) * 100;
-    const cursorYPercent = (cursorPoint.y / height) * 100;
-    const maxSnapStrength = 0.92;
-    const attractionStrength = maxSnapStrength * attractionEase;
-    const attractedX = basePos.x + (cursorXPercent - basePos.x) * attractionStrength;
-    const attractedY = basePos.y + (cursorYPercent - basePos.y) * attractionStrength;
+    // Center-anchored stretch toward cursor, capped so node never sits directly on it.
+    const maxStretchPx = Math.max(12, nodeRadiusPx * 0.9);
+    const stretchDistancePx = Math.min(maxStretchPx, distance * 0.8);
+    const stretchXPercent = ((dx / distance) * stretchDistancePx / width) * 100;
+    const stretchYPercent = ((dy / distance) * stretchDistancePx / height) * 100;
+    const attractedX = basePos.x + stretchXPercent;
+    const attractedY = basePos.y + stretchYPercent;
 
     const finalX = repelledX + (attractedX - repelledX) * attractionEase;
     const finalY = repelledY + (attractedY - repelledY) * attractionEase;
@@ -877,7 +878,7 @@ export default function ConstellationView({ onBack, userPrompt }) {
     >
 
       {/* Topic Header (if generated from prompt) */}
-      {generatedTopic && (
+      {!hideSideHud && generatedTopic && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -892,19 +893,21 @@ export default function ConstellationView({ onBack, userPrompt }) {
       )}
 
       {/* Back button with glow */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(255, 255, 255, 0.4)' }}
-        transition={{ type: 'spring', stiffness: 300 }}
-        onClick={onBack}
-        className="absolute top-6 right-6 z-50 px-6 py-3 bg-black/60 border border-white/30 rounded-lg font-mono text-white hover:bg-white/10 transition-all backdrop-blur-sm"
-        style={{
-          boxShadow: '0 0 20px rgba(255, 255, 255, 0.2)'
-        }}
-      >
-        Back
-      </motion.button>
+      {typeof onBack === 'function' && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(255, 255, 255, 0.4)' }}
+          transition={{ type: 'spring', stiffness: 300 }}
+          onClick={onBack}
+          className="absolute top-6 right-6 z-50 px-6 py-3 bg-black/60 border border-white/30 rounded-lg font-mono text-white hover:bg-white/10 transition-all backdrop-blur-sm"
+          style={{
+            boxShadow: '0 0 20px rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          Back
+        </motion.button>
+      )}
 
       {/* Constellation graph */}
       <motion.div 
@@ -937,41 +940,43 @@ export default function ConstellationView({ onBack, userPrompt }) {
       </motion.div>
 
       {/* Enhanced Legend */}
-      <motion.div
-        initial={{ opacity: 0, x: -30 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1, duration: 0.8, type: 'spring' }}
-        className="absolute bottom-8 left-8 z-50 bg-black/80 border border-white/20 rounded-xl p-5 backdrop-blur-md"
-        style={{ 
-          fontFamily: 'monospace',
-          boxShadow: '0 0 30px rgba(0, 0, 0, 0.5)'
-        }}
-      >
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <motion.div 
-              className="w-4 h-4 rounded-full bg-white" 
-              style={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.8)' }}
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <span className="text-sm text-gray-200 font-medium">Mastered</span>
+      {!hideSideHud && (
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1, duration: 0.8, type: 'spring' }}
+          className="absolute bottom-8 left-8 z-50 bg-black/80 border border-white/20 rounded-xl p-5 backdrop-blur-md"
+          style={{
+            fontFamily: 'monospace',
+            boxShadow: '0 0 30px rgba(0, 0, 0, 0.5)'
+          }}
+        >
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <motion.div
+                className="w-4 h-4 rounded-full bg-white"
+                style={{ boxShadow: '0 0 20px rgba(255, 255, 255, 0.8)' }}
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              <span className="text-sm text-gray-200 font-medium">Mastered</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <motion.div
+                className="w-3 h-3 rounded-full bg-white opacity-80"
+                style={{ boxShadow: '0 0 15px rgba(255, 255, 255, 0.5)' }}
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+              />
+              <span className="text-sm text-gray-300">Available</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-white opacity-30" />
+              <span className="text-sm text-gray-500">Locked</span>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <motion.div 
-              className="w-3 h-3 rounded-full bg-white opacity-80" 
-              style={{ boxShadow: '0 0 15px rgba(255, 255, 255, 0.5)' }}
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
-            />
-            <span className="text-sm text-gray-300">Available</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-white opacity-30" />
-            <span className="text-sm text-gray-500">Locked</span>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* Node details panel with AnimatePresence */}
       <AnimatePresence>
@@ -1050,5 +1055,6 @@ export default function ConstellationView({ onBack, userPrompt }) {
     </motion.div>
   );
 }
+
 
 

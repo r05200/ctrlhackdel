@@ -1,0 +1,169 @@
+.past-constellations-view {
+  width: min(980px, 90vw);
+  max-height: 80vh;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(8, 10, 20, 0.78);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.past-constellations-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.past-constellations-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f6f7ff;
+}
+
+.past-constellations-subtitle {
+  font-size: 0.9rem;
+  color: rgba(200, 210, 255, 0.72);
+}
+
+.past-toolbar {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.past-query-input,
+.past-tag-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f6f7ff;
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  outline: none;
+}
+
+.past-query-input:focus,
+.past-tag-input:focus {
+  border-color: rgba(120, 190, 255, 0.65);
+  box-shadow: 0 0 0 2px rgba(120, 190, 255, 0.18);
+}
+
+.past-tag-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.past-tag-filter,
+.past-add-tag-btn,
+.past-open-btn,
+.past-delete-btn,
+.past-tag-chip {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #dde4ff;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.past-tag-filter.active,
+.past-tag-filter:hover,
+.past-open-btn:hover,
+.past-add-tag-btn:hover {
+  background: rgba(120, 190, 255, 0.25);
+  border-color: rgba(120, 190, 255, 0.65);
+  color: #f4f8ff;
+}
+
+.past-delete-btn:hover,
+.past-tag-chip:hover {
+  background: rgba(255, 100, 120, 0.18);
+  border-color: rgba(255, 100, 120, 0.48);
+}
+
+.past-error {
+  color: #ffb4bc;
+  background: rgba(255, 80, 90, 0.15);
+  border: 1px solid rgba(255, 80, 90, 0.35);
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+}
+
+.past-empty {
+  color: rgba(204, 212, 244, 0.82);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.past-list {
+  overflow: auto;
+  display: grid;
+  gap: 0.7rem;
+  padding-right: 0.25rem;
+}
+
+.past-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.past-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.past-card-title {
+  color: #f6f7ff;
+  font-weight: 600;
+}
+
+.past-card-query,
+.past-card-time {
+  color: rgba(212, 220, 245, 0.72);
+  font-size: 0.82rem;
+}
+
+.past-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.past-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.past-tag-editor {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.past-tag-input {
+  flex: 1;
+}
+
+@media (max-width: 900px) {
+  .past-constellations-view {
+    width: 94vw;
+    max-height: 82vh;
+  }
+
+  .past-card-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

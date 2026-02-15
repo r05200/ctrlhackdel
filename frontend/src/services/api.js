@@ -1,5 +1,6 @@
 // API Service for Backend Integration
 const API_BASE_URL = 'http://localhost:5001';
+const API_FALLBACK_BASE_URL = 'http://localhost:5000';
 
 // Helper function to handle API errors
 const handleResponse = async (response) => {
@@ -148,4 +149,68 @@ export const checkBackendHealth = async () => {
     console.error('Backend health check failed:', error);
     return { status: 'error', message: 'Backend not reachable' };
   }
+};
+
+// Past constellations CRUD (local JSON-backed on backend)
+const constellationApiBases = [API_BASE_URL, API_FALLBACK_BASE_URL].filter(
+  (base, idx, arr) => arr.indexOf(base) === idx
+);
+
+const requestConstellationApi = async (path, options = {}) => {
+  let lastError = null;
+
+  for (const base of constellationApiBases) {
+    try {
+      const response = await fetch(`${base}${path}`, options);
+      if (response.status === 404) {
+        lastError = new Error('Endpoint not found');
+        continue;
+      }
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Network error' }));
+        throw new Error(error.message || 'API request failed');
+      }
+      return response.json();
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('Constellation API unavailable');
+};
+
+export const fetchPastConstellations = async ({ q = '', tag = '' } = {}) => {
+  const params = new URLSearchParams();
+  if (q) params.set('q', q);
+  if (tag) params.set('tag', tag);
+
+  const query = params.toString();
+  const data = await requestConstellationApi(`/api/constellations${query ? `?${query}` : ''}`);
+  return data.items || [];
+};
+
+export const createPastConstellation = async ({ title, query, tags = [], graph }) => {
+  return requestConstellationApi('/api/constellations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ title, query, tags, graph })
+  });
+};
+
+export const updatePastConstellationTags = async (id, tags = []) => {
+  return requestConstellationApi(`/api/constellations/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ tags })
+  });
+};
+
+export const deletePastConstellation = async (id) => {
+  return requestConstellationApi(`/api/constellations/${id}`, {
+    method: 'DELETE'
+  });
 };

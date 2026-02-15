@@ -8,6 +8,9 @@ import SplashScreen from './components/SplashScreen';
 import StarryBackground from './components/StarryBackground';
 import TelescopeView from './components/TelescopeView';
 import ConstellationView from './components/ConstellationView';
+import PastConstellationsView from './components/PastConstellationsView';
+import ProfileView from './components/ProfileView';
+import { createPastConstellation } from './services/api';
 
 const MAIN_UI_FADE_MS = 900;
 
@@ -35,6 +38,13 @@ function SimpleOutlinePage({ title, subtitle }) {
       </div>
     </div>
   );
+}
+
+function parseGraphPayload(payload) {
+  if (!payload) return null;
+  if (payload.graph?.nodes && payload.graph?.links) return payload.graph;
+  if (payload.nodes && payload.links) return payload;
+  return null;
 }
 
 function App() {
@@ -74,11 +84,31 @@ function App() {
   const handleTelescopeComplete = (tree) => {
     setTelescopeMode(false);
     if (tree) {
-      setConstellationData(tree);
+      const graph = parseGraphPayload(tree);
+      const topic = tree.topic || searchQuery || '';
+      if (!graph) {
+        setConstellationData(null);
+        setConstellationMode(false);
+        setConstellationReady(false);
+        setFadingOut(false);
+        return;
+      }
+
+      setConstellationData(graph);
       setConstellationMode(true);
       setConstellationReady(false);
       setActivePage('create');
-      setConstellationTopic(searchQuery || '');
+      setConstellationTopic(topic);
+
+      createPastConstellation({
+        title: topic || 'Untitled Constellation',
+        query: searchQuery || '',
+        tags: [],
+        graph
+      }).catch((err) => {
+        console.error('Failed to persist constellation:', err);
+      });
+
       // Fade in UI after the zoom transition completes
       setTimeout(() => {
         setConstellationReady(true);
@@ -99,6 +129,18 @@ function App() {
       setConstellationMode(false);
       setConstellationReady(false);
     }
+  };
+
+  const handleOpenPastConstellation = (item) => {
+    if (!item?.graph?.nodes || !item?.graph?.links) return;
+    setSearchQuery(item.query || '');
+    setConstellationTopic(item.title || item.query || 'Knowledge');
+    setConstellationData(item.graph);
+    setConstellationMode(true);
+    setConstellationReady(true);
+    setActivePage('create');
+    setFadingOut(false);
+    setTelescopeMode(false);
   };
 
   const showConstellationView = constellationMode && constellationData && activePage === 'create';
@@ -188,6 +230,10 @@ function App() {
                       <TextBox onSubmit={handleTextSubmit} />
                     </div>
                   </>
+                ) : activePage === 'past' ? (
+                  <PastConstellationsView onOpenConstellation={handleOpenPastConstellation} />
+                ) : activePage === 'profile' ? (
+                  <ProfileView />
                 ) : (
                   <SimpleOutlinePage
                     title={PAGE_CONTENT[activePage]?.title || 'Page'}

@@ -1,0 +1,97 @@
+{
+  "items": [
+    {
+      "id": "const_1771130112950_6jo3d9",
+      "title": "archery",
+      "query": "archery",
+      "tags": [
+        "sports"
+      ],
+      "graph": {
+        "nodes": [
+          {
+            "id": "basics",
+            "label": "Archery\nBasics",
+            "status": "mastered",
+            "level": 1,
+            "description": "Fundamental concepts and introduction"
+          },
+          {
+            "id": "fundamentals",
+            "label": "Core\nFundamentals",
+            "status": "active",
+            "level": 2,
+            "description": "Essential principles and practices"
+          },
+          {
+            "id": "intermediate",
+            "label": "Intermediate\nConcepts",
+            "status": "locked",
+            "level": 3,
+            "description": "Building on the foundations"
+          },
+          {
+            "id": "advanced-1",
+            "label": "Advanced\nTopics I",
+            "status": "locked",
+            "level": 4,
+            "description": "Deep dive into complex areas"
+          },
+          {
+            "id": "advanced-2",
+            "label": "Advanced\nTopics II",
+            "status": "locked",
+            "level": 4,
+            "description": "Specialized knowledge"
+          },
+          {
+            "id": "practical",
+            "label": "Practical\nApplications",
+            "status": "locked",
+            "level": 5,
+            "description": "Real-world projects and use cases"
+          },
+          {
+            "id": "mastery",
+            "label": "Mastery &\nBest Practices",
+            "status": "locked",
+            "level": 6,
+            "description": "Expert-level skills"
+          }
+        ],
+        "links": [
+          {
+            "source": "basics",
+            "target": "fundamentals"
+          },
+          {
+            "source": "fundamentals",
+            "target": "intermediate"
+          },
+          {
+            "source": "intermediate",
+            "target": "advanced-1"
+          },
+          {
+            "source": "intermediate",
+            "target": "advanced-2"
+          },
+          {
+            "source": "advanced-1",
+            "target": "practical"
+          },
+          {
+            "source": "advanced-2",
+            "target": "practical"
+          },
+          {
+            "source": "practical",
+            "target": "mastery"
+          }
+        ]
+      },
+      "createdAt": "2026-02-15T04:35:12.950Z",
+      "updatedAt": "2026-02-15T04:35:31.824Z"
+    }
+  ]
+}

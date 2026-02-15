@@ -15,6 +15,7 @@ const userRoutes = require('./routes/userRoutes');
 const parserRoutes = require('./routes/parserRoutes');
 const treeRoutes = require('./routes/treeRoutes');
 const voiceRoutes = require('./routes/voiceRoutes');
+const constellationRoutes = require('./routes/constellationRoutes');
 
 // Initialize Express app
 const app = express();
@@ -46,6 +47,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/parser', parserRoutes);
 app.use('/api/trees', treeRoutes);
 app.use('/api/voice', voiceRoutes);
+app.use('/api/constellations', constellationRoutes);
 
 // 404 handler
 app.use((req, res) => {

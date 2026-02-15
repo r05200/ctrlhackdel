@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const fs = require('fs/promises');
+const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
@@ -69,6 +71,36 @@ const STATUS = {
   ACTIVE: 0
 };
 
+const CONSTELLATION_STORE_DIR = path.join(__dirname, 'data');
+const CONSTELLATION_STORE_FILE = path.join(CONSTELLATION_STORE_DIR, 'constellations.json');
+
+const createConstellationId = () => `const_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+async function ensureConstellationStore() {
+  await fs.mkdir(CONSTELLATION_STORE_DIR, { recursive: true });
+  try {
+    await fs.access(CONSTELLATION_STORE_FILE);
+  } catch {
+    const seed = { items: [] };
+    await fs.writeFile(CONSTELLATION_STORE_FILE, JSON.stringify(seed, null, 2), 'utf-8');
+  }
+}
+
+async function readConstellationStore() {
+  await ensureConstellationStore();
+  const raw = await fs.readFile(CONSTELLATION_STORE_FILE, 'utf-8');
+  const parsed = JSON.parse(raw);
+  if (!parsed.items || !Array.isArray(parsed.items)) {
+    return { items: [] };
+  }
+  return parsed;
+}
+
+async function writeConstellationStore(store) {
+  await ensureConstellationStore();
+  await fs.writeFile(CONSTELLATION_STORE_FILE, JSON.stringify(store, null, 2), 'utf-8');
+}
+
 // Routes
 
 // Health check
@@ -94,6 +126,155 @@ app.get('/api/graph', (req, res) => {
     success: true,
     data: knowledgeGraph
   });
+});
+
+// Past constellations (local JSON-backed)
+app.get('/api/constellations', async (req, res) => {
+  try {
+    const { q = '', tag = '' } = req.query;
+    const query = String(q || '').trim().toLowerCase();
+    const normalizedTag = String(tag || '').trim().toLowerCase();
+    const store = await readConstellationStore();
+
+    let items = [...store.items];
+    if (query) {
+      items = items.filter((item) => {
+        const title = String(item.title || '').toLowerCase();
+        const sourceQuery = String(item.query || '').toLowerCase();
+        return title.includes(query) || sourceQuery.includes(query);
+      });
+    }
+
+    if (normalizedTag) {
+      items = items.filter((item) =>
+        Array.isArray(item.tags) &&
+        item.tags.some((t) => String(t).toLowerCase() === normalizedTag)
+      );
+    }
+
+    items.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+
+    res.json({
+      success: true,
+      items
+    });
+  } catch (error) {
+    console.error('Error loading constellations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to load constellations'
+    });
+  }
+});
+
+app.post('/api/constellations', async (req, res) => {
+  try {
+    const { title, query, tags = [], graph } = req.body || {};
+    if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.links)) {
+      return res.status(400).json({
+        success: false,
+        message: 'graph with nodes and links is required'
+      });
+    }
+
+    const cleanTags = Array.isArray(tags)
+      ? [...new Set(tags.map((t) => String(t).trim()).filter(Boolean))]
+      : [];
+
+    const store = await readConstellationStore();
+    const now = new Date().toISOString();
+    const item = {
+      id: createConstellationId(),
+      title: String(title || query || 'Untitled Constellation').trim(),
+      query: String(query || '').trim(),
+      tags: cleanTags,
+      graph,
+      createdAt: now,
+      updatedAt: now
+    };
+
+    store.items.push(item);
+    await writeConstellationStore(store);
+
+    res.status(201).json({
+      success: true,
+      item
+    });
+  } catch (error) {
+    console.error('Error saving constellation:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to save constellation'
+    });
+  }
+});
+
+app.patch('/api/constellations/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tags } = req.body || {};
+    if (!Array.isArray(tags)) {
+      return res.status(400).json({
+        success: false,
+        message: 'tags array is required'
+      });
+    }
+
+    const cleanTags = [...new Set(tags.map((t) => String(t).trim()).filter(Boolean))];
+    const store = await readConstellationStore();
+    const idx = store.items.findIndex((item) => item.id === id);
+
+    if (idx === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Constellation not found'
+      });
+    }
+
+    store.items[idx].tags = cleanTags;
+    store.items[idx].updatedAt = new Date().toISOString();
+    await writeConstellationStore(store);
+
+    res.json({
+      success: true,
+      item: store.items[idx]
+    });
+  } catch (error) {
+    console.error('Error updating constellation:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update constellation'
+    });
+  }
+});
+
+app.delete('/api/constellations/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const store = await readConstellationStore();
+    const nextItems = store.items.filter((item) => item.id !== id);
+
+    if (nextItems.length === store.items.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'Constellation not found'
+      });
+    }
+
+    store.items = nextItems;
+    await writeConstellationStore(store);
+
+    res.json({
+      success: true,
+      message: 'Constellation deleted'
+    });
+  } catch (error) {
+    console.error('Error deleting constellation:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete constellation'
+    });
+  }
 });
 
 // Get user progress
