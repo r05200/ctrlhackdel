@@ -28,7 +28,7 @@ const DEFAULT_APP_SETTINGS = {
 
 const PAGE_CONTENT = {
   past: {
-    title: 'Past Constellations',
+    title: 'Galaxy',
     subtitle: 'Simple outline view',
   },
   settings: {

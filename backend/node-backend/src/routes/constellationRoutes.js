@@ -93,19 +93,40 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { tags } = req.body || {};
-    if (!Array.isArray(tags)) {
-      return res.status(400).json({ success: false, message: 'tags array is required' });
+    const { tags, title } = req.body || {};
+    const hasTags = Object.prototype.hasOwnProperty.call(req.body || {}, 'tags');
+    const hasTitle = Object.prototype.hasOwnProperty.call(req.body || {}, 'title');
+
+    if (!hasTags && !hasTitle) {
+      return res.status(400).json({ success: false, message: 'at least one of tags or title is required' });
     }
 
-    const cleanTags = [...new Set(tags.map((t) => String(t).trim()).filter(Boolean))];
+    if (hasTags && !Array.isArray(tags)) {
+      return res.status(400).json({ success: false, message: 'tags must be an array when provided' });
+    }
+
+    const cleanTags = hasTags
+      ? [...new Set(tags.map((t) => String(t).trim()).filter(Boolean))]
+      : null;
+    const cleanTitle = hasTitle
+      ? String(title || '').trim().slice(0, 120)
+      : null;
+
+    if (hasTitle && !cleanTitle) {
+      return res.status(400).json({ success: false, message: 'title cannot be empty' });
+    }
     const store = await readStore();
     const index = store.items.findIndex((item) => item.id === id);
     if (index === -1) {
       return res.status(404).json({ success: false, message: 'Constellation not found' });
     }
 
-    store.items[index].tags = cleanTags;
+    if (hasTags) {
+      store.items[index].tags = cleanTags;
+    }
+    if (hasTitle) {
+      store.items[index].title = cleanTitle;
+    }
     store.items[index].updatedAt = new Date().toISOString();
     await writeStore(store);
     res.json({ success: true, item: store.items[index] });

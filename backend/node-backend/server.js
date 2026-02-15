@@ -229,15 +229,38 @@ app.post('/api/constellations', async (req, res) => {
 app.patch('/api/constellations/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { tags } = req.body || {};
-    if (!Array.isArray(tags)) {
+    const { tags, title } = req.body || {};
+    const hasTags = Object.prototype.hasOwnProperty.call(req.body || {}, 'tags');
+    const hasTitle = Object.prototype.hasOwnProperty.call(req.body || {}, 'title');
+
+    if (!hasTags && !hasTitle) {
       return res.status(400).json({
         success: false,
-        message: 'tags array is required'
+        message: 'at least one of tags or title is required'
       });
     }
 
-    const cleanTags = [...new Set(tags.map((t) => String(t).trim()).filter(Boolean))];
+    if (hasTags && !Array.isArray(tags)) {
+      return res.status(400).json({
+        success: false,
+        message: 'tags must be an array when provided'
+      });
+    }
+
+    const cleanTags = hasTags
+      ? [...new Set(tags.map((t) => String(t).trim()).filter(Boolean))]
+      : null;
+    const cleanTitle = hasTitle
+      ? String(title || '').trim().slice(0, 120)
+      : null;
+
+    if (hasTitle && !cleanTitle) {
+      return res.status(400).json({
+        success: false,
+        message: 'title cannot be empty'
+      });
+    }
+
     const store = await readConstellationStore();
     const idx = store.items.findIndex((item) => item.id === id);
 
@@ -248,7 +271,12 @@ app.patch('/api/constellations/:id', async (req, res) => {
       });
     }
 
-    store.items[idx].tags = cleanTags;
+    if (hasTags) {
+      store.items[idx].tags = cleanTags;
+    }
+    if (hasTitle) {
+      store.items[idx].title = cleanTitle;
+    }
     store.items[idx].updatedAt = new Date().toISOString();
     await writeConstellationStore(store);
 

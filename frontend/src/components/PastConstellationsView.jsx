@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchPastConstellations,
   updatePastConstellationTags,
+  updatePastConstellationTitle,
   deletePastConstellation
 } from '../services/api';
 import './PastConstellationsView.css';
@@ -17,6 +18,8 @@ export default function PastConstellationsView({ onOpenConstellation }) {
   const [query, setQuery] = useState('');
   const [activeTag, setActiveTag] = useState('');
   const [tagDraftById, setTagDraftById] = useState({});
+  const [titleDraftById, setTitleDraftById] = useState({});
+  const [isSavingTitleById, setIsSavingTitleById] = useState({});
   const [openingId, setOpeningId] = useState(null);
   const cardRefs = useRef({});
 
@@ -98,6 +101,25 @@ export default function PastConstellationsView({ onOpenConstellation }) {
     }
   };
 
+  const handleSaveTitle = async (item) => {
+    const nextTitle = String(titleDraftById[item.id] ?? item.title ?? '').trim();
+    const currentTitle = String(item.title || '').trim();
+    if (!nextTitle || nextTitle === currentTitle) return;
+
+    try {
+      setIsSavingTitleById((prev) => ({ ...prev, [item.id]: true }));
+      const response = await updatePastConstellationTitle(item.id, nextTitle);
+      const updated = response.item;
+      setItems((prev) => prev.map((it) => (it.id === item.id ? updated : it)));
+      setTitleDraftById((prev) => ({ ...prev, [item.id]: updated.title || nextTitle }));
+    } catch (err) {
+      console.error('Failed to update title:', err);
+      alert(err.message || 'Failed to update title');
+    } finally {
+      setIsSavingTitleById((prev) => ({ ...prev, [item.id]: false }));
+    }
+  };
+
   const buildPreviewStars = (seedKey, count = 16) => {
     const seedString = String(seedKey || 'constellation');
     let seed = 0;
@@ -141,8 +163,8 @@ export default function PastConstellationsView({ onOpenConstellation }) {
   return (
     <div className="past-constellations-view">
       <div className="past-constellations-head">
-        <h2 className="past-constellations-title">Past Constellations</h2>
-        <p className="past-constellations-subtitle">Query, tag, open, and delete saved maps.</p>
+        <h2 className="past-constellations-title">Galaxy</h2>
+        <p className="past-constellations-subtitle">Rename, tag, open, and delete saved maps.</p>
       </div>
 
       <div className="past-toolbar">
@@ -205,7 +227,29 @@ export default function PastConstellationsView({ onOpenConstellation }) {
               </div>
               <div className="past-card-top">
                 <div>
-                  <div className="past-card-title">{item.title || 'Untitled Constellation'}</div>
+                  <div className="past-title-row">
+                    <input
+                      className="past-title-input"
+                      value={titleDraftById[item.id] ?? item.title ?? ''}
+                      onChange={(e) => setTitleDraftById((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                      onBlur={() => handleSaveTitle(item)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          e.currentTarget.blur();
+                        }
+                      }}
+                      maxLength={120}
+                    />
+                    <button
+                      type="button"
+                      className="past-rename-btn"
+                      onClick={() => handleSaveTitle(item)}
+                      disabled={!!isSavingTitleById[item.id]}
+                    >
+                      {isSavingTitleById[item.id] ? 'Saving...' : 'Rename'}
+                    </button>
+                  </div>
                   <div className="past-card-query">Query: {item.query || '-'}</div>
                   <div className="past-card-time">
                     Updated: {new Date(item.updatedAt || item.createdAt).toLocaleString()}

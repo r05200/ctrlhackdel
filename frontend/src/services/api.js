@@ -231,6 +231,16 @@ export const updatePastConstellationTags = async (id, tags = []) => {
   });
 };
 
+export const updatePastConstellationTitle = async (id, title) => {
+  return requestConstellationApi(`/api/constellations/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ title })
+  });
+};
+
 export const deletePastConstellation = async (id) => {
   return requestConstellationApi(`/api/constellations/${id}`, {
     method: 'DELETE'
