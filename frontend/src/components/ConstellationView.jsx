@@ -82,8 +82,96 @@ const getStatusHighlightColor = (status) => {
   if (status === 'active') return '#22c55e';
   return null;
 };
+
+const toEndpointId = (endpoint) => (typeof endpoint === 'object' ? endpoint?.id : endpoint);
+
+const buildConcavePolygonPath = (vertices, outerRadius = 44, innerRadius = 22, cx = 50, cy = 50) => {
+  const points = [];
+  const totalPoints = vertices * 2;
+
+  for (let i = 0; i < totalPoints; i += 1) {
+    const angle = -Math.PI / 2 + (i * Math.PI) / vertices;
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    points.push(`${x.toFixed(2)} ${y.toFixed(2)}`);
+  }
+
+  return `M${points[0]} L${points.slice(1).join(' L')} Z`;
+};
+
+const getNodeDepthMap = (graph) => {
+  const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
+  const links = Array.isArray(graph?.links) ? graph.links : [];
+  if (nodes.length === 0) return {};
+
+  const indegree = new Map(nodes.map((node) => [node.id, 0]));
+  const adjacency = new Map(nodes.map((node) => [node.id, []]));
+
+  links.forEach((link) => {
+    const sourceId = toEndpointId(link.source);
+    const targetId = toEndpointId(link.target);
+    if (!sourceId || !targetId) return;
+    if (adjacency.has(sourceId)) adjacency.get(sourceId).push(targetId);
+    indegree.set(targetId, (indegree.get(targetId) || 0) + 1);
+  });
+
+  let roots = nodes.filter((node) => (indegree.get(node.id) || 0) === 0).map((node) => node.id);
+  if (roots.length === 0) {
+    roots = [nodes[0].id];
+  }
+
+  const depthMap = new Map(nodes.map((node) => [node.id, Number.POSITIVE_INFINITY]));
+  const queue = [];
+  roots.forEach((rootId) => {
+    depthMap.set(rootId, 0);
+    queue.push(rootId);
+  });
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const currentDepth = depthMap.get(current);
+    const children = adjacency.get(current) || [];
+    children.forEach((childId) => {
+      const nextDepth = currentDepth + 1;
+      if (nextDepth < (depthMap.get(childId) ?? Number.POSITIVE_INFINITY)) {
+        depthMap.set(childId, nextDepth);
+        queue.push(childId);
+      }
+    });
+  }
+
+  const finiteDepths = [...depthMap.values()].filter((d) => Number.isFinite(d));
+  const fallbackDepth = finiteDepths.length ? Math.max(...finiteDepths) + 1 : 0;
+
+  const result = {};
+  nodes.forEach((node) => {
+    const depth = depthMap.get(node.id);
+    result[node.id] = Number.isFinite(depth) ? depth : fallbackDepth;
+  });
+  return result;
+};
+
+const getNodeVertexCountMap = (graph) => {
+  const depthMap = getNodeDepthMap(graph);
+  const entries = Object.entries(depthMap);
+  if (entries.length === 0) return {};
+
+  const depths = entries.map(([, depth]) => depth);
+  const minDepth = Math.min(...depths);
+  const maxDepth = Math.max(...depths);
+  const range = Math.max(1, maxDepth - minDepth);
+
+  const vertexCountMap = {};
+  entries.forEach(([nodeId, depth]) => {
+    const t = (depth - minDepth) / range;
+    const quartile = Math.min(3, Math.floor(t * 4));
+    vertexCountMap[nodeId] = 4 + quartile;
+  });
+  return vertexCountMap;
+};
 // Constellation-style node positioning
-function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = false, nodeColor = '#ffffff' }) {
+function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = false, nodeColor = '#ffffff', vertexCount = 4 }) {
   const normalizedStatus = normalizeNodeStatus(node);
   const nodeStyle = getNodeStyleByStatus(normalizedStatus);
   const baseColor = isHexColor(nodeColor) ? nodeColor : '#ffffff';
@@ -91,6 +179,14 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
   const glowColor = shimmerHighlight || baseColor;
   const size = nodeStyle.size;
   const motionProfile = useMemo(() => getNodeMotionProfile(node.id), [node.id]);
+  const primaryPath = useMemo(
+    () => buildConcavePolygonPath(Math.max(4, Math.min(7, vertexCount)), 44, 22),
+    [vertexCount]
+  );
+  const secondaryPath = useMemo(
+    () => buildConcavePolygonPath(Math.max(4, Math.min(7, vertexCount)), 28, 14),
+    [vertexCount]
+  );
 
   return (
     <motion.div
@@ -175,7 +271,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
             }}
           >
             <motion.path
-              d="M50 6 L58 42 L94 50 L58 58 L50 94 L42 58 L6 50 L42 42 Z"
+              d={primaryPath}
               fill={baseColor}
               opacity={nodeStyle.opacity}
               animate={{
@@ -190,7 +286,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
               }}
             />
             <motion.path
-              d="M50 24 L54 46 L76 50 L54 54 L50 76 L46 54 L24 50 L46 46 Z"
+              d={secondaryPath}
               fill={baseColor}
               opacity={nodeStyle.opacity * 0.86}
               animate={{
@@ -205,7 +301,7 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
             />
             {shimmerHighlight && (
               <motion.path
-                d="M50 6 L58 42 L94 50 L58 58 L50 94 L42 58 L6 50 L42 42 Z"
+                d={primaryPath}
                 fill={shimmerHighlight}
                 opacity={0.2}
                 animate={{
@@ -536,6 +632,7 @@ export default function ConstellationView({
     () => FIXED_STARS.filter((star, idx) => idx % 2 === 0),
     []
   );
+  const nodeVertexCounts = useMemo(() => getNodeVertexCountMap(graphData), [graphData]);
   const constellationStarColor = isHexColor(starColor) ? starColor : '#ffffff';
   const constellationStarRgb = hexToRgbString(constellationStarColor);
   const [toast, setToast] = useState(null); // { type: 'success'|'error'|'info', title, lines[] }
@@ -961,6 +1058,7 @@ export default function ConstellationView({
               isSelected={selectedNode?.id === node.id}
               isUnlocking={unlockedNodes.includes(node.id)}
               nodeColor={nodeColor}
+              vertexCount={nodeVertexCounts[node.id] || 4}
             />
           ))}
         </div>
