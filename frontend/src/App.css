@@ -727,10 +727,10 @@
 
 .bg-twinkle-star {
   position: absolute;
-  background: white;
+  background: var(--bg-star-color, #ffffff);
   border-radius: 50%;
   opacity: 0.7;
-  box-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 3px rgba(var(--bg-star-rgb, 255, 255, 255), 0.5);
   animation: star-twinkle-forever 3.2s ease-in-out infinite;
   transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -802,9 +802,9 @@
       0% 50%,
       44% 44%);
   background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.9) 0%,
-      #ffffff 45%,
-      rgba(255, 255, 255, 0.82) 100%);
+      rgba(var(--bg-star-rgb, 255, 255, 255), 0.9) 0%,
+      var(--bg-star-color, #ffffff) 45%,
+      rgba(var(--bg-star-rgb, 255, 255, 255), 0.82) 100%);
 }
 
 .bg-gemini-star::after {
@@ -816,7 +816,7 @@
       46% 55%,
       2% 50%,
       46% 45%);
-  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.08) 55%, transparent 76%);
+  background: radial-gradient(circle at center, rgba(var(--bg-star-rgb, 255, 255, 255), 0.62) 0%, rgba(var(--bg-star-rgb, 255, 255, 255), 0.08) 55%, transparent 76%);
   filter: blur(1px);
 }
 

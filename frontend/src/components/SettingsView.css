@@ -52,6 +52,43 @@
   cursor: pointer;
 }
 
+.settings-text-input {
+  width: min(280px, 44vw);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f6f7ff;
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  outline: none;
+}
+
+.settings-text-input:focus {
+  border-color: rgba(120, 190, 255, 0.65);
+  box-shadow: 0 0 0 2px rgba(120, 190, 255, 0.18);
+}
+
+.settings-color-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-color-input {
+  width: 40px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.settings-color-code {
+  color: rgba(208, 216, 243, 0.86);
+  font-family: monospace;
+  font-size: 0.84rem;
+}
+
 .settings-item-title {
   color: #f6f7ff;
   font-size: 1rem;

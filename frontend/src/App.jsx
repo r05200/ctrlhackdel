@@ -20,7 +20,9 @@ const PAST_OPEN_DISSOLVE_MS = 550;
 const APP_SETTINGS_KEY = 'ctrlhackdel_app_settings';
 const DEFAULT_APP_SETTINGS = {
   disableStartingAnimation: false,
-  disableBackgroundElements: false
+  disableBackgroundElements: false,
+  userName: '',
+  starColor: '#ffffff'
 };
 
 const PAGE_CONTENT = {
@@ -88,6 +90,11 @@ function getStoredAppSettings() {
   } catch {
     return { ...DEFAULT_APP_SETTINGS };
   }
+}
+
+function sanitizeStarColor(value, fallback = '#ffffff') {
+  const raw = String(value || '').trim();
+  return /^#[0-9a-fA-F]{6}$/.test(raw) ? raw.toLowerCase() : fallback;
 }
 
 function App() {
@@ -240,6 +247,12 @@ function App() {
   const handleSettingsChange = (patch) => {
     setAppSettings((prev) => {
       const next = { ...prev, ...patch };
+      if (Object.prototype.hasOwnProperty.call(patch, 'userName')) {
+        next.userName = String(patch.userName || '').slice(0, 25);
+      }
+      if (Object.prototype.hasOwnProperty.call(patch, 'starColor')) {
+        next.starColor = sanitizeStarColor(patch.starColor, prev.starColor || DEFAULT_APP_SETTINGS.starColor);
+      }
       if (patch.disableStartingAnimation) {
         setShowSplash(false);
         setMainVisible(true);
@@ -247,6 +260,9 @@ function App() {
       return next;
     });
   };
+
+  const greetingName = String(appSettings.userName || '').trim() || 'Explorer';
+  const starColor = sanitizeStarColor(appSettings.starColor, DEFAULT_APP_SETTINGS.starColor);
 
   const showConstellationView = constellationMode && constellationData && activePage === 'create';
   const showMainUI = !showConstellationView;
@@ -259,6 +275,7 @@ function App() {
           hideMeteors={showSplash}
           enableGeminiStars={!showSplash && !showConstellationView && !telescopeMode}
           panUpTransition={fadingOut || telescopeMode || showConstellationView}
+          starColor={starColor}
         />
       )}
 
@@ -332,7 +349,7 @@ function App() {
               <div className="flex-1 p-4 flex flex-col justify-center items-center">
                 {activePage === 'create' ? (
                   <>
-                    <Greeting />
+                    <Greeting name={greetingName} />
                     <div className="w-[55vw]">
                       <TextBox onSubmit={handleTextSubmit} />
                     </div>
