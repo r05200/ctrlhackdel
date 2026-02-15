@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-const Sidebar = ({isHovered, setIsHovered, onMenuClick}) => {
+const Sidebar = ({ isHovered, setIsHovered, onMenuClick, activePage = 'create' }) => {
     
     
     const menuItems = [
-        { icon: '✦', label: 'Create Constellation' },
-        { icon: '◈', label: 'Past Constellations' },
-        { icon: '⚙', label: 'Settings' },
+        { id: 'create', icon: '✦', label: 'Create Constellation' },
+        { id: 'past', icon: '◈', label: 'Past Constellations' },
+        { id: 'settings', icon: '⚙', label: 'Settings' },
     ];
 
     return (
@@ -28,15 +28,22 @@ const Sidebar = ({isHovered, setIsHovered, onMenuClick}) => {
 
             {/* Menu Items */}
             <nav className="flex flex-col gap-1 px-0 flex-1">
-                {menuItems.map((item, index) => (
+                {menuItems.map((item) => (
                     <div
-                        key={index}
-                        className="flex items-center px-2 py-2 rounded cursor-pointer transition-all duration-200 hover:bg-gray-900 group mx-2"
+                        key={item.id}
+                        className={`flex items-center px-2 py-2 rounded cursor-pointer transition-all duration-200 group mx-2 ${
+                            activePage === item.id ? 'bg-gray-900' : 'hover:bg-gray-900'
+                        }`}
+                        onClick={() => onMenuClick?.(item.id)}
                     >
-                        <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 text-lg group-hover:text-gray-200 transition-all duration-200">
+                        <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center text-lg transition-all duration-200 ${
+                            activePage === item.id ? 'text-gray-200' : 'text-gray-400 group-hover:text-gray-200'
+                        }`}>
                             {item.icon}
                         </span>
-                        <span className={`ml-3 font-rajdhani font-normal text-gray-400 whitespace-nowrap transition-all duration-300 group-hover:text-gray-200 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}>
+                        <span className={`ml-3 font-rajdhani font-normal whitespace-nowrap transition-all duration-300 ${
+                            activePage === item.id ? 'text-gray-200' : 'text-gray-400 group-hover:text-gray-200'
+                        } ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}>
                             {item.label}
                         </span>
                     </div>
@@ -46,11 +53,20 @@ const Sidebar = ({isHovered, setIsHovered, onMenuClick}) => {
             {/* Bottom Section — bar aligns with header bottom (60px) */}
             <div className="mt-auto" style={{ paddingTop: 'calc(60px - 6rem)' }}>
                 <div className="mx-2 mb-4 h-px bg-gray-800" />
-                <div className="flex items-center px-2 py-2 rounded cursor-pointer transition-all duration-200 hover:bg-gray-900 group mx-2">
-                    <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 text-lg group-hover:text-gray-200 transition-all duration-200">
+                <div
+                    className={`flex items-center px-2 py-2 rounded cursor-pointer transition-all duration-200 group mx-2 ${
+                        activePage === 'profile' ? 'bg-gray-900' : 'hover:bg-gray-900'
+                    }`}
+                    onClick={() => onMenuClick?.('profile')}
+                >
+                    <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center text-lg transition-all duration-200 ${
+                        activePage === 'profile' ? 'text-gray-200' : 'text-gray-400 group-hover:text-gray-200'
+                    }`}>
                         ◉
                     </span>
-                    <span className={`ml-3 font-rajdhani font-normal text-gray-400 whitespace-nowrap transition-all duration-300 group-hover:text-gray-200 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}>
+                    <span className={`ml-3 font-rajdhani font-normal whitespace-nowrap transition-all duration-300 ${
+                        activePage === 'profile' ? 'text-gray-200' : 'text-gray-400 group-hover:text-gray-200'
+                    } ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}>
                         Profile
                     </span>
                 </div>
