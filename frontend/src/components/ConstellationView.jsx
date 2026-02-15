@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { knowledgeGraphData } from '../data/knowledgeGraph';
 import { fetchKnowledgeGraph, completeNode, verifyExplanation, generateCustomTree } from '../services/api';
@@ -21,36 +21,32 @@ const getNodeBestScore = (node) => {
   return node.score || null;
 };
 
+const getNodeStyleByStatus = (status) => {
+  switch (status) {
+    case 'mastered':
+      return { opacity: 1, size: 50, pulseSize: 2, shadow: '0 0 30px rgba(255,255,255,1)', rotate: true };
+    case 'active':
+      return { opacity: 0.8, size: 45, pulseSize: 1.8, shadow: '0 0 20px rgba(255,255,255,0.8)', rotate: true };
+    case 'locked':
+    default:
+      return { opacity: 0.3, size: 35, pulseSize: 0, shadow: '0 0 10px rgba(255,255,255,0.3)', rotate: false };
+  }
+};
 // Constellation-style node positioning
 function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = false }) {
   const normalizedStatus = normalizeNodeStatus(node);
-
-  const getNodeStyle = (status) => {
-    switch (status) {
-      case 'mastered':
-        return { opacity: 1, size: 50, pulseSize: 2, shadow: '0 0 30px rgba(255,255,255,1)', rotate: true };
-      case 'active':
-        return { opacity: 0.8, size: 45, pulseSize: 1.8, shadow: '0 0 20px rgba(255,255,255,0.8)', rotate: true };
-      case 'locked':
-      default:
-        return { opacity: 0.3, size: 35, pulseSize: 0, shadow: '0 0 10px rgba(255,255,255,0.3)', rotate: false };
-    }
-  };
-
-  const nodeStyle = getNodeStyle(normalizedStatus);
+  const nodeStyle = getNodeStyleByStatus(normalizedStatus);
   const baseColor = '#ffffff';
   const size = nodeStyle.size;
 
   return (
     <motion.div
       className="absolute cursor-pointer group"
-      style={{
-        left: `${position.x}%`,
-        top: `${position.y}%`,
-        transform: 'translate(-50%, -50%)'
-      }}
+      style={{ position: 'absolute' }}
       initial={{ scale: 0, opacity: 0, rotate: -180 }}
       animate={isUnlocking ? {
+        left: `${position.x}%`,
+        top: `${position.y}%`,
         scale: [1, 1.3, 1],
         opacity: 1,
         rotate: 0,
@@ -60,14 +56,20 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
           '0 0 20px rgba(96, 165, 250, 0)'
         ]
       } : {
-        scale: 1, 
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+        scale: 1,
         opacity: 1,
         rotate: 0
       }}
       transition={isUnlocking ? {
+        left: { type: 'spring', damping: 22, mass: 0.8 },
+        top: { type: 'spring', damping: 22, mass: 0.8 },
         duration: 1.2,
         ease: 'easeOut'
       } : {
+        left: { type: 'spring', damping: 22, mass: 0.8, delay: node.level * 0.03 },
+        top: { type: 'spring', damping: 22, mass: 0.8, delay: node.level * 0.03 },
         duration: 1.2,
         delay: node.level * 0.15,
         type: 'spring',
@@ -76,20 +78,27 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
       whileHover={{ scale: 1.4, transition: { duration: 0.3 } }}
       onClick={() => onClick(node)}
     >
-      {/* Diamond/Hexagon shape instead of circle */}
-      <motion.div
+      {/* Center anchor wrapper so link coordinates land at node center */}
+      <div
         style={{
           position: 'relative',
-          width: `${size}px`,
-          height: `${size}px`
-        }}
-        animate={nodeStyle.rotate ? {
-          rotate: [0, 360]
-        } : {}}
-        transition={{
-          rotate: { duration: 20, repeat: Infinity, ease: 'linear' }
+          transform: 'translate(-50%, -50%)'
         }}
       >
+        {/* Diamond/Hexagon shape instead of circle */}
+        <motion.div
+          style={{
+            position: 'relative',
+            width: `${size}px`,
+            height: `${size}px`
+          }}
+          animate={nodeStyle.rotate ? {
+            rotate: [0, 360]
+          } : {}}
+          transition={{
+            rotate: { duration: 20, repeat: Infinity, ease: 'linear' }
+          }}
+        >
         {/* Star burst shape with 8 rays - shortened */}
         <svg width={size} height={size} viewBox="0 0 100 100" style={{ filter: `drop-shadow(${nodeStyle.shadow})` }}>
           {/* Main rays - 4 primary directions */}
@@ -340,51 +349,52 @@ function ConstellationNode({ node, position, onClick, isSelected, isUnlocking = 
             </svg>
           </>
         )}
-      </motion.div>
+        </motion.div>
 
-      {/* Label with smooth fade */}
-      <motion.div
-        className="absolute whitespace-nowrap font-mono text-sm font-medium"
-        style={{
-          left: `${size + 15}px`,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          color: baseColor,
-          textShadow: `0 0 ${15 * nodeStyle.opacity}px rgba(255, 255, 255, ${nodeStyle.opacity * 0.8}), 0 2px 4px rgba(0,0,0,0.5)`,
-          pointerEvents: 'none'
-        }}
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ 
-          opacity: nodeStyle.opacity * 0.95, 
-          x: 0 
-        }}
-        transition={{ 
-          delay: node.level * 0.15 + 0.4,
-          duration: 0.8,
-          type: 'spring'
-        }}
-      >
-        {node.label.replace('\n', ' ')}
-      </motion.div>
+        {/* Label with smooth fade */}
+        <motion.div
+          className="absolute whitespace-nowrap font-mono text-sm font-medium"
+          style={{
+            left: `${size + 15}px`,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: baseColor,
+            textShadow: `0 0 ${15 * nodeStyle.opacity}px rgba(255, 255, 255, ${nodeStyle.opacity * 0.8}), 0 2px 4px rgba(0,0,0,0.5)`,
+            pointerEvents: 'none'
+          }}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ 
+            opacity: nodeStyle.opacity * 0.95, 
+            x: 0 
+          }}
+          transition={{ 
+            delay: node.level * 0.15 + 0.4,
+            duration: 0.8,
+            type: 'spring'
+          }}
+        >
+          {node.label.replace('\n', ' ')}
+        </motion.div>
 
-      {/* Statistics display */}
-      <motion.div
-        className="absolute whitespace-nowrap font-mono text-xs"
-        style={{
-          left: `${size + 15}px`,
-          top: 'calc(50% + 20px)',
-          color: normalizedStatus === 'mastered' ? '#60a5fa' : normalizedStatus === 'active' ? '#99ff00' : '#888888',
-          opacity: nodeStyle.opacity * 0.8,
-          textShadow: `0 0 8px rgba(255, 255, 255, ${nodeStyle.opacity * 0.4})`,
-          pointerEvents: 'none',
-          fontSize: '10px'
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: nodeStyle.opacity * 0.8 }}
-        transition={{ delay: node.level * 0.15 + 0.6, duration: 0.8 }}
-      >
-        {normalizedStatus === 'mastered' ? `Best Score: ${getNodeBestScore(node) || 95}%` : 'Incomplete'}
-      </motion.div>
+        {/* Statistics display */}
+        <motion.div
+          className="absolute whitespace-nowrap font-mono text-xs"
+          style={{
+            left: `${size + 15}px`,
+            top: 'calc(50% + 20px)',
+            color: normalizedStatus === 'mastered' ? '#60a5fa' : normalizedStatus === 'active' ? '#99ff00' : '#888888',
+            opacity: nodeStyle.opacity * 0.8,
+            textShadow: `0 0 8px rgba(255, 255, 255, ${nodeStyle.opacity * 0.4})`,
+            pointerEvents: 'none',
+            fontSize: '10px'
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: nodeStyle.opacity * 0.8 }}
+          transition={{ delay: node.level * 0.15 + 0.6, duration: 0.8 }}
+        >
+          {normalizedStatus === 'mastered' ? `Best Score: ${getNodeBestScore(node) || 95}%` : 'Incomplete'}
+        </motion.div>
+      </div>
     </motion.div>
   );
 }
@@ -542,6 +552,8 @@ export default function ConstellationView({ onBack, userPrompt }) {
   const [generatedTopic, setGeneratedTopic] = useState('');
   const [unlockedNodes, setUnlockedNodes] = useState([]);
   const [animatingEdges, setAnimatingEdges] = useState([]);
+  const graphContainerRef = useRef(null);
+  const [cursorPoint, setCursorPoint] = useState(null);
   
   // Fetch knowledge graph from backend on mount
   useEffect(() => {
@@ -691,9 +703,9 @@ export default function ConstellationView({ onBack, userPrompt }) {
           setCurrentBossNode(null);
           
           // Show success message
-          console.log('✅', result.message);
+          console.log('OK', result.message);
           if (dependentNodeIds.length > 0) {
-            console.log('🔓 Unlocked:', dependentNodeIds);
+            console.log('Unlocked:', dependentNodeIds);
           }
 
           const previousBest = verifyResult.previousBestScore;
@@ -709,13 +721,28 @@ export default function ConstellationView({ onBack, userPrompt }) {
         }
       } else {
         // Show feedback to user
-        console.log('❌ Verification failed:', verifyResult.message);
+        console.log('Verification failed:', verifyResult.message);
         alert(`${verifyResult.message}\n\nScore: ${verifyResult.score}/100\n\nFeedback: ${verifyResult.feedback}`);
       }
     } catch (err) {
       console.error('Error completing boss fight:', err);
       alert('Failed to verify explanation. Please try again.');
     }
+  };
+
+  const handleGraphMouseMove = (event) => {
+    const container = graphContainerRef.current;
+    if (!container) return;
+
+    const bounds = container.getBoundingClientRect();
+    setCursorPoint({
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top
+    });
+  };
+
+  const handleGraphMouseLeave = () => {
+    setCursorPoint(null);
   };
 
   // Show loading state
@@ -780,7 +807,67 @@ export default function ConstellationView({ onBack, userPrompt }) {
       });
     }
   });
+  const dynamicNodePositions = {};
+  const bounds = graphContainerRef.current?.getBoundingClientRect();
+  const width = bounds?.width || 0;
+  const height = bounds?.height || 0;
+  const repelRadiusPx = 220;
+  const maxRepelShiftPx = 80;
+  const snapZoneWidthPx = 75; // 1.5x wider than previous 12px border band
 
+  graphData.nodes.forEach((node) => {
+    const basePos = nodePositions[node.id];
+    if (!basePos || !cursorPoint || width <= 0 || height <= 0) {
+      dynamicNodePositions[node.id] = basePos;
+      return;
+    }
+
+    const nodeSize = getNodeStyleByStatus(normalizeNodeStatus(node)).size;
+    const nodeRadiusPx = nodeSize * 0.5 + 6;
+
+    const centerX = (basePos.x / 100) * width;
+    const centerY = (basePos.y / 100) * height;
+    const dx = cursorPoint.x - centerX;
+    const dy = cursorPoint.y - centerY;
+    const distance = Math.hypot(dx, dy) || 0.0001;
+
+    // Repulsion field (same-charge behavior).
+    let repelledX = basePos.x;
+    let repelledY = basePos.y;
+    if (distance < repelRadiusPx) {
+      const force = Math.pow(1 - distance / repelRadiusPx, 2);
+      const repelShiftPx = force * maxRepelShiftPx;
+      const shiftX = ((-dx / distance) * repelShiftPx / width) * 100;
+      const shiftY = ((-dy / distance) * repelShiftPx / height) * 100;
+      repelledX = basePos.x + shiftX;
+      repelledY = basePos.y + shiftY;
+    }
+
+    // Attraction field around/inside node border with smooth transition.
+    const transitionOuter = nodeRadiusPx + snapZoneWidthPx;
+    const transitionInner = Math.max(1, nodeRadiusPx - snapZoneWidthPx);
+    let attractionEase = 0;
+    if (distance <= transitionOuter) {
+      const rawT = (transitionOuter - distance) / (transitionOuter - transitionInner);
+      const clampedT = Math.max(0, Math.min(1, rawT));
+      attractionEase = clampedT * clampedT * (3 - 2 * clampedT); // smoothstep
+    }
+
+    const cursorXPercent = (cursorPoint.x / width) * 100;
+    const cursorYPercent = (cursorPoint.y / height) * 100;
+    const maxSnapStrength = 0.92;
+    const attractionStrength = maxSnapStrength * attractionEase;
+    const attractedX = basePos.x + (cursorXPercent - basePos.x) * attractionStrength;
+    const attractedY = basePos.y + (cursorYPercent - basePos.y) * attractionStrength;
+
+    const finalX = repelledX + (attractedX - repelledX) * attractionEase;
+    const finalY = repelledY + (attractedY - repelledY) * attractionEase;
+
+    dynamicNodePositions[node.id] = {
+      x: Math.max(4, Math.min(96, finalX)),
+      y: Math.max(6, Math.min(94, finalY))
+    };
+  });
   return (
     <motion.div 
       className="relative w-full h-screen bg-black overflow-hidden"
@@ -826,11 +913,11 @@ export default function ConstellationView({ onBack, userPrompt }) {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 1.2, delay: 0.3 }}
       >
-        <div className="relative w-full h-full">
+        <div ref={graphContainerRef} onMouseMove={handleGraphMouseMove} onMouseLeave={handleGraphMouseLeave} className="relative w-full h-full">
           {/* Connection lines */}
           <ConstellationLinks 
             links={graphData.links} 
-            nodePositions={nodePositions}
+            nodePositions={dynamicNodePositions}
             nodes={graphData.nodes}
             animatingEdges={animatingEdges}
           />
@@ -840,7 +927,7 @@ export default function ConstellationView({ onBack, userPrompt }) {
             <ConstellationNode
               key={node.id}
               node={node}
-              position={nodePositions[node.id]}
+              position={dynamicNodePositions[node.id]}
               onClick={handleNodeClick}
               isSelected={selectedNode?.id === node.id}
               isUnlocking={unlockedNodes.includes(node.id)}
@@ -957,9 +1044,11 @@ export default function ConstellationView({ onBack, userPrompt }) {
           animate={{ opacity: 1, y: 0 }}
           className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-yellow-500/20 border border-yellow-500/50 rounded-lg px-4 py-2 text-yellow-200 text-sm font-mono backdrop-blur-sm"
         >
-          ⚠️ {error} - Backend not connected
+          Warning: {error} - Backend not connected
         </motion.div>
       )}
     </motion.div>
   );
 }
+
+
