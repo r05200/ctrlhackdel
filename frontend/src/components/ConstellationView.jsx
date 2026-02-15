@@ -957,9 +957,13 @@ export default function ConstellationView({
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="absolute z-50 bg-black/80 border border-white/30 rounded-xl p-6 backdrop-blur-md"
             style={{
-              right: '16px',
-              bottom: '16px',
+              top: 'auto',
+              left: 'auto',
+              right: '96px',
+              bottom: '32px',
               maxWidth: 'min(24rem, calc(100vw - 32px))',
+              maxHeight: 'calc(100vh - 32px)',
+              overflowY: 'auto',
               fontFamily: 'monospace',
               boxShadow: '0 0 40px rgba(255, 255, 255, 0.2)'
             }}
